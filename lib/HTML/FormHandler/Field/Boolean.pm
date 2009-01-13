@@ -2,7 +2,7 @@ package HTML::FormHandler::Field::Boolean;
 
 use Moose;
 extends 'HTML::FormHandler::Field';
-our $VERSION = '0.01';
+our $VERSION = '0.03';
 
 has '+widget' => ( default => 'radio' );
 

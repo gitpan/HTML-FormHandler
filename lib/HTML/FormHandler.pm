@@ -10,11 +10,11 @@ use Locale::Maketext;
 use HTML::FormHandler::I18N;    # base class for language files
 
 use 5.008;
-our $VERSION = '0.02';
+our $VERSION = '0.03';
 
 =head1 NAME
 
-HTML::FormHandler - validate and process form data
+HTML::FormHandler - form handler written in Moose 
 
 =head1 SYNOPSIS
 
@@ -225,7 +225,7 @@ will return the form name + "." + field name
 
 =cut
 
-has 'html_prefix' => ( isa => 'Bool', is => 'rw', default => '' );
+has 'html_prefix' => ( isa => 'Bool', is => 'rw', default => 0 );
 
 =head2 init_object
 
@@ -996,9 +996,11 @@ This method is called even if some fields did not validate.
 
 sub cross_validate { 1 }
 
-# here we get a bit more iffy.
-# Remember, this is before white space is trimmed.
-# and before any validation.
+=head1 set_dependency
+
+Process the dependency lists 
+
+=cut 
 
 sub set_dependency
 {

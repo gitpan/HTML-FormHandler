@@ -1,5 +1,8 @@
 Revision history for Perl extension HTML::FormHandler 
 
+0.03 Tues Jan 12 2009, 16:00
+    Pod fix, remove failing test from htmlarea
+
 0.02 Tues Jan 12 2009, 03:00
     Fixed pod formatting, naming of files
 
