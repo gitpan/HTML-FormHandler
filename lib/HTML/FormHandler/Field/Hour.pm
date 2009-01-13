@@ -2,7 +2,7 @@ package HTML::FormHandler::Field::Hour;
 
 use Moose;
 extends 'Form::Processor::Field::IntRange';
-our $VERSION = '0.03';
+our $VERSION = '0.01';
 
 has '+range_start' => ( default => 0 );
 has '+range_end' => ( default => 23 );

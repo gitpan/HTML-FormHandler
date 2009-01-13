@@ -26,7 +26,7 @@ sub fif_value {
 
 =head1 NAME
 
-HTML::FormHandler::Field::WeekdayStr
+HTML::FormHandler::Field::WeekdayStr - multiple days of week in a string
 
 =head1 DESCRIPTION
 

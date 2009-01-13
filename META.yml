@@ -1,24 +1,29 @@
----
-abstract: 'validate and process form data'
-author:
-  - 'Gerda Shank, gshank@cpan.org'
-build_requires:
+--- 
+abstract: validate and process form data
+author: 
+  - Gerda Shank, gshank@cpan.org
+build_requires: 
   Test::More: 0.77
 distribution_type: module
-generated_by: 'Module::Install version 0.77'
+generated_by: Module::Install version 0.68
 license: perl
-meta-spec:
-  url: http://module-build.sourceforge.net/META-spec-v1.4.html
-  version: 1.4
+meta-spec: 
+  url: http://module-build.sourceforge.net/META-spec-v1.3.html
+  version: 1.3
 name: HTML-FormHandler
-no_index:
-  directory:
+no_index: 
+  directory: 
     - inc
     - t
-requires:
+requires: 
   Carp: 0
+  DBIx::Class: 0
+  Locale::Maketext: 1.09
+  Module::Find: 0.05
+  Moose: 0.59
+  MooseX::AttributeHelpers: 0.14
   Scalar::Util: 1.19
-  perl: 5.008
-resources:
-  license: http://dev.perl.org/licenses/
-version: 0.01
+  UNIVERSAL::require: 0
+  perl: 5.8.0
+tests: t/*.t t/Field/*.t
+version: 0.02

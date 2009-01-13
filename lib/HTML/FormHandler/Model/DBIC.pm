@@ -41,7 +41,7 @@ or accessor names in your DBIx::Class result source.
 This DBIC model for HTML::FormHandler will save form fields automatically to 
 the database, will retrieve selection lists from the database 
 (with type => 'Select' and a fieldname containing a single relationship, 
-or type => 'Multiple' and a many_to_many or has_many relationship), 
+or type => 'Multiple' and a many_to_many relationship), 
 and will save the selected values (one value for 'Select', multiple 
 values in a mapping table for a 'Multiple' field). 
 
@@ -185,14 +185,7 @@ sub update_model
       $value = $field->clear ? undef : $field->value;
       if ( $source->has_relationship($name) )
       {
-         if ( $field->can('multiple') && $field->multiple == 1 ) 
-         {
-            $multiple_has_many{$name} = $value;
-         }
-         # If the table has a column name the same name as the
-         # the "select" relationship, the 'has_columns' will catch it.
-         # This is for Selects with different column name and rel name
-         elsif ($field->can('options'))
+         if ($field->can('options'))
          {
             $select{$name} = $value;
          } 
@@ -260,28 +253,6 @@ sub update_model
    # update db
    $item->update if $changed > 0;
 
-   # process Multiple field 'has_many' relationships
-   for my $field_name ( keys %multiple_has_many )
-   {
-      # This is a has_many/many_to_many relationship
-      my ( $self_rel, $self_col, $foreign_rel, $foreign_col, $m2m_rel ) =
-         $self->many_to_many($field_name);
-      $value = $multiple_has_many{$field_name};
-      my %keep;
-      %keep = map { $_ => 1 } ref $value ? @$value : ($value)
-         if defined $value;
-      if ( $self->updated_or_created eq 'updated' )
-      {
-         for ( $item->$field_name->all )
-         {
-            # delete old selections
-            $_->delete unless delete $keep{ $_->$foreign_col };
-          }
-      }
-
-      # Add new related
-      $item->create_related( $field_name, { $foreign_col => $_ } ) for keys %keep;
-   } 
    # process Multiple field 'many_to_many' relationships
    for my $field_name ( keys %multiple_m2m )
    {
@@ -424,16 +395,6 @@ sub lookup_options
    {
       $f_class = $self->source->related_class($field_name);
       $source = $self->schema->source($f_class);
-
-      my $rel_info = $self->source->relationship_info($field_name);
-      if ( $field->type eq 'Multiple'
-         || ( $field->type eq 'Auto' && $rel_info->{attrs}{accessor} eq 'multi' ) )
-      {
-         # This is a 'has_many' relationship with a mapping table
-         my ( $self_rel, $self_col, $foreign_rel, $foreign_col ) =
-            $self->many_to_many($field_name);
-         $source  = $source->related_source($foreign_rel);
-      }
    }
    elsif ($self->resultset->new_result({})->can("add_to_$field_name") )
    {
@@ -508,15 +469,7 @@ sub init_value
    my $source = $self->source;
    if ( $source->has_relationship($name) )
    {
-      if ( $field->can('multiple') && $field->multiple == 1 ) 
-      {
-         # has_many Multiple field
-         my ( undef, undef, undef, $foreign_col ) = $self->many_to_many($name);
-         my @rows = $item->search_related($name)->all;
-         my @values = map { $_->$foreign_col } @rows;
-         return @values;
-      }
-      elsif ($field->can('options'))
+      if ($field->can('options'))
       {
          return $item->$name->id; 
       } 
@@ -714,43 +667,6 @@ sub resultset
    return $self->schema->resultset( $self->source_name || $self->item_class );
 }
 
-=head2 many_to_many
-
-When passed the name of the has_many relationship for a many_to_many
-pseudo-relationship, this subroutine returns the relationship and column
-name from the mapping table to the current table, and the relationship and
-column name from the mapping table to the foreign table.
-
-This code assumes that the mapping table has only two columns 
-and two relationships, and you must have correct DBIx::Class relationships
-defined.
-
-For different table arrangements you could subclass 
-this method to return the correct relationship and column names. 
-
-=cut
-
-sub many_to_many
-{
-   my ( $self, $has_many_rel ) = @_;
-
-   # get rel and col pointing to self from reverse
-   my $source     = $self->source;
-   my $rev_rel    = $source->reverse_relationship_info($has_many_rel);
-   my ($self_rel) = keys %{$rev_rel};
-   my ($cond)     = values %{ $rev_rel->{$self_rel}{cond} };
-   my ($self_col) = $cond =~ m/^self\.(\w+)$/;
-
-   # assume that the other rel and col are for foreign table
-   my @rels = $source->related_source($has_many_rel)->relationships;
-   my $foreign_rel;
-   foreach (@rels) { $foreign_rel = $_ if $_ ne $self_rel; }
-   my $foreign_col;
-   my @cols = $source->related_source($has_many_rel)->columns;
-   foreach (@cols) { $foreign_col = $_ if $_ ne $self_col; }
-
-   return ( $self_rel, $self_col, $foreign_rel, $foreign_col );
-}
 
 =head1 SUPPORT
 

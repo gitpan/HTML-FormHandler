@@ -40,10 +40,13 @@ example/BookDB/script/bookdb_schema_dump.pl
 example/BookDB/script/bookdb_server.pl
 example/BookDB/script/bookdb_test.pl
 example/README
+inc/Module/AutoInstall.pm
 inc/Module/Install.pm
+inc/Module/Install/AutoInstall.pm
 inc/Module/Install/Base.pm
 inc/Module/Install/Can.pm
 inc/Module/Install/Fetch.pm
+inc/Module/Install/Include.pm
 inc/Module/Install/Makefile.pm
 inc/Module/Install/Metadata.pm
 inc/Module/Install/Win32.pm
@@ -80,6 +83,7 @@ lib/HTML/FormHandler/I18N.pm
 lib/HTML/FormHandler/I18N/en_us.pm
 lib/HTML/FormHandler/Manual.pod
 lib/HTML/FormHandler/Manual/Cookbook.pod
+lib/HTML/FormHandler/Manual/Intro.pod
 lib/HTML/FormHandler/Manual/Reference.pod
 lib/HTML/FormHandler/Manual/Templates.pod
 lib/HTML/FormHandler/Manual/Tutorial.pod
@@ -105,6 +109,7 @@ t/db/book.db
 t/db/bookdb.sql
 t/dbic_accessor.t
 t/dependency.t
+t/errors.t
 t/field.t
 t/Field/boolean.t
 t/Field/checkbox.t
@@ -134,7 +139,6 @@ t/fif.t
 t/form_handler.t
 t/init_object.t
 t/lib/BookDB/Form/Book.pm
-t/lib/BookDB/Form/Book.pm.auto
 t/lib/BookDB/Form/BookAuto.pm
 t/lib/BookDB/Form/BookCDBI.pm
 t/lib/BookDB/Form/BookHTML.pm

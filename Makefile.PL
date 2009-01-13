@@ -23,5 +23,7 @@ build_requires 'Test::More'      => '0.77';
 
 tests_recursive();
 
-WriteAll();
+auto_install;
+
+WriteAll;
 

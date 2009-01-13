@@ -6,11 +6,11 @@ with 'Catalyst::Component::InstancePerContext';
 use Carp;
 use UNIVERSAL::require;
 
-our $VERSION = '0.01_01';
+our $VERSION = '0.01';
 
 =head1 NAME
 
-Catalyst::Controller::Role::HTML::FormHandler
+Catalyst::Controller::Role::HTML::FormHandler - a Moose role for Catalyst controllers
 
 =head1 SYNOPSIS
 

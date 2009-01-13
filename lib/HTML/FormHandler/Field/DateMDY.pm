@@ -35,7 +35,7 @@ sub validate
 
 =head1 NAME
 
-HTML::FormHandler::Field::DateMDY
+HTML::FormHandler::Field::DateMDY - single field for mm/dd/yyyy dates 
 
 =head1 AUTHORS
 

@@ -21,6 +21,7 @@ After installing, you can find documentation for this module with the
 perldoc command.
 
     perldoc HTML::FormHandler::Manual
+    perldoc HTML::FormHandler::Intro
     perldoc HTML::FormHandler::Tutorial
     perldoc HTML::FormHandler
     perldoc HTML::FormHandler::Model::DBIC

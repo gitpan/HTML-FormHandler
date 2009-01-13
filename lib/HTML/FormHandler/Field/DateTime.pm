@@ -86,7 +86,7 @@ sub fif_value {
 
 =head1 NAME
 
-HTML::FormHandler::Field::DateTime
+HTML::FormHandler::Field::DateTime - compound field for dates
 
 =head1 DESCRIPTION
 
