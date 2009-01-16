@@ -35,6 +35,7 @@ and in the individual field classes.
    noupdate      Don't update this field in the database
    writeonly     Do not call field class's "fif_value" routine. 
    errors        Errors associated with this field 
+                 (also num_errors, clear_errors, has_errors, add_error)
    label_column  Select lists: column to use for labels (default: name)
    active_column Select lists: which values to list
    sort_column   Select lists: column to use for sorting (default: label_column)
@@ -65,6 +66,15 @@ These attributes are usually accessed in a subroutine or in a template.
    input_to_value    To process the field before storing, after validation
    Add your own field attributes in your custom Field classes.
 
+=head3 Miscellaneous field subroutines
+ 
+   set_order      Sets the field's order to the value of the form's field_counter
+   has_input      Checks 'input' attribute
+   fif_value      Convert the field's value to a format suitable for param hash 
+   value_changed  Has the field's value changed from the init_value?
+   required_text  Returns 'required' or 'optional' according to required flag
+   dump           For debugging
+
 =head1 Forms
 
 =head2 Attributes to pass to new or set in form
@@ -85,13 +95,43 @@ These attributes are usually accessed in a subroutine or in a template.
    dependency    Array of arrays of field names. If one name has a value, all
                        fields in the list are set to 'required'
 
+=head2 Other Form attributes
+
+   name           Form name
+   name_prefix    Flag to add/remove formname from field name in params
+   validated      Flag that form has validated
+   ran_validation Flag that validation has already been run
+   field_name_space  Where to look for your fields
+   num_errors     Number of errors
+   updated_or_created  'updated' or 'created' in database
+   user_data      Place to store user data
+   language handle  For MakeText 
+   field_counter  For setting field order
+   params         HTTP parameters 
+   fields         Field array
+   required       Array of required fields
+   parent_field   For subforms
+   active_column  The 'active' column for all select lists in the form
+    
+=head2 Form methods
+
+   clear           Useful in tests
+   sorted_fields
+   field( $name )
+   field_exists( $name )
+   validate( $params )
+   has_error       Ran_validation & !validated
+   error_fields
+   errors
+   error_field_names
+   uuid
+   
 =head2  Subroutines for your form
 
    options_$fieldname       Provides a list of key value pairs for select lists
    validate_$fieldname      Validation routine for field 
    init_value_$fieldname    Overrides initial value for the field
    cross_validate           For validation after individual fields are validated 
-   active_column            For all select lists in the form
    Plus any subroutine you care to write...
    
 =head2 Methods to subclass from HTML::FormHandler::Model::DBIC

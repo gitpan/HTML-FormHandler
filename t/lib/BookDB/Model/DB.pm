@@ -6,7 +6,7 @@ use base 'Catalyst::Model::DBIC::Schema';
 __PACKAGE__->config(
     schema_class => 'BookDB::Schema::DB',
     connect_info => [
-        'dbi:SQLite:db/book.db',
+        'dbi:SQLite:t/db/book.db',
         
     ],
 );

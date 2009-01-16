@@ -19,6 +19,7 @@ TT View Component.
 
 BookDB::View::TT->config({
     TEMPLATE_EXTENSION => '.tt',
+    INCLUDE => [ BookDB->path_to('root') ],
 });
 
 

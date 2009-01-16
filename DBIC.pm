@@ -3,8 +3,6 @@ package HTML::FormHandler::Model::DBIC;
 use Moose;
 extends 'HTML::FormHandler';
 use Carp;
-use UNIVERSAL::require;
-use DBIx::Class::ResultClass::HashRefInflator;
 
 our $VERSION = '0.01';
 
@@ -485,7 +483,7 @@ sub init_value
          else # multi relationship (unsupported)
          {
             my $rs = $item->$name;
-            $rs->result_class('DBIx::Class::ResultClass::HashRefInflator');
+            $rs->result_class('DBIx::Class::ResultClass::HashRefInflator'); 
             return $rs->all;
          }
       }

@@ -10,7 +10,7 @@ use Locale::Maketext;
 use HTML::FormHandler::I18N;    # base class for language files
 
 use 5.008;
-our $VERSION = '0.03';
+our $VERSION = '0.04';
 
 =head1 NAME
 
@@ -101,9 +101,7 @@ An example of a form class:
 A dynamic form may be created in a controller:
 
     $c->stash->{form} = HTML::FormHandler->new(
-        item_class => 'Book',
-        item_id => $id,
-        schema => $schema,
+        item => $user,
         profile => {
             fields => {
                first_name => 'Text',
@@ -338,6 +336,14 @@ has 'field_counter' => (
    default => 1
 );
 
+=head2 active_column
+
+The column in tables used for select list that marks an option 'active'
+
+=cut
+
+has 'active_column' => ( isa => 'Str', is => 'rw' );
+
 =head2 params
 
 Stores HTTP parameters. 
@@ -427,7 +433,7 @@ New creates a new form object.  The constructor takes name/value pairs:
 
     MyForm->new(
         item    => $item,
-        item_id => $item->id,
+        init_object => { name => 'Your name here', username => 'choose' }
     );
 
 Or a single item (model row object) or item_id (row primary key)
@@ -444,13 +450,6 @@ an "id" method.  So:
 
     MyForm->new( $item_object );
 
-is the same as:
-
-    MyForm->new(
-        item    => $item_object,
-        item_id => $item_object->id,
-    );
-
 The common attributes to be passed in to the constructor are:
 
    item_id
@@ -460,7 +459,6 @@ The common attributes to be passed in to the constructor are:
    item_class
    profile
    init_object
-
 
 Creating a form object:
 
@@ -850,6 +848,20 @@ sub field
    croak "Field '$name' not found in form '$self'";
 }
 
+=head2
+
+Convenience function to return the value of the field. Returns
+undef if field not found.
+
+=cut
+
+sub value
+{
+   my ( $self, $fieldname ) = @_;
+   my $field = $self->field( $fieldname, 1 ) || return;
+   return $field->value; 
+}
+
 =head2 field_exists
 
 Returns true (the field) if the field exists
@@ -905,9 +917,9 @@ sub validate
 
    return $self->validated if $self->ran_validation;
 
-   # Set params -- so can be used by fif later
-   $self->params($params) if $params;
-   $params ||= $self->params;
+   # Set params 
+   $self->params($params) if ($params && keys %$params);
+   $params = $self->params; 
    $self->set_dependency;    # set required dependencies
 
    foreach my $field ( $self->fields )

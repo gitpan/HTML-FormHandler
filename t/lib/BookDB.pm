@@ -2,7 +2,6 @@ package BookDB;
 
 use strict;
 use Catalyst ('-Debug',
-              'FillInForm',
               'Static::Simple',
 );
 
