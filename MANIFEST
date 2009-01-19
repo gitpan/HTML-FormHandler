@@ -1,6 +1,4 @@
 Changes
-DBIC.pm
-example/BookDB/db/sqlup.sql
 inc/Module/AutoInstall.pm
 inc/Module/Install.pm
 inc/Module/Install/AutoInstall.pm
@@ -126,6 +124,15 @@ t/lib/BookDB/root/scaffold/header.tt
 t/lib/BookDB/root/scaffold/header_bg.jpg
 t/lib/BookDB/root/scaffold/nav.tt
 t/lib/BookDB/root/scaffold/styles.css
+t/lib/BookDB/root/widget/checkbox.tt
+t/lib/BookDB/root/widget/checkbox_group.tt
+t/lib/BookDB/root/widget/form_end.tt
+t/lib/BookDB/root/widget/form_start.tt
+t/lib/BookDB/root/widget/multiple.tt
+t/lib/BookDB/root/widget/radio.tt
+t/lib/BookDB/root/widget/select.tt
+t/lib/BookDB/root/widget/text.tt
+t/lib/BookDB/root/widget/textarea.tt
 t/lib/BookDB/Schema/DB.pm
 t/lib/BookDB/Schema/DB/Author.pm
 t/lib/BookDB/Schema/DB/Book.pm

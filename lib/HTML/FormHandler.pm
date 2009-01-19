@@ -10,7 +10,7 @@ use Locale::Maketext;
 use HTML::FormHandler::I18N;    # base class for language files
 
 use 5.008;
-our $VERSION = '0.04';
+our $VERSION = '0.05';
 
 =head1 NAME
 
@@ -343,6 +343,30 @@ The column in tables used for select list that marks an option 'active'
 =cut
 
 has 'active_column' => ( isa => 'Str', is => 'rw' );
+
+=head2 http_method
+
+For storing 'post' or 'get'
+
+=cut
+
+has 'http_method' => ( isa => 'Str', is => 'rw', default => 'post' );
+
+=head2  action
+
+Store the form 'action' on submission
+
+=cut
+
+has 'action' => ( isa => 'Str', is => 'rw' );
+
+=head2 submit
+
+Store form submit field info
+
+=cut
+
+has 'submit' => ( is => 'rw' );
 
 =head2 params
 
