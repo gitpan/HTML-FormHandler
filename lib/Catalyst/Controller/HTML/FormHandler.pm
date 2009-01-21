@@ -1,7 +1,7 @@
 package Catalyst::Controller::HTML::FormHandler;
 
 use Moose ('with');
-use base ('Catalyst::Controller', 'Class::Accessor::Fast');
+use base ('Catalyst::Controller', 'Moose::Object');
 with 'Catalyst::Component::InstancePerContext';
 
 use Carp;
@@ -9,7 +9,7 @@ use UNIVERSAL::require;
 
 __PACKAGE__->mk_accessors('form_name_space', 'model_name', 'ctx', 'fif');
 
-our $VERSION = '0.01_01';
+our $VERSION = '0.02';
 
 =head1 NAME
 
@@ -128,7 +128,7 @@ sub get_form
       {
          %args = %{$args_ref};
       }
-      elsif ( Scalar::Util::blessed($args_ref) )
+      elsif ( blessed($args_ref) )
       {
          %args = (
             item    => $args_ref,
@@ -147,8 +147,9 @@ sub get_form
    if ( $package->isa('Form::Processor::Model::DBIC') )
    {
       # schema only exists for DBIC model
-      die "No model to create schema for C::C::F::P" unless $self->model;
-      $args{schema} = $self->model->schema;
+      die "Form $package must have an item or a schema (via model_name)" 
+            unless ( $self->model || $args{item} );
+      $args{schema} = $self->model->schema if $self->model;
    }
 
    return $self->ctx->stash->{form} = $package->new(%args);

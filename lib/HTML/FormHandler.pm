@@ -10,7 +10,7 @@ use Locale::Maketext;
 use HTML::FormHandler::I18N;    # base class for language files
 
 use 5.008;
-our $VERSION = '0.05';
+our $VERSION = '0.06';
 
 =head1 NAME
 
@@ -25,9 +25,6 @@ L<Form::Processor>, FormHandler does not intend to be compatible. A substantial
 number of methods and attributes have been renamed for internal 
 consistency and consistency with Moose usage, and some refactoring has
 been done. 
-
-This first version should be considered non-stable, since I am actively 
-looking for ways to improve it which may result in some api changes.
 
 HTML::FormHandler allows you to define HTML form fields and validators, and will
 automatically update or create rows in a database, although it can also be
@@ -358,7 +355,7 @@ Store the form 'action' on submission
 
 =cut
 
-has 'action' => ( isa => 'Str', is => 'rw' );
+has 'action' => ( is => 'rw' );
 
 =head2 submit
 
@@ -767,7 +764,6 @@ attribute.
 sub init_from_object
 {
    my $self = shift;
-
    my $item = $self->init_object || $self->item || return;
 
    for my $field ( $self->fields )

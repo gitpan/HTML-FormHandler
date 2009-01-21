@@ -1,4 +1,5 @@
 Changes
+HTML-FormHandler-0.06.tar.gz
 inc/Module/AutoInstall.pm
 inc/Module/Install.pm
 inc/Module/Install/AutoInstall.pm
@@ -75,7 +76,6 @@ t/Field/boolean.t
 t/Field/checkbox.t
 t/Field/datetime.t
 t/Field/email.t
-t/Field/htmlarea.t
 t/Field/integer.t
 t/Field/intrange.t
 t/Field/minute.t
