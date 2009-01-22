@@ -36,7 +36,7 @@ sub book_base : Chained PathPart('book') CaptureArgs(0)
    my ( $self, $c ) = @_;
 }
 
-sub default : Chained('book_base') ParthPart('') Args
+sub default : Chained('book_base') PathPart('') Args
 {
    my ( $self, $c ) = @_;
    return $self->do_list($c);
@@ -72,7 +72,6 @@ sub create : Chained('book_base') PathPart('create') Args(0)
 sub item : Chained('book_base') PathPart('') CaptureArgs(1)
 {
    my ( $self, $c, $book_id ) = @_;
-
   $c->stash->{book} = $c->model('DB::Book')->find($book_id);
 }
 
@@ -169,6 +168,7 @@ sub view : Chained('item') PathPart('') Args(0)
    $c->stash->{template} = 'book/view.tt';
    my $validated = $self->update_from_form( $c->stash->{book}, 'BookView' );
    return if !$validated;
+$DB::single=1;
    # form validated
    $c->stash->{message} = 'Book checked out';
 }
@@ -186,8 +186,7 @@ sub do_return : Chained('item') PathPart('return') Args(0)
    $book->borrower(undef);
    $book->update;
 
-   my $action = $c->controller->action('view');
-   $c->res->redirect($c->uri_for( $action, [$book->id]));
+   $c->res->redirect( '/book/' . $book->id );
    $c->detach;
 }
 

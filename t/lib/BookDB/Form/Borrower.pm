@@ -2,6 +2,7 @@ package BookDB::Form::Borrower;
 
 use Moose;
 extends 'HTML::FormHandler::Model::DBIC';
+with 'HTML::FormHandler::Render::Simple';
 
 
 =head1 NAME
@@ -47,9 +48,6 @@ sub profile {
                 order => 3,
                 label => 'URL',
             },
-         books => {
-            type => 'Text',
-         },
 		},
       unique => {
          name => 'That name is already in our user directory'
