@@ -6,7 +6,7 @@ use lib 't/lib';
 BEGIN {
    eval "use DBIx::Class";
    plan skip_all => 'DBIX::Class required' if $@;
-   plan tests => 18;
+   plan tests => 20;
 }
 
 use_ok( 'HTML::FormHandler' );
@@ -18,13 +18,14 @@ use_ok( 'BookDB::Schema::DB');
 my $schema = BookDB::Schema::DB->connect('dbi:SQLite:t/db/book.db');
 ok($schema, 'get db schema');
 
-my $book_id = 1;
+my $form = BookDB::Form::Book->new;
 
-my $form = BookDB::Form::Book->new(item_id => undef, schema => $schema);
+ok( $form, 'no param new' );
 
-ok( !$form->validate, 'Empty data' );
+$form->process( item_id => 1, schema => $schema, params => {} );
+is( $form->item->id, 1, 'get item from item_id and schema');
 
-$form->clear_state;
+ok( !$form->process( schema => $schema ), 'Empty data' );
 
 # This is munging up the equivalent of param data from a form
 my $good = {
@@ -36,9 +37,7 @@ my $good = {
     'publisher' => 'EreWhon Publishing',
 };
 
-ok( $form->validate( $good ), 'Good data' );
-
-ok( $form->update_model, 'Update validated data');
+ok( $form->process( schema => $schema, params => $good ), 'Good data' );
 
 my $book = $form->item;
 END { $book->delete };
@@ -51,15 +50,14 @@ is( $num_genres, 2, 'multiple select list updated ok');
 is( $form->value('format'), 2, 'get value for format' );
 
 my $id = $book->id;
-$form->clear_state;
 
 my $bad_1 = {
     notitle => 'not req',
     silly_field   => 4,
 };
 
-ok( !$form->validate( $bad_1 ), 'bad 1' );
-$form->clear_state;
+ok( !$form->process( schema => $schema, params => $bad_1 ), 'bad 1' );
+
 
 my $bad_2 = {
     'title' => "Another Silly Test Book",
@@ -69,7 +67,7 @@ my $bad_2 = {
     'format' => '22',
 };
 
-ok( !$form->validate( $bad_2 ), 'bad 2');
+ok( !$form->process( schema => $schema, params => $bad_2 ), 'bad 2');
 
 ok( $form->field('year')->has_errors, 'year has error' );
 
@@ -79,9 +77,8 @@ ok( !$form->field('author')->has_errors, 'author has no error' );
 
 ok( $form->field('format')->has_errors, 'format has error' );
 
-$form->clear_state;
 
-$form = BookDB::Form::Book->new(item => $book, schema => $schema);
+$form->process(item => $book, schema => $schema);
 ok( $form, 'create form from db object');
 
 my $genres_field = $form->field('genres');

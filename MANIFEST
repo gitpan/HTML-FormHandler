@@ -10,8 +10,6 @@ inc/Module/Install/Makefile.pm
 inc/Module/Install/Metadata.pm
 inc/Module/Install/Win32.pm
 inc/Module/Install/WriteAll.pm
-lib/Catalyst/Controller/HTML/FormHandler.pm
-lib/Catalyst/Controller/Role/HTML/FormHandler.pm
 lib/HTML/FormHandler.pm
 lib/HTML/FormHandler/Field.pm
 lib/HTML/FormHandler/Field/Boolean.pm
@@ -103,13 +101,12 @@ t/lib/BookDB/Controller/Borrower.pm
 t/lib/BookDB/Controller/Root.pm
 t/lib/BookDB/Form/Book.pm
 t/lib/BookDB/Form/BookAuto.pm
-t/lib/BookDB/Form/BookCDBI.pm
 t/lib/BookDB/Form/BookHTML.pm
 t/lib/BookDB/Form/BookM2M.pm
 t/lib/BookDB/Form/BookView.pm
-t/lib/BookDB/Form/BookViewCDBI.pm
 t/lib/BookDB/Form/Borrower.pm
 t/lib/BookDB/Form/Borrower.pm.auto
+t/lib/BookDB/Form/BorrowerX.pm
 t/lib/BookDB/Form/Field/AltText.pm
 t/lib/BookDB/Model/DB.pm
 t/lib/BookDB/root/book/form.tt
@@ -142,10 +139,12 @@ t/lib/BookDB/Schema/DB/Genre.pm
 t/lib/BookDB/View/TT.pm
 t/load_field.t
 t/model.t
+t/model_cdbi.t
 t/model_dbic.t
 t/multiple_forms.t
 t/MyTest.pm
 t/order.t
+t/process.t
 t/render.t
 t/script/bookdb_server.pl
 t/script/bookdb_test.pl

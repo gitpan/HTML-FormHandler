@@ -5,7 +5,7 @@ use Carp;
 use Data::Dumper;
 extends 'HTML::FormHandler';
 
-our $VERSION = '0.01';
+our $VERSION = '0.02';
 
 =head1 NAME
 
@@ -38,6 +38,9 @@ HTML::FormHandler::Model::CDBI - Class::DBI model class for HTML::FormHandler
 =head1 DESCRIPTION
 
 A Class::DBI database model for HTML::FormHandler
+
+I don't use CDBI, so this module is not well tested. Patches
+and tests gratefully accepted.
 
 
 =head1 METHODS
@@ -229,6 +232,7 @@ sub init_value {
 
     $item ||= $self->item;
 
+    return if $field->writeonly;
     return $item->{$column} if ref($item) eq 'HASH';
     # Use "can" instead of "find_column" because could be a related column
     return unless $item && $item->isa('Class::DBI') && $item->can($column);
@@ -241,32 +245,7 @@ sub init_value {
     return @values;
 }
 
-=head2 update_from_form
-
-    my $ok = $form->update_from_form( $parameter_hash );
-
-Update or create the object from values in the form.
-
-The actual update is done in the C<update_model> method.  
-Pass in hash reference of parameters.
-Returns false if form does not validate.  
-
-=cut
-
-sub update_from_form {
-    my ( $self, $params ) = @_;
-
-    return unless $self->validate($params);
-    if ( $self->item_class->can('do_transaction') ) {
-        $self->item_class->do_transaction( sub { $self->update_model } );
-    }
-    else {
-        $self->update_model;
-    }
-    return 1;
-}
-
-=head2 model_validate
+=head2 validate_model
 
 Validates profile items that are dependent on the model.
 Currently, "unique" fields are checked  to make sure they are unique.
@@ -276,7 +255,7 @@ field values entered in $field->value at this point.
 
 =cut
 
-sub model_validate {
+sub validate_model {
     my ($self) = @_;
 
     return unless $self->validate_unique;
