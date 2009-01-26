@@ -44,9 +44,11 @@ lib/HTML/FormHandler/Manual/Intro.pod
 lib/HTML/FormHandler/Manual/Reference.pod
 lib/HTML/FormHandler/Manual/Templates.pod
 lib/HTML/FormHandler/Manual/Tutorial.pod
+lib/HTML/FormHandler/Meta/Class.pm
 lib/HTML/FormHandler/Model.pm
 lib/HTML/FormHandler/Model/CDBI.pm
 lib/HTML/FormHandler/Model/DBIC.pm
+lib/HTML/FormHandler/Moose.pm
 lib/HTML/FormHandler/Render/Simple.pm
 Makefile.PL
 MANIFEST			This list of files
@@ -137,6 +139,7 @@ t/lib/BookDB/Schema/DB/Borrower.pm
 t/lib/BookDB/Schema/DB/Format.pm
 t/lib/BookDB/Schema/DB/Genre.pm
 t/lib/BookDB/View/TT.pm
+t/lib/Form/Test.pm
 t/load_field.t
 t/model.t
 t/model_cdbi.t
