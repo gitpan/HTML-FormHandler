@@ -31,6 +31,7 @@ lib/HTML/FormHandler/Field/Password.pm
 lib/HTML/FormHandler/Field/PosInteger.pm
 lib/HTML/FormHandler/Field/Second.pm
 lib/HTML/FormHandler/Field/Select.pm
+lib/HTML/FormHandler/Field/Test.pm
 lib/HTML/FormHandler/Field/Text.pm
 lib/HTML/FormHandler/Field/TextArea.pm
 lib/HTML/FormHandler/Field/Weekday.pm
@@ -57,6 +58,7 @@ README
 t/01app.t
 t/02pod.t
 t/03podcoverage.t
+t/add_field.t
 t/auto_fields.t
 t/bad_item_id.t
 t/book.t
@@ -96,6 +98,7 @@ t/field_counter.t
 t/field_select.t
 t/fif.t
 t/form_handler.t
+t/has_field.t
 t/init_object.t
 t/lib/BookDB.pm
 t/lib/BookDB/Controller/Book.pm
@@ -140,6 +143,7 @@ t/lib/BookDB/Schema/DB/Format.pm
 t/lib/BookDB/Schema/DB/Genre.pm
 t/lib/BookDB/View/TT.pm
 t/lib/Form/Test.pm
+t/lib/Form/Two.pm
 t/load_field.t
 t/model.t
 t/model_cdbi.t
