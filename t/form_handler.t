@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 use Test::More;
-my $tests = 10;
+my $tests = 15;
 plan tests => $tests;
 
 use_ok( 'HTML::FormHandler' );
@@ -51,10 +51,14 @@ my $good = {
 
 ok( $form->validate( $good ), 'Good data' );
 
+ok( !$form->validate( {} ), 'form doesn\'t validate with empty params' );
+is( $form->num_errors, 0, 'form doesn\'t have errors with empty params' );
+
 my $bad_1 = {
     optname => 'not req',
     fruit   => 4,
 };
+
 
 ok( !$form->validate( $bad_1 ), 'bad 1' );
 
@@ -69,4 +73,7 @@ is( $form->field('fruit')->id, "testform_fruit", 'field has id' );
 is( $form->field('fruit')->label, 'Fruit', 'field label');
 
 
+ok( !$form->validate( {} ), 'no leftover params' );
+is( $form->num_errors, 0, 'no leftover errors' );
+ok( !$form->field('reqname')->has_errors, 'no leftover error in field');
 

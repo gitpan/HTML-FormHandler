@@ -10,7 +10,7 @@ use Locale::Maketext;
 use HTML::FormHandler::I18N;    # base class for language files
 
 use 5.008;
-our $VERSION = '0.12';
+our $VERSION = '0.13';
 
 =head1 NAME
 
@@ -61,7 +61,12 @@ The example above has the forms as a persistent part of the application.
 If you prefer, it also works fine to create the form on each request:
     
     my $form = MyApp::Form->new;
-    my $validated = $form->process( item => $book, params => $params );
+    my $validated = $form->update( item => $book, params => $params );
+
+or, for a non-database form:
+
+    my $form = MyApp::Form->new;
+    my $validated = $form->validate( $params );
    
 An example of a form class:
 
@@ -928,8 +933,9 @@ sub validate
    warn "HFH: validate ", $self->name, "\n" if $self->verbose;
 
    # Set params 
-   $self->params($params) if ($params && keys %{$params});
+   $self->params($params) if (ref $params eq 'HASH');
    $params = $self->params; 
+   return unless $self->has_params;
    $self->set_dependency;    # set required dependencies
 
    foreach my $field ( $self->fields )
@@ -1230,9 +1236,7 @@ sub make_field
       ? $self->name_prefix . '.' . $name
       : $name;
    $attr->{form} = $self;
-
    my $field = $class->new( %{$attr} );
-
    return $field;
 }
 

@@ -31,7 +31,6 @@ lib/HTML/FormHandler/Field/Password.pm
 lib/HTML/FormHandler/Field/PosInteger.pm
 lib/HTML/FormHandler/Field/Second.pm
 lib/HTML/FormHandler/Field/Select.pm
-lib/HTML/FormHandler/Field/Test.pm
 lib/HTML/FormHandler/Field/Text.pm
 lib/HTML/FormHandler/Field/TextArea.pm
 lib/HTML/FormHandler/Field/Weekday.pm
