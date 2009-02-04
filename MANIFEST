@@ -71,6 +71,7 @@ t/db/book.db
 t/db/bookdb.sql
 t/dbic_accessor.t
 t/dependency.t
+t/dump.t
 t/errors.t
 t/field.t
 t/Field/boolean.t
