@@ -120,10 +120,14 @@ triggers setting the 'fif' attribute.
 
 The "validate" field method usually sets this value if the field validates.
 
+The user does not need to set this field except in validation methods.
+
 =cut
 
 has 'value' => (
    is      => 'rw',
+   clearer => 'clear_value',
+   predicate => 'has_value',
    trigger => sub {
       my ( $self, $value ) = @_;
       $self->fif($self->fif_value($value)) 
@@ -134,14 +138,20 @@ has 'value' => (
 
 =head2 input
 
-Input value for the field, usually from a parameter hash, but could
-also be set with an accessor. Validation is performed on the 'input'
-attributes. A change in this attribute triggers setting 'fif'.
+Input value for the field, moved from the parameter hash.
+In L<HTML::FormHandler>, the setter for this attribute is for internal 
+use. If you want to set an input value, use the 'set_param' method. 
+A field validation routine may copy the value of this attribute to 
+the 'value' attribute. The setter may be used in field tests and
+if a field class is used standalone. A change in this attribute triggers 
+setting 'fif'. 
 
 =cut
 
 has 'input' => (
    is      => 'rw',
+   clearer => 'clear_input',
+   predicate => 'input_exists',
    trigger => sub {
       my ( $self, $input ) = @_;
       $self->fif($input)
@@ -152,7 +162,12 @@ has 'input' => (
 
 =head2 fif
 
-For filling in forms. Input or value.
+For filling in forms. Input or value. The user does not need to set this field.
+It is set by FormHandler from the values in your database object or the
+input parameters. The normal use would be to a access this field from a template:
+
+   [% f = form.field('title') %]
+   [% f.fif %]
 
 =cut
 
@@ -491,10 +506,26 @@ has 'errors' => (
 =head2 validate_meth
 
 Specify the form method to be used to validate this field.
+The default is C<< 'validate_' . $field->name >>. (Periods in
+field names will be changed to underscores.) If you have
+a number of fields that require the same validation and don't
+want to write a field class, you could set them all to the same 
+method name.
+
+   has_field 'title' => ( isa => 'Str', validate_meth => 'check_title' );
+   has_field 'subtitle' => ( isa => 'Str', validate_meth => 'check_title' );
 
 =cut
 
-has 'validate_meth' => ( isa => 'Str', is => 'rw' );
+has 'validate_meth' => ( isa => 'Str', is => 'rw', lazy => 1,
+    default => sub { 
+       my $self = shift; 
+       my $name = $self->name;
+       $name =~ s/\./_/g;
+       return 'validate_' . $name;
+    }
+);
+
 
 # tell Moose to make this class immutable
 __PACKAGE__->meta->make_immutable;
@@ -505,14 +536,6 @@ __PACKAGE__->meta->make_immutable;
 
 Create a new instance of a field.  Initial values are passed 
 as a list of parameters.
-
-=cut
-
-sub BUILDARGS
-{
-   my ( $self, @args ) = @_;
-   return {@args};
-}
 
 =head2 full_name
 
@@ -622,17 +645,15 @@ sub validate_field
    my $field = shift;
 
    $field->clear_errors;
-   $field->value(undef);
-
    # See if anything was submitted
    unless ( $field->has_input )
    {
-      $field->add_error( $field->required_message )
-         if $field->required;
-
-      return !$field->required;
+      $field->add_error( $field->required_message) if( $field->required );
+      $field->clear_value if( $field->input_exists);
+      return;
    }
 
+   $field->clear_value;
    return unless $field->test_multiple;
    return unless $field->test_options;
    return unless $field->validate;
@@ -789,7 +810,7 @@ Returns true if $self->input contains any non-blank input.
 sub has_input
 {
    my ($self) = @_;
-
+   return unless $self->input_exists;
    my $value = $self->input;
    # check for one value as defined
    return grep { /\S/ } @$value

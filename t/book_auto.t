@@ -16,8 +16,6 @@ use_ok( 'BookDB::Schema::DB');
 my $schema = BookDB::Schema::DB->connect('dbi:SQLite:t/db/book.db');
 ok($schema, 'get db schema');
 
-my $book_id = 1;
-
 my $form = BookDB::Form::BookAuto->new(item_id => undef, schema => $schema);
 
 ok( !$form->validate, 'Empty data' );
@@ -44,6 +42,7 @@ $book->delete;
 $form->clear_state;
 
 my $bad_1 = {
+    'book.title' => '',
     notitle => 'not req',
     silly_field   => 4,
 };

@@ -1,4 +1,5 @@
 Changes
+HTML-FormHandler-0.14.tar.gz
 inc/Module/AutoInstall.pm
 inc/Module/Install.pm
 inc/Module/Install/AutoInstall.pm
@@ -31,7 +32,6 @@ lib/HTML/FormHandler/Field/Password.pm
 lib/HTML/FormHandler/Field/PosInteger.pm
 lib/HTML/FormHandler/Field/Second.pm
 lib/HTML/FormHandler/Field/Select.pm
-lib/HTML/FormHandler/Field/Test.pm
 lib/HTML/FormHandler/Field/Text.pm
 lib/HTML/FormHandler/Field/TextArea.pm
 lib/HTML/FormHandler/Field/Weekday.pm
@@ -45,11 +45,12 @@ lib/HTML/FormHandler/Manual/Intro.pod
 lib/HTML/FormHandler/Manual/Reference.pod
 lib/HTML/FormHandler/Manual/Templates.pod
 lib/HTML/FormHandler/Manual/Tutorial.pod
-lib/HTML/FormHandler/Meta/Class.pm
+lib/HTML/FormHandler/Meta/Role.pm
 lib/HTML/FormHandler/Model.pm
 lib/HTML/FormHandler/Model/CDBI.pm
 lib/HTML/FormHandler/Model/DBIC.pm
 lib/HTML/FormHandler/Moose.pm
+lib/HTML/FormHandler/Moose/Role.pm
 lib/HTML/FormHandler/Render/Simple.pm
 Makefile.PL
 MANIFEST			This list of files
@@ -69,6 +70,7 @@ t/borrower.t
 t/controller.t
 t/db/book.db
 t/db/bookdb.sql
+t/db_validate.t
 t/dbic_accessor.t
 t/dependency.t
 t/dump.t
@@ -143,6 +145,12 @@ t/lib/BookDB/Schema/DB/Borrower.pm
 t/lib/BookDB/Schema/DB/Format.pm
 t/lib/BookDB/Schema/DB/Genre.pm
 t/lib/BookDB/View/TT.pm
+t/lib/Form/Address.pm
+t/lib/Form/AddressRole.pm
+t/lib/Form/Multiple.pm
+t/lib/Form/MultipleRole.pm
+t/lib/Form/Person.pm
+t/lib/Form/PersonRole.pm
 t/lib/Form/Test.pm
 t/lib/Form/Two.pm
 t/load_field.t
