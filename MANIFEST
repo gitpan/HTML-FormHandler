@@ -1,5 +1,4 @@
 Changes
-HTML-FormHandler-0.14.tar.gz
 inc/Module/AutoInstall.pm
 inc/Module/Install.pm
 inc/Module/Install/AutoInstall.pm
@@ -107,6 +106,7 @@ t/lib/BookDB.pm
 t/lib/BookDB/Controller/Book.pm
 t/lib/BookDB/Controller/Borrower.pm
 t/lib/BookDB/Controller/Root.pm
+t/lib/BookDB/Form/Author.pm
 t/lib/BookDB/Form/Book.pm
 t/lib/BookDB/Form/BookAuto.pm
 t/lib/BookDB/Form/BookHTML.pm
@@ -116,6 +116,7 @@ t/lib/BookDB/Form/Borrower.pm
 t/lib/BookDB/Form/Borrower.pm.auto
 t/lib/BookDB/Form/BorrowerX.pm
 t/lib/BookDB/Form/Field/AltText.pm
+t/lib/BookDB/Form/Profile.pm
 t/lib/BookDB/Model/DB.pm
 t/lib/BookDB/root/book/form.tt
 t/lib/BookDB/root/book/list.tt
@@ -157,6 +158,7 @@ t/load_field.t
 t/model.t
 t/model_cdbi.t
 t/model_dbic.t
+t/mult_pk.t
 t/multiple_forms.t
 t/MyTest.pm
 t/order.t

@@ -10,7 +10,7 @@ use Locale::Maketext;
 use HTML::FormHandler::I18N;    # base class for language files
 
 use 5.008;
-our $VERSION = '0.15';
+our $VERSION = '0.16';
 
 =head1 NAME
 
@@ -18,12 +18,38 @@ HTML::FormHandler - form handler written in Moose
 
 =head1 SYNOPSIS
 
-HTML::FormHandler allows you to define HTML form fields and validators. It can
-be used for both database and non-database forms, and will
-automatically update or create rows in a database;
+An example of a form class:
 
-One of its goals is to keep the controller interface as simple as possible,
-and to minimize the duplication of code. 
+    package MyApp::Form::User;
+    
+    use HTML::FormHandler::Moose;
+    extends 'HTML::FormHandler::Model::DBIC';
+
+    has '+item_class' => ( default => 'User' );
+
+    has_field 'name' => ( type => 'Text' );
+    has_field 'age' => ( type => 'PosInteger' );
+    has_field 'birthdate' => ( type => 'DateTime' );
+    has_field 'hobbies' => ( type => 'Multiple' );
+    has_field 'address' => ( type => 'Text' );
+    has_field 'city' => ( type => 'Text' );
+    has_field 'state' => ( type => 'Select' );
+    has_field 'email' => ( type => 'Email' );
+
+    has '+dependency' => ( default => sub {
+          [ ['address', 'city', 'state'], ]
+       }
+    );
+
+    sub validate_age {
+        my ( $self, $field ) = @_;
+        $field->add_error('Sorry, you must be 18')
+            if $field->value < 18;
+    }
+
+    no HTML::FormHandler::Moose;
+    1;
+
 
 An example of a Catalyst controller that uses an HTML::FormHandler form
 to update a 'Book' record:
@@ -69,38 +95,6 @@ or, for a non-database form:
     my $form = MyApp::Form->new;
     my $validated = $form->validate( $params );
    
-An example of a form class:
-
-    package MyApp::Form::User;
-    
-    use HTML::FormHandler::Moose;
-    extends 'HTML::FormHandler::Model::DBIC';
-
-    has '+item_class' => ( default => 'User' );
-
-    has_field 'name' => ( type => 'Text' );
-    has_field 'age' => ( type => 'PosInteger' );
-    has_field 'birthdate' => ( type => 'DateTime' );
-    has_field 'hobbies' => ( type => 'Multiple' );
-    has_field 'address' => ( type => 'Text' );
-    has_field 'city' => ( type => 'Text' );
-    has_field 'state' => ( type => 'Select' );
-    has_field 'email' => ( type => 'Email' );
-
-    has '+dependency' => ( default => sub {
-          [ ['address', 'city', 'state'], ]
-       }
-    );
-
-    sub validate_age {
-        my ( $self, $field ) = @_;
-        $field->add_error('Sorry, you must be 18')
-            if $field->value < 18;
-    }
-
-    no HTML::FormHandler::Moose;
-    1;
-
 A dynamic form may be created in a controller using the field_list
 attribute to set fields:
 
@@ -117,9 +111,25 @@ attribute to set fields:
 
 =head1 DESCRIPTION
 
-HTML::FormHandler differs from other form frameworks in that each form is
-a Perl object. This allows concentrating form definition and validation in
-one place, and permits easy customization.
+HTML::FormHandler allows you to define HTML form fields and validators. It can
+be used for both database and non-database forms, and will
+automatically update or create rows in a database.
+
+One of its goals is to keep the controller interface as simple as possible,
+and to minimize the duplication of code. In most cases, interfacing your
+controller to your form is only a few lines of code.
+
+With FormHandler you'll never spend hours trying to figure out how to make a 
+simple HTML change that would take one minute by hand. Because you CAN do it
+by hand. Or you can automate HTML generation as much as you want, with
+template widgets or pure Perl rendering classes, and stay completely in
+control of what, where, and how much is done automatically. 
+
+You can split the pieces of your forms up into logical parts and compose
+complete forms from FormHandler classes, roles, fields, collections of
+validations. You can write custom methods to process forms, add any
+attribute you like, use Moose before/after/around. FormHandler forms are
+Perl classes, so there's a lot of flexibility in what you can do.  
 
 The L<HTML::FormHandler> module is documented here.  For more extensive 
 documentation on use and a tutorial, see the manual at 
@@ -654,14 +664,9 @@ update_model if the form validated.  It returns the 'validated' flag.
 sub update
 {
    my ( $self, @args ) = @_;
-   my $hashref = {@args};
-   while ( my ($key, $value) = each %{$hashref} )
-   {
-      $self->$key($value) if $self->can($key);
-   } 
+
    warn "HFH: update ", $self->name, "\n" if $self->verbose;
-   $self->init_from_object;
-   $self->load_options;
+   $self->setup_form(@args);
    $self->validate if $self->has_params;
    $self->update_model if $self->validated;
    $self->dump_fields if $self->verbose;
@@ -672,8 +677,13 @@ sub update
 
 This method is called by the 'update' method. It might be called
 by itself for a non-database form (although 'process' will also work).
+There are two modes for this method. If arguments are passed in, this
+is assumed to be a non-database form and some additional setup is
+performed. (See the 'update' method'). For non-database forms, this
+method should be called with no parameters.
 
-   my $validated = $form->validate( $params );
+   $form->validate( $params ); # non-database
+   $form->validate;  # database
 
 Validates the form from the HTTP request parameters.
 The parameters must be a hash ref with multiple values as array refs.
@@ -706,17 +716,14 @@ Returns true if validation succeeds, false if validation fails.
 
 sub validate
 {
-   my ( $self, $params ) = @_;
+   my ( $self, @args ) = @_;
 
-   $self->clear_state;
    warn "HFH: validate ", $self->name, "\n" if $self->verbose;
-   # Set params for validate called separately
-   if ( ref $params eq 'HASH' )
-   {
-      $self->params($params);
-   }
+   $self->clear_state;
+   $self->setup_form( @args ) if ( @args > 0 );
+
    return unless $self->has_params;
-   $params = $self->params; 
+   my $params = $self->params; 
    $self->set_dependency;    # set required dependencies
 
    foreach my $field ( $self->fields )
@@ -754,6 +761,7 @@ sub validate
    return $self->validated;
 }
 
+
 =head2 db_validate
 
 Convenience function to allow validating values in the database object.
@@ -790,6 +798,7 @@ sub clear
    my $self = shift;
    warn "HFH: clear ", $self->name, "\n" if $self->verbose;
    $self->clear_state;
+   $self->clear_fif;
    $self->clear_params;
    $self->clear_model if $self->can('clear_model');
    $self->ctx(undef) if $self->ctx;
@@ -814,7 +823,6 @@ sub clear_state
    $self->validated(0);
    $self->ran_validation(0);
    $self->num_errors(0);
-#   $self->clear_values; 
    $self->clear_errors;
    $self->updated_or_created(undef);
 }
@@ -831,7 +839,7 @@ sub clear_values
    $_->clear_value for ( $self->fields );
 }
 
-=head2 clear errors
+=head2 clear_errors
 
 Clears field errors
 
@@ -841,6 +849,18 @@ sub clear_errors
 {
    my $self = shift;
    $_->clear_errors for $self->fields;
+}
+
+=head1 clear_fif
+
+Clears fif values
+
+=cut
+
+sub clear_fif
+{
+   my $self = shift;
+   $_->clear_fif for $self->fields;
 }
 
 =head2 dump_fields
@@ -1266,12 +1286,36 @@ sub make_field
    return $field;
 }
 
+=head2 setup_form
+
+Puts parameters into attributes, initializes fields, loads options
+
+=cut
+
+sub setup_form
+{
+   my ($self, @args) = @_;
+   if( @args == 1 )
+   {
+      $self->params( $args[0] );
+   }
+   elsif ( @args > 1 )
+   {
+      my $hashref = {@args};
+      while ( my ($key, $value) = each %{$hashref} )
+      {
+         $self->$key($value) if $self->can($key);
+      } 
+   }
+   $self->clear_fif;
+   $self->init_from_object;
+   $self->load_options;
+}
 =head2 init_from_object
 
 Populates the field 'value' attributes from an 'init_object' or $form->item
 by calling a form's custom init_value_$fieldname method, passing in
-the field and the item. If a custom init_value_ method doesn't exist,
-uses the 'init_value' routine from the model.
+the field and the item. 
 
 The value is stored in both the 'init_value' attribute, and the 'value'
 attribute.
@@ -1305,6 +1349,21 @@ sub init_from_object
    }
 }
 
+=head2 init_value
+
+This method populates a form field's value from the item object.
+
+=cut
+
+sub init_value
+{
+   my ( $self, $field, $item ) = @_;
+   my $name = $field->name;
+
+   return $item->can($name) ? $item->$name : undef
+      if blessed($item);
+   return $item->{$name};
+}
 
 =head2 load_options
 
@@ -1420,9 +1479,36 @@ sub clear_dependency
    $self->clear_required;
 }
 
+=head1 SUPPORT
+
+IRC:
+
+  Join #formhandler on irc.perl.org
+
+=head1 SEE ALSO
+
+L<HTML::FormHandler::Manual>
+
+L<HTML::FormHandler::Tutorial>
+
+L<HTML::FormHandler::Intro>
+
+L<HTML::FormHandler::Templates>
+
+L<HTML::FormHandler::Cookbook>
+
+L<HTML::FormHandler::Field>
+
+L<HTML::FormHandler::Model::DBIC>
+
+L<HTML::FormHandler::Moose>
+
+L<HTML::FormHandler::Moose::Role>
+
+
 =head1 AUTHOR
 
-Gerda Shank, gshank@cpan.org
+gshank: Gerda Shank <gshank@cpan.org>
 
 Based on the original source code of L<Form::Processor> by Bill Moseley
 
