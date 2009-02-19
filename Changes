@@ -1,5 +1,8 @@
 Revision history for HTML::FormHandler 
 
+0.17 Thurs Feb 19 2009, 17:30
+    Refactor validate, adding validate_form method
+
 0.16 Thurs Feb 19 2009, 17:00 
     Add ability to use arrayrefs for primary key
     Clear 'fif' for non-db forms. Allow init_object for non-db forms.

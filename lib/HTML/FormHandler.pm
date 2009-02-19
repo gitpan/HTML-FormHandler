@@ -10,7 +10,7 @@ use Locale::Maketext;
 use HTML::FormHandler::I18N;    # base class for language files
 
 use 5.008;
-our $VERSION = '0.16';
+our $VERSION = '0.17';
 
 =head1 NAME
 
@@ -667,7 +667,7 @@ sub update
 
    warn "HFH: update ", $self->name, "\n" if $self->verbose;
    $self->setup_form(@args);
-   $self->validate if $self->has_params;
+   $self->validate_form if $self->has_params;
    $self->update_model if $self->validated;
    $self->dump_fields if $self->verbose;
    return $self->validated;
@@ -675,21 +675,33 @@ sub update
 
 =head2 validate
 
-This method is called by the 'update' method. It might be called
-by itself for a non-database form (although 'process' will also work).
-There are two modes for this method. If arguments are passed in, this
-is assumed to be a non-database form and some additional setup is
-performed. (See the 'update' method'). For non-database forms, this
-method should be called with no parameters.
+This is the non-database form processing method.
 
-   $form->validate( $params ); # non-database
-   $form->validate;  # database
+  $self->validate( $params );
 
-Validates the form from the HTTP request parameters.
-The parameters must be a hash ref with multiple values as array refs.
-Params may be passed in to validate, or else may be set earlier
-on new, or by using the params setter. If params are passed in, 
-'clear_state' is also called, for convenience with persistent forms.
+or
+
+ $self->validate( key => 'something', params => $params );
+
+It will call the validate_form method to perform validation
+on the fields.
+
+=cut
+
+sub validate
+{
+   my ( $self, @args ) = @_;
+
+   warn "HFH: validate ", $self->name, "\n" if $self->verbose;
+   $self->clear_state;
+   $self->setup_form( @args );
+   return unless $self->has_params;
+   return $self->validate_form;
+}
+
+=head2 validate_form
+
+The validation routine
 
 The method does the following:
  
@@ -714,15 +726,9 @@ Returns true if validation succeeds, false if validation fails.
 
 =cut
 
-sub validate
+sub validate_form
 {
-   my ( $self, @args ) = @_;
-
-   warn "HFH: validate ", $self->name, "\n" if $self->verbose;
-   $self->clear_state;
-   $self->setup_form( @args ) if ( @args > 0 );
-
-   return unless $self->has_params;
+   my $self = shift;
    my $params = $self->params; 
    $self->set_dependency;    # set required dependencies
 
