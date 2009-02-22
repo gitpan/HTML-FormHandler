@@ -4,7 +4,7 @@ use lib 't/lib';
 BEGIN {
    eval "use DBIx::Class";
    plan skip_all => 'DBIX::Class required' if $@;
-   plan tests => 14;
+   plan tests => 18;
 }
 
 use_ok('HTML::FormHandler::Model::DBIC');
@@ -24,9 +24,10 @@ ok($schema, 'get schema');
    has '+field_list' => ( default => sub {
          {
            fields    => [
-               title     => {
+               book_title   => {
                   type => 'Text',
                   required => 1,
+                  accessor => 'title',
                },
                author    => 'Text',
                extra     => 'Text',
@@ -37,7 +38,7 @@ ok($schema, 'get schema');
 
 my $form = My::Form->new( item_id => 1, schema => $schema );
 ok( $form, 'get form');
-my $title_field = $form->field('title');
+my $title_field = $form->field('book_title');
 my $author_field = $form->field('author');
 
 ok( $title_field->value eq 'Harry Potter and the Order of the Phoenix', 'get title from form');
@@ -57,7 +58,7 @@ ok( $author_field->order == 2, 'order for author');
            fields    => [
                title     => {
                   type => 'Text',
-                  required => 1,
+#                  required => 1,
                },
                author    => 'Text',
                extra     => 'Text',
@@ -80,6 +81,12 @@ ok( $form3, 'get form from empty row object');
 is( $form3->item_id, undef, 'empty row form has no item_id');
 is( $form3->item_class, 'Book', 'item_class set from empty row');
 
+$form3->update(params => {});
+ok( !$form3->validated, 'empty form does not validate');
+
+$form3->update(params => { extra => 'testing'});
+ok( $form3->validated, 'form with single non-db param validates');
+
 my $params = {
    title => 'Testing a form created from an empty row',
    author => 'S.Else',
@@ -89,3 +96,5 @@ my $params = {
 $form3->update( params => $params );
 is( $book3->author, 'S.Else', 'row object updated');
 is( $form3->value('extra'), 'extra_test', 'value of non-db field');
+ok( $form3->item->id, 'get id from new result');
+ok( $form3->item_id, 'item_id has been set');

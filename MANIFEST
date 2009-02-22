@@ -103,9 +103,11 @@ t/form_handler.t
 t/has_field.t
 t/init_object.t
 t/lib/BookDB.pm
+t/lib/BookDB/Controller/Author.pm
 t/lib/BookDB/Controller/Book.pm
 t/lib/BookDB/Controller/Borrower.pm
 t/lib/BookDB/Controller/Root.pm
+t/lib/BookDB/Controller/User.pm
 t/lib/BookDB/Form/Author.pm
 t/lib/BookDB/Form/Book.pm
 t/lib/BookDB/Form/BookAuto.pm
@@ -116,7 +118,7 @@ t/lib/BookDB/Form/Borrower.pm
 t/lib/BookDB/Form/Borrower.pm.auto
 t/lib/BookDB/Form/BorrowerX.pm
 t/lib/BookDB/Form/Field/AltText.pm
-t/lib/BookDB/Form/Profile.pm
+t/lib/BookDB/Form/User.pm
 t/lib/BookDB/Model/DB.pm
 t/lib/BookDB/root/book/form.tt
 t/lib/BookDB/root/book/list.tt
@@ -129,6 +131,9 @@ t/lib/BookDB/root/scaffold/header.tt
 t/lib/BookDB/root/scaffold/header_bg.jpg
 t/lib/BookDB/root/scaffold/nav.tt
 t/lib/BookDB/root/scaffold/styles.css
+t/lib/BookDB/root/user/form.tt
+t/lib/BookDB/root/user/list.tt
+t/lib/BookDB/root/user/view.tt
 t/lib/BookDB/root/widget/checkbox.tt
 t/lib/BookDB/root/widget/checkbox_group.tt
 t/lib/BookDB/root/widget/form_end.tt
@@ -145,6 +150,7 @@ t/lib/BookDB/Schema/DB/BooksGenres.pm
 t/lib/BookDB/Schema/DB/Borrower.pm
 t/lib/BookDB/Schema/DB/Format.pm
 t/lib/BookDB/Schema/DB/Genre.pm
+t/lib/BookDB/Schema/DB/User.pm
 t/lib/BookDB/View/TT.pm
 t/lib/Form/Address.pm
 t/lib/Form/AddressRole.pm

@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 use Test::More;
-my $tests = 20;
+my $tests = 24;
 plan tests => $tests;
 
 use_ok( 'HTML::FormHandler' );
@@ -76,10 +76,15 @@ is( $form->num_errors, 0, 'no leftover errors' );
 ok( !$form->field('reqname')->has_errors, 'no leftover error in field');
 ok( !$form->field('optname')->fif, 'no lefover fif values');
 
-$form = My::Form->new( init_object => {reqname => 'Starting Perl',
-                                       optname => 'Over Again' } );
-                                        
+my $init_object = { reqname => 'Starting Perl',
+                    optname => 'Over Again' };
+$form = My::Form->new( init_object => $init_object );
+is( $form->field('optname')->value, 'Over Again', 'get right value from form');
 $form->validate({});
-is( $form->field('reqname')->fif, 'Starting Perl', 
-                      'get right fif with init_object');
+ok( !$form->validated, 'form validated' );
+is_deeply( $form->fif, $init_object, 'get right fif with init_object');
+is_deeply( $form->values, $init_object, 'get right values from form'); 
+
+ok( $form->validate( $init_object ), 'form validates with params' );
+
 
