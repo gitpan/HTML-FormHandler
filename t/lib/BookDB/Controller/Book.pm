@@ -80,7 +80,7 @@ sub form
    my ( $self, $c ) = @_;
 
    $c->stash( form => $self->edit_form, template => 'book/form.tt',
-      action => $c->chained_uri_for->as_string );
+      action => $c->uri_for($c->action, $c->req->captures ));
    return unless $self->edit_form->process( item => $c->stash->{book},
       params => $c->req->parameters );
    $c->res->redirect( $c->uri_for('list') );

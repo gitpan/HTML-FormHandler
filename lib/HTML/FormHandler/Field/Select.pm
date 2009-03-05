@@ -113,7 +113,6 @@ has 'sort_column' => ( isa => 'Str', is => 'rw' );
 has '+widget' => ( default => 'select' );
 
 
-__PACKAGE__->meta->make_immutable;
 
 
 =head2 select_widget
@@ -157,6 +156,46 @@ sub as_label {
     return;
 }
 
+=head2 validate_field 
+
+Checks that this is a multiple field if the input is an array. 
+The input value (or values if an array ref) is tested to make 
+sure they all are valid options.
+
+Returns true or false
+
+=cut
+
+augment 'validate_field' => sub
+{
+   my ($self) = @_;
+
+   # create a lookup hash
+   my %options = map { $_->{value} => 1 } $self->options;
+
+   my $input = $self->input;
+
+   return 1 unless defined $input;    # nothing to check
+
+   if ( ref $input eq 'ARRAY'
+      && !( $self->can('multiple') && $self->multiple ) )
+   {
+      $self->add_error('This field does not take multiple values');
+      return;
+   }
+
+   for my $value ( ref $input eq 'ARRAY' ? @$input : ($input) )
+   {
+      unless ( $options{$value} )
+      {
+         $self->add_error("'$value' is not a valid value");
+         return;
+      }
+   }
+   inner();
+   return 1;
+};
+
 
 =head1 AUTHORS
 
@@ -171,5 +210,6 @@ the same terms as Perl itself.
 
 =cut
 
+__PACKAGE__->meta->make_immutable;
 no Moose;
 1;

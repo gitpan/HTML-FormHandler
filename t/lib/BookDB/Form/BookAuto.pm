@@ -18,7 +18,6 @@ Catalyst Form.
 =cut
 
 has '+item_class' => ( default => 'Book' );
-has '+name_prefix' => ( default => 'book' );
 
 __PACKAGE__->meta->make_immutable;
 
@@ -40,7 +39,7 @@ sub field_list {
 #}
 
 
-sub validate_book_year {
+sub validate_year {
 	my ( $self, $field ) = @_;
 	$field->add_error('Invalid year')
 	     if (($field->value > 3000) || ($field->value < 1600));

@@ -7,10 +7,11 @@ extends 'HTML::FormHandler::Model';
 use Carp;
 use UNIVERSAL::require;
 use Locale::Maketext;
-use HTML::FormHandler::I18N;    # base class for language files
+use HTML::FormHandler::I18N; 
+use HTML::FormHandler::Params;
 
 use 5.008;
-our $VERSION = '0.18';
+our $VERSION = '0.19';
 
 =head1 NAME
 
@@ -394,8 +395,6 @@ you could subclass 'munge_params'.
 
 has 'html_prefix' => ( isa => 'Bool', is => 'rw' );
 
-has 'name_prefix' => ( isa => 'Str', is => 'rw' );
-
 =head2 active_column
 
 The column in tables used for select list that marks an option 'active'.
@@ -723,8 +722,18 @@ sub validate_form
    my $params = $self->params; 
    $self->set_dependency;    # set required dependencies
 
-
+   # make sure parent fields are validated last
+   my @fields;
+   my @parent_fields;
    foreach my $field ( $self->fields )
+   {
+      push @fields, $field unless $field->has_children;
+      push @parent_fields, $field if $field->has_children;
+   }
+   push @fields, @parent_fields;
+
+   # validate all fields
+   foreach my $field ( @fields )
    {
       # Trim values and move to "input" slot
       $field->input( $field->trim_value( $params->{$field->full_name} ) )
@@ -732,7 +741,7 @@ sub validate_form
       next if $field->clear;    # Skip validation
       # Validate each field and "inflate" input -> value.
       $field->validate_field;  # this calls the field's 'validate' routine
-      next unless defined $field->value;
+      next unless $field->value; 
       # these methods have access to the inflated values
       my $method = $field->validate_meth;
       $self->$method($field) if $method && $self->can($method); 
@@ -752,7 +761,6 @@ sub validate_form
    $self->num_errors( $errors || 0 );
    $self->ran_validation(1);
    $self->validated( !$errors );
-
    $self->dump_validated if $self->verbose;
    $_->clear_input for $self->fields;
 
@@ -916,7 +924,18 @@ sub fif
    {
       next if $field->password;
       next unless $field->fif;
-      $params->{ $prefix . $field->name } = $field->fif;
+      my $fif = $field->fif;
+      if ( ref $fif eq 'HASH' )
+      {
+         foreach my $key ( keys %{$fif} )
+         {
+            $params->{ $prefix . $key } = $fif->{$key};
+         }
+      }
+      else
+      {
+         $params->{ $prefix . $field->name } = $field->fif;
+      }
    }
    return $params;
 }
@@ -940,6 +959,7 @@ sub values
    foreach my $field( $self->fields )
    {
       next unless $field->has_value;
+      next if $field->has_parent;
       $values->{$field->accessor} = $field->value;
    }
    return $values;
@@ -967,7 +987,6 @@ sub field
 {
    my ( $self, $name, $no_die ) = @_;
 
-   $name = $self->name_prefix . '.' . $name if $self->name_prefix;
    for my $field ( $self->fields )
    {
       return $field if $field->name eq $name;
@@ -985,7 +1004,6 @@ Convenience function for for use with 'set_field_at'.
 sub field_index
 {
    my ( $self, $name ) = @_;
-   $name = $self->name_prefix . '.' . $name if $self->name_prefix;
    my $index = 0;
    for my $field ( $self->fields )
    {
@@ -1048,19 +1066,14 @@ html form than your field names.
 
 sub munge_params
 {
-   my ( $self, $params ) = @_;
+   my ( $self, $params, $attr ) = @_;
+   my $new_params = HTML::FormHandler::Params->expand_hash($params);
    if ( $self->html_prefix )
    {
-      my $prefix = $self->name;
-      while ( ( my $key, my $value ) = each %$params )
-      {
-         ( my $new_key = $key ) =~ s/^$prefix\.//g;
-         if ( $new_key ne $key )
-         {
-            $params->{$new_key} = $value;
-         }
-      }
+      $new_params = $new_params->{$self->name};
    }
+   my $final_params = {%{$params}, %{$new_params}};
+   $self->{params} = $final_params;
 }
 
 =head2 cross_validate
@@ -1202,7 +1215,16 @@ sub build_form
    {
       $field->order( $order ) unless $field->order;
       $order++;
+      # collect child references in parent field
+      if( $field->can('parent') && $field->parent )
+      {
+         my $parent = $self->field($field->parent);
+         die "Parent field for " . $field->name . "not found" unless $parent;
+         $parent->add_child($field);
+         $field->parent_field($parent);
+      }
    }
+
 }
 
 sub _build_meta_field_list
@@ -1307,10 +1329,7 @@ sub make_field
       or die "Could not load field class '$type' for field '$name'"; 
 
    # Add field name and reference to form 
-   $attr->{name} =
-        $self->name_prefix
-      ? $self->name_prefix . '.' . $name
-      : $name;
+   $attr->{name} = $name;
    $attr->{form} = $self;
    my $field = $class->new( %{$attr} );
    return $field;
@@ -1518,6 +1537,11 @@ sub clear_dependency
 
    $_->required(0) for $self->_required;
    $self->clear_required;
+}
+
+sub name_prefix
+{
+  die "The name_prefix attribute has been removed from HFH. Use 'html_prefix' and set the form name instead.";
 }
 
 =head1 SUPPORT
