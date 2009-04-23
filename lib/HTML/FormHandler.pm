@@ -3,6 +3,7 @@ package HTML::FormHandler;
 use Moose;
 use MooseX::AttributeHelpers;
 extends 'HTML::FormHandler::Model';
+with 'HTML::FormHandler::Fields';
 
 use Carp;
 use UNIVERSAL::require;
@@ -10,8 +11,9 @@ use Locale::Maketext;
 use HTML::FormHandler::I18N; 
 use HTML::FormHandler::Params;
 
+
 use 5.008;
-our $VERSION = '0.19';
+our $VERSION = '0.20';
 
 =head1 NAME
 
@@ -29,7 +31,7 @@ An example of a form class:
     has '+item_class' => ( default => 'User' );
 
     has_field 'name' => ( type => 'Text' );
-    has_field 'age' => ( type => 'PosInteger' );
+    has_field 'age' => ( type => 'PosInteger', apply => [ 'MinimumAge' ] );
     has_field 'birthdate' => ( type => 'DateTime' );
     has_field 'hobbies' => ( type => 'Multiple' );
     has_field 'address' => ( type => 'Text' );
@@ -42,12 +44,11 @@ An example of a form class:
        }
     );
 
-    sub validate_age {
-        my ( $self, $field ) = @_;
-        $field->add_error('Sorry, you must be 18')
-            if $field->value < 18;
-    }
-
+    subtype 'MinimumAge'
+       => as 'Int'
+       => where { $_ > 13 }
+       => message { "You are not old enough to register" };
+    
     no HTML::FormHandler::Moose;
     1;
 
@@ -128,9 +129,11 @@ control of what, where, and how much is done automatically.
 
 You can split the pieces of your forms up into logical parts and compose
 complete forms from FormHandler classes, roles, fields, collections of
-validations. You can write custom methods to process forms, add any
-attribute you like, use Moose before/after/around. FormHandler forms are
-Perl classes, so there's a lot of flexibility in what you can do.  
+validations, transformations and Moose type constraints. 
+You can write custom methods to 
+process forms, add any attribute you like, use Moose before/after/around. 
+FormHandler forms are Perl classes, so there's a lot of flexibility in what 
+you can do. See L<HTML::FormHandler::Field/apply> for more info.
 
 The L<HTML::FormHandler> module is documented here.  For more extensive 
 documentation on use and a tutorial, see the manual at 
@@ -200,24 +203,6 @@ declarations. This is a MooseX::AttributeHelpers::Collection::Array,
 and provides clear_fields, add_field, remove_last_field, num_fields,
 has_fields, and set_field_at methods.
 
-=cut
-
-has 'fields' => (
-   metaclass  => 'Collection::Array',
-   isa        => 'ArrayRef[HTML::FormHandler::Field]',
-   is         => 'rw',
-   default    => sub { [] },
-   auto_deref => 1,
-   provides   => {
-      clear => 'clear_fields',
-      push  => 'add_field',
-      pop   => 'remove_last_field',
-      count => 'num_fields',
-      empty => 'has_fields',
-      set   => 'set_field_at',
-   }
-);
-
 =head2 name
 
 The form's name.  Useful for multiple forms.
@@ -237,6 +222,10 @@ has 'name' => (
    default => sub { return 'form' . int( rand 1000 ) }
 );
 
+# to avoid fiddly 'isa' checks when passing through $self->form 
+has 'form' => ( isa => 'HTML::FormHandler', is => 'rw', weak_ref => 1,
+   lazy => 1, default => sub { shift });
+has 'parent' => ( is => 'rw' );
 
 =head2 init_object
 
@@ -278,13 +267,9 @@ doing something in between update/validate, such as set a stash key.
 Flag to print out additional diagnostic information. See 'dump_fields' and
 'dump_validated'.
 
-=head2 readonly
-
-"Readonly" is not used by HFH. 
-
 =cut
 
-has [ 'ran_validation', 'validated', 'verbose', 'readonly' ] => ( isa => 'Bool', is => 'rw' );
+has [ 'ran_validation', 'validated', 'verbose' ] => ( isa => 'Bool', is => 'rw' );
 
 =head2 field_name_space
 
@@ -310,14 +295,8 @@ Total number of fields with errors. Set by the validation routine.
 
 has 'num_errors' => ( isa => 'Int', is => 'rw', default => 0 );
 
-=head2 updated_or_created
 
-String indicating whether the db record in the item already existed 
-(was updated) or was created. Returns 'updated' or 'created'.
-
-=cut
-
-has 'updated_or_created' => ( isa => 'Str|Undef', is => 'rw' );
+sub updated_or_created { die "updated_or_created method has been removed" }
 
 =head2 user_data
 
@@ -488,17 +467,6 @@ has '_required' => (
    }
 );
 
-=head2 parent_field
-
-This value can be used to link a sub-form to the parent field.
-
-If a form has a parent_field associated with it, errors in the field will be 
-pushed onto the parent_field instead of the current field. 
-This stores a weakened value.
-
-=cut
-
-has 'parent_field' => ( is => 'rw', weak_ref => 1 );
 
 # tell Moose to make this class immutable
 HTML::FormHandler->meta->make_immutable;
@@ -564,7 +532,7 @@ These are called when the form object is first created (by Moose).
 A single argument is an "item" parameter if it's a reference, 
 otherwise it's an "item_id".
 
-First BUILD calls the build_form method, which reads the field_list and creates
+First BUILD calls the build_fields method, which reads the field_list and creates
 the fields object array.
 
 Then 'init_from_object' is called to load each field's internal value
@@ -590,16 +558,14 @@ sub BUILD
 {
    my $self = shift;
 
-   warn "HFH: build_form for ", $self->name, ", ", ref($self), "\n" if
-      $self->verbose;
-
-   $self->build_form;    # create the form fields
+   $self->build_fields;    # create the form fields
    return if defined $self->item_id && !$self->item;
    $self->init_from_object;    # load values from object, if item exists;
    $self->load_options;        # load options -- need to do after loading item
    $self->dump_fields if $self->verbose;
    return;
 }
+
 
 =head2 process
 
@@ -697,20 +663,13 @@ The method does the following:
  
     1) sets required dependencies
     2) trims params and saves in field 'input' attribute
-    3) calls the field's 'validate_field' routine which:
-        1) validates that required fields have a value
-        2) calls the field's 'validate' routine (the one that is provided
-           by custom field classes)
-        3) calls 'input_to_value' to move the data from the 'input' attribute 
-           to the 'value' attribute if it hasn't happened already in 'validate'
-    4) calls the form's validate_$fieldname, if the method exists and
-       if there's a value in the field
-    5) calls cross_validate for validating fields that might be blank and
+    3) calls the 'fields_validate' routine from HTML::FormHandler::Fields
+    4) calls cross_validate for validating fields that might be blank and
        checking more complex dependencies. (If this field, then not that field...) 
-    6) calls the model's validation method. By default, this only checks for
+    5) calls the model's validation method. By default, this only checks for
        database uniqueness.
-    7) counts errors, sets 'ran_validation' and 'validated' flags
-    8) returns 'validated' flag
+    6) counts errors, sets 'ran_validation' and 'validated' flags
+    7) returns 'validated' flag
 
 Returns true if validation succeeds, false if validation fails.
 
@@ -721,32 +680,22 @@ sub validate_form
    my $self = shift;
    my $params = $self->params; 
    $self->set_dependency;    # set required dependencies
-
-   # make sure parent fields are validated last
-   my @fields;
-   my @parent_fields;
    foreach my $field ( $self->fields )
    {
-      push @fields, $field unless $field->has_children;
-      push @parent_fields, $field if $field->has_children;
-   }
-   push @fields, @parent_fields;
-
-   # validate all fields
-   foreach my $field ( @fields )
-   {
       # Trim values and move to "input" slot
-      $field->input( $field->trim_value( $params->{$field->full_name} ) )
-         if exists $params->{$field->full_name};
-      next if $field->clear;    # Skip validation
-      # Validate each field and "inflate" input -> value.
-      $field->validate_field;  # this calls the field's 'validate' routine
-      next unless $field->value; 
-      # these methods have access to the inflated values
-      my $method = $field->validate_meth;
-      $self->$method($field) if $method && $self->can($method); 
+      if ( exists $params->{$field->full_name} )
+      {
+         # trim_value may be replaced by some kind of filter in the future
+         $field->input( $field->trim_value( $params->{$field->full_name} ) )
+      }
+      elsif ( $field->has_input_without_param )
+      {
+         $field->input( $field->input_without_param );
+      }
    }
 
+   $self->fields_validate;
+      
    $self->cross_validate($params);
    # model specific validation 
    $self->validate_model;
@@ -816,7 +765,6 @@ Clears out state information in the form.
    validated
    ran_validation
    num_errors
-   updated_or_created
    fields: errors, fif  
    params
 
@@ -830,7 +778,6 @@ sub clear_state
    $self->num_errors(0);
    $self->clear_errors;
    $self->clear_fif;
-   $self->updated_or_created(undef);
 }
 
 =head2 clear_values
@@ -857,7 +804,7 @@ sub clear_errors
    $_->clear_errors for $self->fields;
 }
 
-=head1 clear_fif
+=head2 clear_fif
 
 Clears fif values
 
@@ -927,14 +874,14 @@ sub fif
       my $fif = $field->fif;
       if ( ref $fif eq 'HASH' )
       {
-         foreach my $key ( keys %{$fif} )
-         {
-            $params->{ $prefix . $key } = $fif->{$key};
-         }
+          foreach my $key ( keys %{$fif} )
+          {
+             $params->{ $prefix . $key } = $fif->{$key};
+          }
       }
       else
       {
-         $params->{ $prefix . $field->name } = $field->fif;
+         $params->{ $prefix . $field->full_name } = $field->fif;
       }
    }
    return $params;
@@ -958,9 +905,11 @@ sub values
    my $values;
    foreach my $field( $self->fields )
    {
+      next if $field->noupdate;
       next unless $field->has_value;
       next if $field->has_parent;
-      $values->{$field->accessor} = $field->value;
+      $values->{$field->accessor} = $field->value unless $field->clear;
+      $values->{$field->accessor} = undef if $field->clear; 
    }
    return $values;
 }
@@ -980,53 +929,6 @@ Dies on not found.
 Pass a second true value to not die on errors.
  
     my $field = $form->field('something', 1 );
-
-=cut
-
-sub field
-{
-   my ( $self, $name, $no_die ) = @_;
-
-   for my $field ( $self->fields )
-   {
-      return $field if $field->name eq $name;
-   }
-   return if $no_die;
-   croak "Field '$name' not found in form '$self'";
-}
-
-=head2 field_index
-
-Convenience function for for use with 'set_field_at'.
-
-=cut 
-
-sub field_index
-{
-   my ( $self, $name ) = @_;
-   my $index = 0;
-   for my $field ( $self->fields )
-   {
-      return $index if $field->name eq $name;
-      $index++;
-   }
-   return;
-}
-
-=head2 sorted_fields
-
-Calls fields and returns them in sorted order by their "order"
-value. Non-sorted fields are retrieved with 'fields'. 
-
-=cut
-
-sub sorted_fields
-{
-   my $form = shift;
-
-   my @fields = sort { $a->order <=> $b->order } $form->fields;
-   return wantarray ? @fields : \@fields;
-}
 
 =head2 value
 
@@ -1180,160 +1082,6 @@ sub uuid
 
 Most users won't need these methods.
 
-=head2 build_form
-
-This parses the form field_list and creates the individual
-field objects.  It calls the make_field() method for each field.
-This is called by the BUILD method. Users don't need to call this.
-
-=cut
-
-sub build_form
-{
-   my $self = shift;
-
-   my $meta_flist = $self->_build_meta_field_list;
-   $self->_build_fields( $meta_flist, 0 ) if $meta_flist; 
-   my $flist = $self->field_list;
-   $self->_build_fields( $flist->{'required'}, 1 ) if $flist->{'required'}; 
-   $self->_build_fields( $flist->{'optional'}, 0 ) if $flist->{'optional'};
-   $self->_build_fields( $flist->{'fields'}, 0 )   if $flist->{'fields'};
-   $self->_build_fields( $flist->{'auto_required'}, 1, 'auto' ) 
-                                              if $flist->{'auto_required'};
-   $self->_build_fields( $flist->{'auto_optional'}, 0, 'auto' ) 
-                                              if $flist->{'auto_optional'};
-   return unless $self->has_fields;
-   # get highest order number
-   my $order = 0;
-   foreach my $field ( $self->fields)
-   {
-      $order++ if $field->order > $order;
-   }
-   $order++;
-   # number all unordered fields
-   foreach my $field ( $self->fields )
-   {
-      $field->order( $order ) unless $field->order;
-      $order++;
-      # collect child references in parent field
-      if( $field->can('parent') && $field->parent )
-      {
-         my $parent = $self->field($field->parent);
-         die "Parent field for " . $field->name . "not found" unless $parent;
-         $parent->add_child($field);
-         $field->parent_field($parent);
-      }
-   }
-
-}
-
-sub _build_meta_field_list
-{
-   my $self = shift;
-   my @field_list;
-   foreach my $sc ( reverse $self->meta->linearized_isa )
-   {
-      my $meta = $sc->meta;
-      foreach my $role ( $meta->calculate_all_roles )
-      {
-         if ( $role->can('field_list') && defined $role->field_list )
-         {
-            push @field_list, @{$role->field_list};
-         }
-      }
-      if ( $meta->can('field_list') && defined $meta->field_list )
-      {
-         push @field_list, @{$meta->field_list};
-      }
-   }
-   return \@field_list if scalar @field_list;
-}
-
-sub _build_fields
-{
-   my ( $self, $fields, $required, $auto ) = @_;
-
-   return unless $fields;
-   my $field;
-   my $name;
-   my $type;
-   if ($auto)    # an auto array of fields
-   {
-      foreach $name (@$fields)
-      {
-         $type = $self->guess_field_type($name);
-         croak "Could not guess field type for field '$name'" unless $type;
-         $self->_set_field( $name, $type, $required );
-      }
-   }
-   elsif ( ref($fields) eq 'ARRAY' )    # an array of fields
-   {
-      while (@$fields)
-      {
-         $name = shift @$fields;
-         $type = shift @$fields;
-         $self->_set_field( $name, $type, $required );
-      }
-   }
-   else                                 # a hashref of fields
-   {
-      while ( ( $name, $type ) = each %$fields )
-      {
-         $self->_set_field( $name, $type, $required );
-      }
-   }
-   return;
-}
-
-sub _set_field
-{
-   my ( $self, $name, $type, $required ) = @_;
-
-   my $field = $self->make_field( $name, $type );
-   return unless $field;
-   $field->required($required) unless ( $field->required == 1 );
-   my $index = $self->field_index($name);
-   if( defined $index )
-      { $self->set_field_at($index, $field); }
-   else
-      { $self->add_field($field); }
-}
-
-=head2 make_field
-
-    $field = $form->make_field( $name, $type );
-
-Maps the field type to a field class, creates a field object and
-and returns it.
-
-The "$name" parameter is the field's name (e.g. first_name, age).
-
-The second parameter is either a scalar which is the field's type
-string, or a hashref with a 'type' key containing the field's type.
-
-=cut
-
-sub make_field
-{
-   my ( $self, $name, $attr ) = @_;
-
-   $attr = { type => $attr } unless ref $attr eq 'HASH';
-   my $type = $attr->{type} ||= 'Text';
-   my $class =
-        $type =~ s/^\+//
-      ? $self->field_name_space
-         ? $self->field_name_space . "::" . $type
-         : $type
-      : 'HTML::FormHandler::Field::' . $type;
-   $class->require
-      or die "Could not load field class '$type' for field '$name'"; 
-
-   # Add field name and reference to form 
-   $attr->{name} = $name;
-   $attr->{form} = $self;
-   my $field = $class->new( %{$attr} );
-   return $field;
-}
 
 =head2 setup_form
 
@@ -1373,26 +1121,32 @@ attribute.
 
 sub init_from_object
 {
-   my $self = shift;
-
+   my ( $self, $node, $item ) = @_;
+   $node ||= $self;
    $self->item( $self->build_item ) if $self->item_id && !$self->item;
-   my $item = $self->init_object || $self->item || return;
+   $item ||= $self->init_object || $self->item || return;
    warn "HFH: init_from_object ", $self->name, "\n" if $self->verbose;
-   for my $field ( $self->fields )
+   for my $field ( $node->fields )
    {
-      my @values;
-      my $method = 'init_value_' . $field->name;
-      if ( $self->can($method) )
-      {
-         @values = $self->$method( $field, $item );
-         my $value = @values > 1 ? \@values : shift @values;
-         $field->init_value($value) if $value;
-         $field->value($value) if $value;
+      if( $field->isa( 'HTML::FormHandler::Field::Compound' ) ){
+          my $accessor = $field->accessor;
+          my $new_item = $item->$accessor;
+          $self->init_from_object( $field, $new_item );
       }
-      else
-      {
-         $self->init_value( $field, $item );
-      }
+      else{
+         my @values;
+         if ( $field->_can_init )
+         {
+            @values = $field->_init( $field, $item );
+            my $value = @values > 1 ? \@values : shift @values;
+            $field->init_value($value) if $value;
+            $field->value($value) if $value;
+         }
+         else
+         {
+            $self->init_value( $field, $item );
+         }
+     }
    }
 }
 
@@ -1448,10 +1202,19 @@ See L<HTML::FormHandler::Field::Select>
 
 sub load_options
 {
-   my $self = shift;
+   my ( $self, $node, $model_stuff ) = @_;
 
-   warn "HFH: load_options ", $self->name, "\n" if $self->verbose;
-   $self->load_field_options($_) for $self->fields;
+   $node ||= $self;
+   warn "HFH: load_options ", $node->name, "\n" if $self->verbose;
+   for my $field ( $node->fields ){
+       if( $field->isa( 'HTML::FormHandler::Field::Compound' ) ){
+           my $new_model_stuff = $self->compute_model_stuff( $field, $model_stuff );
+           $self->load_options( $field, $new_model_stuff );
+       }
+       else {
+           $self->load_field_options($field, $model_stuff);
+       }
+   }
 }
 
 =head2 load_field_options
@@ -1463,7 +1226,7 @@ and, optionally, an options array.
 
 sub load_field_options
 {
-   my ( $self, $field, @options ) = @_;
+   my ( $self, $field, $model_stuff, @options ) = @_;
 
    return unless $field->can('options');
 
@@ -1471,7 +1234,7 @@ sub load_field_options
    @options =
         $self->can($method)
       ? $self->$method($field)
-      : $self->lookup_options($field)
+      : $self->lookup_options($field, $model_stuff)
       unless @options;
    return unless @options;
 
@@ -1508,6 +1271,7 @@ sub set_dependency
          next unless defined $value;
          # The exception is a boolean can be zero which we count as not set.
          # This is to allow requiring a field when a boolean is true.
+         my $field = $self->field_exists($name);
          next if $self->field($name)->type eq 'Boolean' && $value == 0;
          if ( ref $value )
          {
@@ -1550,25 +1314,31 @@ IRC:
 
   Join #formhandler on irc.perl.org
 
+Mailing list:
+
+  http://groups.google.com/group/formhandler
+
+Code repository:
+
+  http://github.com/gshank/html-formhandler/tree/master
+
 =head1 SEE ALSO
 
 L<HTML::FormHandler::Manual>
 
-L<HTML::FormHandler::Tutorial>
+L<HTML::FormHandler::Manual::Tutorial>
 
-L<HTML::FormHandler::Intro>
+L<HTML::FormHandler::Manual::Intro>
 
-L<HTML::FormHandler::Templates>
+L<HTML::FormHandler::Manual::Templates>
 
-L<HTML::FormHandler::Cookbook>
+L<HTML::FormHandler::Manual::Cookbook>
 
 L<HTML::FormHandler::Field>
 
 L<HTML::FormHandler::Model::DBIC>
 
 L<HTML::FormHandler::Moose>
-
-L<HTML::FormHandler::Moose::Role>
 
 
 =head1 AUTHOR

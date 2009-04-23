@@ -111,6 +111,29 @@ sub render_text
    return $output;
 }
 
+=head2 render_text
+
+Output an HTML string for a hidden input widget
+
+=cut
+
+sub render_hidden
+{
+   my ( $self, $field ) = @_;
+   # label
+   my $fif = $field->fif || '';
+   my $output .= "\n<label class=\"label\" for=\"";
+   $output    .= $field->name . "\">";
+   $output    .= $field->label . ":</label>";
+   # input
+   $output .= "<input type=\"hidden\" name=\"";
+   $output .= $field->name . "\"";
+   $output .= " id=\"" . $field->id . "\"";
+   $output .= " value=\"" . $fif . "\">";
+   # value
+   return $output;
+}
+
 =head2 render_select
 
 Output an HTML string for a 'select' widget, single or multiple
@@ -167,20 +190,25 @@ sub render_checkbox
    my ( $self, $field ) = @_;
 
    my $fif = $field->fif || '';
-   my $output = "<input type=\"checkbox\" name=\"";
-   $output .= $field->name . "\" value=\"1\"";
-   $output .= " checked=\"checked\"" if $fif eq '1';
+   my $output = "<label class=\"label\" for=\"";
+   $output .= $field->name . "\">" . $field->label . "</label>";
+   $output .= "<input type=\"checkbox\" name=\"";
+   $output .= $field->name . '" value="' . $field->checkbox_value . '"';
+   $output .= " checked=\"checked\"" if $fif eq $field->checkbox_value;
    $output .= "/>";
    return $output;
 }
 
-=head2 render_radio
 
-Output an HTML string for a 'radio' widget
+=head2 render_radio_group
+
+Output an HTML string for a 'radio_group' selection widget.
+This widget should be for a field that inherits from 'Select',
+since it requires the existance of an 'options' array.
 
 =cut
 
-sub render_radio
+sub render_radio_group
 {
    my ( $self, $field ) = @_;
 
@@ -190,8 +218,8 @@ sub render_radio
    {
       $output = "<label class=\"label\" for=\"";
       $output .= $field->name . "\">" . $option->{label} . "</label>";
-      $output .= "<input name=\"" . $field->name;
-      $output .= " type=\"radio\" value=\"" . $option->{value} . "\"";
+      $output .= "<input type=\"radio\" value=\"" . $option->{value} . "\"";
+      $output .= " name=\"" . $field->name;
       $output .= " selected=\"selected\"" if $option->{value} eq $fif;
       $output .= " />\n";
    }
@@ -221,6 +249,24 @@ sub render_textarea
       . qq(rows="$rows" cols="$cols">$fif</textarea>);
 
    return $output;
+}
+
+=head2 render_compound
+
+Renders field with 'compound' widget
+
+=cut
+
+sub render_compound
+{
+   my ( $self, $field ) = @_;
+
+   my $output = '<fieldset class="' . $field->name . '">';
+   foreach my $subfield ($field->sorted_fields)
+   {
+      $output .= $self->render_field($subfield);
+   }
+   $output .= "</fieldset>";
 }
 
 =head1 AUTHORS

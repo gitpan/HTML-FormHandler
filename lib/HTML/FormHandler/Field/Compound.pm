@@ -3,6 +3,7 @@ package HTML::FormHandler::Field::Compound;
 use Moose;
 use MooseX::AttributeHelpers;
 extends 'HTML::FormHandler::Field';
+with 'HTML::FormHandler::Fields';
 
 =head1 NAME
 
@@ -15,13 +16,12 @@ multiple subfields. Examples are L<HTML::FormHandler::DateTime>
 and L<HTML::FormHandler::Duration>.
 
 A compound parent class requires the use of sub-fields prepended
-with the parent class name plus a dot, and the 'parent' attribute
-set to the name of the parent field:
+with the parent class name plus a dot
 
    has_field 'birthdate' => ( type => 'DateTime' );
-   has_field 'birthdate.year' => ( type => 'Year', parent => 'birthdate' );
-   has_field 'birthdate.month' => ( type => 'Month', parent => 'birthdate' );
-   has_field 'birthdate.day' => ( type => 'MonthDay', parent => 'birthdate' );
+   has_field 'birthdate.year' => ( type => 'Year' );
+   has_field 'birthdate.month' => ( type => 'Month' );
+   has_field 'birthdate.day' => ( type => 'MonthDay');
 
 If all validation is performed in the parent class so that no
 validation is necessary in the child classes, then the field class
@@ -31,6 +31,21 @@ Error messages will be applied to both parent classes and child
 classes unless the 'errors_on_parent' flag is set. (This flag is
 set for the 'Nested' field class.)
 
+The process method of this field runs the process methods on the child fields
+and then builds a hash of these fields values.  This hash is available for 
+further processing by L<HTML::FormHandler::Field/actions> and the validate method.
+
+Example:
+
+  has_field 'date_time' => ( 
+      type => 'Compound',
+      actions => [ { transform => sub{ DateTime->new( $_[0] ) } } ],
+  );
+  has_field 'date_time.year' => ( type => 'Text', );
+  has_field 'date_time.month' => ( type => 'Text', );
+  has_field 'date_time.day' => ( type => 'Text', );
+
+
 =head2 widget
 
 Widget type is 'compound'
@@ -39,29 +54,61 @@ Widget type is 'compound'
 
 has '+widget' => ( default => 'compound' );
 
-=head2 children
+sub BUILD
+{
+   my $self = shift;
+   $self->build_fields;
+}
 
-This is a Moose Collection::Array of child field references.
-A child class will have have a 'parent_field' reference in
-addition to the 'parent' field name.
+augment 'process' => sub {
+   my $self = shift;
 
-=cut
-
-has 'children' => ( isa => 'ArrayRef', 
-   is => 'rw',
-   metaclass => 'Collection::Array',
-   auto_deref => 1,
-   default => sub {[]},
-   provides => {
-      push => 'add_child',
-      empty => 'has_children',
-      clear => 'clear_children',
+   my $input = $self->input;
+   # this isn't right
+   if( ref $input eq 'HASH' )
+   {
+      foreach my $field ( $self->fields )
+      {
+         my $field_name = substr( $field->full_name, length($self->full_name) + 1 );
+         # Trim values and move to "input" slot
+         if ( exists $input->{$field_name} )
+         {
+            $field->input( $field->trim_value( $input->{$field_name} ) )
+         }
+         elsif ( $field->has_input_without_param )
+         {
+            $field->input( $field->input_without_param );
+         }
+      }
    }
-);
-
-augment 'validate_field' => sub {
-   shift->clear_fif;
+   $self->clear_fif;
+   return unless $self->has_fields;
+   $self->fields_validate;
+   my %value_hash;
+   for my $field ( $self->fields )
+   { 
+      $value_hash{ $field->accessor } = $field->value;
+   }
+   $self->value( \%value_hash );
 };
+
+
+
+# this is a kludge. We need to factor this stuff better...
+# create the 'fif' for compound fields
+sub _build_fif 
+{
+   my $self = shift;
+
+   my $fif; 
+   for my $field ($self->fields)
+   {
+      $fif->{$field->full_name} = $field->fif;
+   }
+   $self->fif($fif) if $fif;
+
+}
+
 
 __PACKAGE__->meta->make_immutable;
 no Moose;

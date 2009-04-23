@@ -78,8 +78,8 @@ Inheritance hierarchy of the distribution's field classes:
 See the documentation or source for the individual fields.
 
 Normally you would implement a 'validate' routine in a custom
-field class, but you can also override the base validation routine
-by overriding 'validate_field'.
+field class, but you can also override the base validation process
+by overriding 'process'.
 
 =head1 ATTRIBUTES
 
@@ -125,23 +125,35 @@ The user does not need to set this field except in validation methods.
 =cut
 
 has 'value' => (
-   is      => 'rw',
-   clearer => 'clear_value',
+   is        => 'rw',
+   clearer   => 'clear_value',
    predicate => 'has_value',
-   trigger => sub {
+   trigger   => sub {
       my ( $self, $value ) = @_;
-      $self->fif($self->fif_value($value)) 
-            unless (($self->password && $self->password == 1)
-                    || $self->has_children );
+      $self->fif( $self->fif_value($value) )
+         unless ( ( $self->password && $self->password == 1 )
+         || $self->has_fields );
       return $value;
    }
 );
 
-has 'parent' => ( isa => 'Str', is => 'rw', predicate => 'has_parent' );
-has 'parent_field' => ( isa => 'HTML::FormHandler::Field', is => 'rw' );
-has 'errors_on_parent' => ( isa => 'Bool', is => 'rw' );
-sub has_children {}
+=head2 parent
 
+A reference to the parent of this field.
+
+=cut
+
+has 'parent' => ( is => 'rw', predicate => 'has_parent' );
+
+=head2 errors_on_parent
+
+Flag indicating that errors should not be set on this field class
+
+=cut
+
+has 'errors_on_parent' => ( isa => 'Bool', is => 'rw' );
+
+sub has_fields { }
 
 =head2 input
 
@@ -156,29 +168,41 @@ setting 'fif'.
 =cut
 
 has 'input' => (
-   is      => 'rw',
-   clearer => 'clear_input',
+   is        => 'rw',
+   clearer   => 'clear_input',
    predicate => 'has_input',
-   trigger => sub {
+   trigger   => sub {
       my ( $self, $input ) = @_;
       $self->fif($input)
-            unless ($self->password && $self->password == 1);
+         unless ( $self->password && $self->password == 1 );
       return $input;
    }
+);
+
+=head2 input_without_param
+
+Input for this field if there is no param. Needed for checkbox,
+since an unchecked checkbox does not return a parameter.
+
+=cut
+
+has 'input_without_param' => (
+   is        => 'rw',
+   predicate => 'has_input_without_param'
 );
 
 =head2 fif
 
 For filling in forms. Input or value. The user does not need to set this field.
 It is set by FormHandler from the values in your database object or the
-input parameters. The normal use would be to a access this field from a template:
+input parameters. The normal use would be to access this field from a template:
 
    [% f = form.field('title') %]
    [% f.fif %]
 
 =cut
 
-has 'fif' => ( is => 'rw', clearer => 'clear_fif', predicate => 'has_fif' ); 
+has 'fif' => ( is => 'rw', clearer => 'clear_fif', predicate => 'has_fif' );
 
 =head2 accessor
 
@@ -187,13 +211,16 @@ this attribute to provide the name of accessor.
 
 =cut
 
-has 'accessor' => ( isa => 'Str', is => 'rw', lazy => 1, 
-   default => sub { 
-       my $self = shift;
-       my $accessor = $self->name;
-       $accessor =~ s/^(.*)\.//g if ($accessor =~ /\./);
-       return $accessor; 
-   } 
+has 'accessor' => (
+   isa     => 'Str',
+   is      => 'rw',
+   lazy    => 1,
+   default => sub {
+      my $self     = shift;
+      my $accessor = $self->name;
+      $accessor =~ s/^(.*)\.//g if ( $accessor =~ /\./ );
+      return $accessor;
+   }
 );
 
 =head2 temp
@@ -214,7 +241,7 @@ has 'label' => (
    isa     => 'Str',
    is      => 'rw',
    lazy    => 1,
-   default => sub { ucfirst(shift->name) }, 
+   default => sub { ucfirst( shift->name ) },
 );
 
 =head2 title
@@ -282,7 +309,7 @@ sub build_prename
 {
    my $self = shift;
    my $prefix = $self->form ? $self->form->name . "." : '';
-   return $prefix . $self->name;
+   return $prefix . $self->full_name;
 }
 
 =head2 widget
@@ -348,8 +375,12 @@ The default is "Field <field label> is required".
 
 =cut
 
-has 'required_message' => ( isa => 'Str', is => 'rw', lazy => 1, 
-     default => sub { shift->label . ' field is required' } );
+has 'required_message' => (
+   isa     => 'Str',
+   is      => 'rw',
+   lazy    => 1,
+   default => sub { shift->label . ' field is required' }
+);
 
 =head2 unique
 
@@ -401,22 +432,15 @@ must only be used on appropriate fields
 has 'range_start' => ( isa => 'Int|Undef', is => 'rw', default => undef );
 has 'range_end'   => ( isa => 'Int|Undef', is => 'rw', default => undef );
 
-=head2 value_sprintf
+sub value_sprintf
+{
+   die "The 'value_sprintf' attribute has been removed. Please use a transformation instead.";
+}
 
-This is a sprintf format string that is used when moving the field's
-input data to the field's value attribute.  By defult this is undefined,
-but can be set in fields to alter the way the input_to_value() method
-formates input data.
-
-For example in a field that represents money the field could define:
-
-    has '+value_sprintf' => ( default => '%.2f' );
-
-The field's 'value' will be formatted with two decimal places.
-
-=cut
-
-has 'value_sprintf' => ( isa => 'Str|Undef', is => 'rw' );
+sub input_to_value
+{
+   die "The 'input_to_value' method has been removed. Use a transformation or move to the 'validate' method.";
+}
 
 =head2 id, build_id
 
@@ -516,17 +540,16 @@ has 'errors' => (
    isa        => 'ArrayRef[Str]',
    is         => 'rw',
    auto_deref => 1,
-   default    => sub {[]},
-   provides   => { 
-      'push'  => 'push_errors', 
+   default    => sub { [] },
+   provides   => {
+      'push'  => 'push_errors',
       'count' => 'num_errors',
       'empty' => 'has_errors',
       'clear' => 'clear_errors',
    }
 );
 
-
-=head2 validate_meth
+=head2 set_validate
 
 Specify the form method to be used to validate this field.
 The default is C<< 'validate_' . $field->name >>. (Periods in
@@ -535,23 +558,154 @@ a number of fields that require the same validation and don't
 want to write a field class, you could set them all to the same 
 method name.
 
-   has_field 'title' => ( isa => 'Str', validate_meth => 'check_title' );
-   has_field 'subtitle' => ( isa => 'Str', validate_meth => 'check_title' );
+   has_field 'title' => ( isa => 'Str', set_validate => 'check_title' );
+   has_field 'subtitle' => ( isa => 'Str', set_validate => 'check_title' );
 
 =cut
 
-has 'validate_meth' => ( isa => 'Str', is => 'rw', lazy => 1,
-    default => sub { 
-       my $self = shift; 
-       my $name = $self->name;
-       $name =~ s/\./_/g;
-       return 'validate_' . $name;
-    }
+has 'set_validate' => (
+   isa     => 'Str',
+   is      => 'rw',
+   lazy    => 1,
+   default => sub {
+      my $self = shift;
+      my $name = $self->full_name;
+      $name =~ s/\./_/g;
+      return 'validate_' . $name;
+   }
 );
 
+sub _can_validate
+{
+   my $self = shift;
+   return
+      unless $self->form
+         && $self->set_validate
+         && $self->form->can( $self->set_validate );
+   return 1;
+}
 
-# tell Moose to make this class immutable
-__PACKAGE__->meta->make_immutable;
+sub _validate
+{
+   my $self = shift;
+   return unless $self->_can_validate;
+   my $meth = $self->set_validate;
+   $self->form->$meth($self);
+}
+
+=head2 set_init
+
+The name of the method in the form that provides a field's initial value
+
+=cut
+
+has 'set_init' => (
+   isa     => 'Str',
+   is      => 'rw',
+   default => sub {
+      my $self = shift;
+      my $name = $self->full_name;
+      $name =~ s/\./_/g;
+      return 'init_value_' . $name;
+   }
+);
+
+sub _can_init
+{
+   my $self = shift;
+   return
+      unless $self->form
+         && $self->set_init
+         && $self->form->can( $self->set_init );
+   return 1;
+}
+
+sub _init
+{
+   my $self = shift;
+   return unless $self->_can_init;
+   my $meth = $self->set_init;
+   $self->form->$meth($self);
+}
+
+=head2 apply
+
+An ArrayRef of constraints and coercions to be executed on the field at process 
+time.  In general the action can be of three types: a Moose type (which is 
+represented by it's name), a transformation (which is a callback called on 
+the value of the field), or a constraint which performes a 'smart match' 
+on the value of the field.  Currently we implement the smart match
+in our code - but in the future when Perl 5.10 is more widely used we'll switch 
+to the core
+L<http://search.cpan.org/~rgarcia/perl-5.10.0/pod/perlsyn.pod#Smart_matching_in_detail>
+smart match operator.  The Moose type action first tries to coerce the value - 
+then it checks the result, so you can use it instead of both constraints and 
+tranformations - TIMTOWTDI.
+
+Examples:
+
+A Moose type:
+  subtype 'MyStr'
+      => as 'Str'
+      => where { /^a/ };
+
+This is a simple constraint checking if the value string starts with the letter 'a'.
+
+Another Moose type:
+  subtype 'MyInt'
+      => as 'Int';
+  coerce 'MyInt'
+      => from 'MyStr'
+      => via { return $1 if /(\d+)/ };
+
+This type contains a coercion.
+
+You can use them in a field like this:
+
+   has_field 'some_text_to_int' => (
+       apply => [ 'MyStr', 'MyInt' ]
+   );
+
+This will check if the field contains a string starting with 'a' - and then coerce it
+to an integer by extracting the first continues string of digits.
+
+A simple constraint:
+
+  has_field 'some_text' => (
+      apply => [ { check => qr/aaa/, message => 'Must contain aaa' } ],
+  );
+
+This should be self-explanatory.
+
+And a simple transformation:
+
+  has_field 'sprintf_filter' => (
+      apply => [ { transform => sub{ sprintf '<%.1g>', $_[0] } } ]
+  );
+
+As you can see above, all three types define a message to be presented to the 
+user in the case of failure. Transformations and coercions are called in an eval 
+to catch the errors.
+
+All the actions are called in the order that they are defined, so that you can check 
+constraints after transformations and vice versa. You can weave all three types of 
+actions in any order you need.
+
+=cut
+
+has 'apply' => (
+   metaclass  => 'Collection::Array',
+   isa        => 'ArrayRef',
+   is         => 'rw',
+   auto_deref => 1,
+   default    => sub { [] },
+   provides   => {
+      'push'  => 'push_action',
+      'count' => 'num_actions',
+      'empty' => 'has_actions',
+      'clear' => 'clear_actions',
+   }
+);
 
 =head1 METHODS
 
@@ -573,10 +727,9 @@ sub full_name
 {
    my $field = shift;
 
-   my $name   = $field->name;
-   my $form   = $field->form || return $name;
-   my $parent = $form->parent_field || return $name;
-   return $parent->name . '.' . $name;
+   my $name = $field->name;
+   my $parent = $field->parent || return $name;
+   return $parent->full_name . '.' . $name;
 }
 
 =head2 set_order
@@ -608,18 +761,17 @@ See $form->language_handle for details. Returns undef.
 
 sub add_error
 {
-   my $self = shift;
+   my ($self, @message) = @_;
 
-   my $form = $self->form;
    my $lh;
-   # By default errors get attached to the field where they happen.
-   my $error_field = $self;
-   # Running without a form object?
-   if ($form)
+   unless( defined $message[0] )
    {
-      $lh = $form->language_handle;
-      # If we are a sub-form then redirect errors to the parent field
-      $error_field = $form->parent_field if $form->parent_field;
+      @message = ('field is invalid');
+   }
+   # Running without a form object?
+   if ( $self->form )
+   {
+      $lh = $self->form->language_handle;
    }
    else
    {
@@ -627,13 +779,13 @@ sub add_error
          || HTML::FormHandler::I18N->get_handle
          || die "Failed call to Locale::Maketext->get_handle";
    }
-   $error_field = $self->parent_field if $self->errors_on_parent;
-   $error_field->push_errors( $lh->maketext(@_) );
+   my $message = $lh->maketext(@message);
+   $self->push_errors( $message ) unless $self->errors_on_parent;
+   $self->parent->push_errors( $message ) if $self->parent;
    return;
 }
 
-
-=head2 validate_field
+=head2 process
 
 This method does standard validation, which currently tests:
 
@@ -646,41 +798,144 @@ If these tests pass, the field's validate method is called
     $field->validate;
 
 If C<< $field->validate >> returns true then the input value
-is copied from the input attribute to the field's value attribute
-by calling:
-
-    $field->input_to_value;
-
-The default method simply copies the value.  This method is only called
-if the field does not have any errors.
+is copied from the input attribute to the field's value attribute.
 
 The field's error list and internal value are reset upon entry.
 
 =cut
 
-# TODO: move test_multiple and test_options to the field classes?
-#
-sub validate_field
+sub process
 {
    my $field = shift;
    $field->clear_errors;
    # See if anything was submitted
    unless ( $field->input_defined )
    {
-      $field->add_error( $field->required_message) if( $field->required );
-      $field->value(undef) if( $field->has_input );
+      $field->add_error( $field->required_message ) if ( $field->required );
+      $field->value(undef)                          if ( $field->has_input );
       return;
    }
 
    $field->clear_value;
 
+   $field->value( $field->input );
+
+   # allow augment 'process' calls here
    inner();
+
+   $field->_apply_actions;
+
+   return if $field->has_errors;
    return unless $field->validate;
    return unless $field->test_ranges;
 
-   # Now move data from input -> value
-   $field->input_to_value;
+   $field->_build_fif if $field->can('_build_fif');
    return;
+}
+
+sub validate_field
+{
+   return shift->process(@_);
+}
+
+sub _apply_actions
+{
+   my $self  = shift;
+
+   my $error_message;
+   local $SIG{__WARN__} = sub {
+      my $error = shift;
+      $error_message = $error;
+      return 1;
+   };
+   for my $action ( @{ $self->apply || [] } )
+   {
+      $error_message = undef;
+      my $input = $self->value;
+      # Moose constraints 
+      if ( !ref $action )
+      {
+         my $tobj = Moose::Util::TypeConstraints::find_type_constraint($action)
+            or die 'Cannot find type constraint';
+         my $new_value = $input;
+         if ( $tobj->has_coercion )
+         {
+            eval { $new_value = $tobj->coerce($new_value) };
+            if ($@)
+            {
+               if ( $tobj->has_message )
+               {
+                  $error_message = $tobj->message->($new_value);
+               }
+               else
+               {
+                  $error_message = $@;
+               }
+            }
+         }
+         $error_message ||= $tobj->validate($new_value);
+         if ( !$error_message )
+         {
+            $self->value($new_value);
+         }
+      }
+      # now maybe: http://search.cpan.org/~rgarcia/perl-5.10.0/pod/perlsyn.pod#Smart_matching_in_detail
+      # actions in a hashref
+      elsif ( ref $action->{check} eq 'CODE' )
+      {
+         if ( !$action->{check}->($input) )
+         {
+            $error_message = 'Wrong value';
+         }
+      }
+      elsif ( ref $action->{check} eq 'Regexp' )
+      {
+         if ( $input !~ $action->{check} )
+         {
+            $error_message = "\"$input\" does not match";
+         }
+      }
+      elsif ( ref $action->{check} eq 'ARRAY' )
+      {
+         if ( !grep { $input eq $_ } @{ $action->{check} } )
+         {
+            $error_message = "\"$input\" not allowed";
+         }
+      }
+      elsif ( ref $action->{transform} eq 'CODE' )
+      {
+         my $new_value = eval { 
+            no warnings 'all';
+            $action->{transform}->($input);
+         };
+         if ($@)
+         {
+            $error_message = $@ || 'error occurred';
+         }
+         else
+         {
+            # need to put in value so we know to skip
+            # the default creation of value
+            $self->value($new_value);
+         }
+      }
+      if ( defined $error_message )
+      {
+         my @message = ($error_message);
+         if ( ref $action )
+         {
+            if ( ref $action->{message} )
+            {
+               @message = @{ $action->{message} };
+            }
+            elsif ( defined $action->{message} )
+            {
+               @message = ( $action->{message} );
+            }
+         }
+         $self->add_error(@message);
+      }
+   }
 }
 
 =head2 validate
@@ -700,34 +955,6 @@ method is to return true.
 =cut
 
 sub validate { 1 }
-
-
-=head2 input_to_value
-
-This method moves the 'input' attribute value to the 'value' attribute
-if 'value' is undefined (has not already been set in 'validate').
-It calls the 'value_sprintf' routine to format the value before moving it.
-
-Override this method if you want to convert the input to another format
-before saving in 'value'.
-
-=cut
-
-sub input_to_value
-{
-   my $field = shift;
-
-   return if defined $field->value;    # already set by validate method.
-   my $format = $field->value_sprintf;
-   if ($format)
-   {
-      $field->value( sprintf( $format, $field->input ) );
-   }
-   else
-   {
-      $field->value( $field->input );
-   }
-}
 
 =head2 test_ranges
 
@@ -773,15 +1000,7 @@ sub test_ranges
    return 1;
 }
 
-=head2 trim_value
-
-Trims leading and trailing white space for single parameters.
-If the parameter is an array ref then each value is trimmed.
-
-Pass in the value to trim and returns value back
-
-=cut
-
+# removed pod because deprecating in favor of filters
 sub trim_value
 {
    my ( $self, $value ) = @_;
@@ -795,9 +1014,8 @@ sub trim_value
       s/^\s+//;
       s/\s+$//;
    }
-   return @values > 1 ? \@values : $values[0];
+   return ref $value eq 'ARRAY' ? \@values : $values[0];
 }
-
 
 =head2 input_defined
 
@@ -816,26 +1034,12 @@ sub input_defined
    return defined $value && $value =~ /\S/;
 }
 
-
-=head2 fif_value
-
-A field class can use this method to format an internal
-value into hash for form parameters.
-
-A Date field subclass might expand the value into:
-
-    my $name = $field->name;
-    return (
-        $name . 'd'  => $day,
-        $name . 'm' => $month,
-        $name . 'y' => $year,
-    );
-
-=cut
-
+# removed pod to discourage use of fif_value
+# This method will probably be replaced by deflate or something
+# similar in the near future
 sub fif_value
 {
-   my ($self, $value)  = @_;
+   my ( $self, $value ) = @_;
    return $value;
 }
 
@@ -883,10 +1087,10 @@ sub dump
    my $self = shift;
 
    require Data::Dumper;
-   warn "HFH: -----  ",  $self->name, " -----\n";
-   warn "HFH: type: ", $self->type, "\n";
+   warn "HFH: -----  ", $self->name, " -----\n";
+   warn "HFH: type: ",  $self->type, "\n";
    warn "HFH: required: ", ( $self->required || '0' ), "\n";
-   warn "HFH: label: ", $self->label, "\n";
+   warn "HFH: label: ",  $self->label,  "\n";
    warn "HFH: widget: ", $self->widget, "\n";
    my $v = $self->value;
    warn "HFH: value: ", Data::Dumper::Dumper $v if $v;
@@ -917,5 +1121,6 @@ the same terms as Perl itself.
 
 =cut
 
+__PACKAGE__->meta->make_immutable;
 no Moose;
 1;

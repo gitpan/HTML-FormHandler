@@ -5,6 +5,7 @@ extends 'HTML::FormHandler';
 use Carp;
 use UNIVERSAL::require;
 use DBIx::Class::ResultClass::HashRefInflator;
+use Scalar::Util qw(blessed);
 
 our $VERSION = '0.03';
 
@@ -139,6 +140,7 @@ sub update_model
    my ($self) = @_;
    my $item   = $self->item;
    my $source = $self->source;
+   my $updated_or_created;
 
    warn "HFH: update_model for ", $self->name, "\n" if $self->verbose;
    # get a hash of all fields, skipping fields marked 'noupdate'
@@ -198,13 +200,13 @@ sub update_model
          $item->$accessor($value);
          $changed++;
       }
-      $self->updated_or_created('updated');
+      $updated_or_created = 'updated';
    }
    else    # create new item
    {
       $item = $self->resultset->create( \%columns );
       $self->item($item);
-      $self->updated_or_created('created');
+      $updated_or_created = 'created';
    }
 
    # Set single select lists with rel different from column
@@ -236,7 +238,7 @@ sub update_model
          if defined $value;
       my $meth;
       my $row;
-      if ( $self->updated_or_created eq 'updated' )
+      if ( $updated_or_created eq 'updated' )
       {
          foreach $row ( $item->$accessor->all )
          {
@@ -356,23 +358,24 @@ The currently selected values in a Multiple list are grouped at the top
 
 sub lookup_options
 {
-   my ( $self, $field ) = @_;
+   my ( $self, $field, $self_source ) = @_;
 
    return unless $self->schema;
+   $self_source ||= $self->source;
    my $accessor = $field->accessor;
 
    # if this field doesn't refer to a foreign key, return
    my $f_class;
    my $source;
-   if ($self->source->has_relationship($accessor) )
+   if ($self_source->has_relationship($accessor) )
    {
-      $f_class = $self->source->related_class($accessor);
+      $f_class = $self_source->related_class($accessor);
       $source = $self->schema->source($f_class);
    }
    elsif ($self->resultset->new_result({})->can("add_to_$accessor") )
    {
       # Multiple field with many_to_many relationship
-      $source = $self->resultset->new_result({})->$accessor->result_source;
+      $source = $self_source->resultset->new_result({})->$accessor->result_source;
    }
    return unless $source; 
 
@@ -442,13 +445,22 @@ sub init_value
    elsif( $item->isa('DBIx::Class') && $item->can($accessor) )
    {
 
-      my $source = $self->source;
+      my $source = $item->result_source;
       if ( $source->has_relationship($accessor) )
       {
          if ($field->can('options'))
          {
-            @values = $item->get_column($accessor); 
-         } 
+           my $rel_info = $source->relationship_info($accessor);
+           if( $rel_info->{attrs}->{accessor} eq 'multi' ){
+                @values = map{ $_->id } $item->$accessor();
+            }
+            else{
+                @values = ($item->$accessor());
+                if( blessed $values[0] && $values[0]->isa('DBIx::Class::Row')){
+                    $values[0] = $values[0]->id;
+                }
+            }
+         }
          else # some other relationship (unsupported)
          {
             my $rel_info = $source->relationship_info($accessor);
@@ -487,6 +499,27 @@ sub init_value
    my $value = @values > 1 ? \@values : shift @values;
    $field->init_value($value);
    $field->value($value);
+}
+
+sub _get_pk_for_related {
+    my ( $object, $relation ) = @_;
+
+    my $source = $object->result_source;
+    my $result_source = _get_related_source( $source, $relation );
+    return $result_source->primary_columns;
+}
+
+sub _get_related_source {
+    my ( $source, $name ) = @_;
+    if( $source->has_relationship( $name ) ){
+        return $source->related_source( $name );
+    }
+    # many to many case
+    my $row = $source->resultset->new({});
+    if ( $row->can( $name ) and $row->can( 'add_to_' . $name ) and $row->can( 'set_' . $name ) ){
+        return $row->$name->result_source;
+    }
+    return;
 }
 
 =head2 validate_unique
@@ -603,6 +636,16 @@ sub resultset
    die "You must supply a schema for your FormHandler form" unless $self->schema;
    return $self->schema->resultset( $self->source_name || $self->item_class );
 }
+
+sub compute_model_stuff {
+    my ( $self, $field, $source ) = @_;
+    if( ! $source ){
+        return if !$self->schema;
+        $source = $self->source;
+    }
+    return _get_related_source( $source, $field->accessor );
+}
+ 
 
 =head1 SUPPORT
 
