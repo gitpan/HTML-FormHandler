@@ -58,11 +58,17 @@ To render all the fields in a form in sorted order (using
 sub render
 {
    my $self = shift;
-   my $output;
+   my $output = '<form ';
+   $output .= 'action="' . $self->action if $self->action;
+   $output .= '" id="' . $self->name if $self->name;
+   $output .= '" method="' . $self->http_method if $self->http_method;
+   $output .= '">' . "\n";
+
    foreach my $field ( $self->sorted_fields )
    {
-      $output .= "\n<div>" . $self->render_field($field) . "</div>\n";
+      $output .= $self->render_field($field);
    }
+   $output .= "</form>\n";
    return $output;
 }
 
@@ -85,7 +91,13 @@ sub render_field
    my $method = 'render_' . $field->widget;
    die "Widget method $method not implemented in H::F::Render::Simple"
       unless $self->can($method);
-   return $self->$method($field);
+   my $class = '';
+   $class = ' class="error"' if $field->has_errors;
+   my $output = qq{\n<div$class>};
+   $output .= $self->$method($field);
+   $output .= qq{\n<span class="error_message">$_</span>} for $field->errors;
+   $output .= "</div>\n";
+   return $output;
 }
 
 =head2 render_text
@@ -100,18 +112,18 @@ sub render_text
    # label
    my $fif = $field->fif || '';
    my $output .= "\n<label class=\"label\" for=\"";
-   $output    .= $field->name . "\">";
+   $output    .= $field->html_name . "\">";
    $output    .= $field->label . ":</label>";
    # input
    $output .= "<input type=\"text\" name=\"";
-   $output .= $field->name . "\"";
+   $output .= $field->html_name . "\"";
    $output .= " id=\"" . $field->id . "\"";
    $output .= " value=\"" . $fif . "\">";
    # value
    return $output;
 }
 
-=head2 render_text
+=head2 render_hidden
 
 Output an HTML string for a hidden input widget
 
@@ -123,11 +135,11 @@ sub render_hidden
    # label
    my $fif = $field->fif || '';
    my $output .= "\n<label class=\"label\" for=\"";
-   $output    .= $field->name . "\">";
+   $output    .= $field->html_name . "\">";
    $output    .= $field->label . ":</label>";
    # input
    $output .= "<input type=\"hidden\" name=\"";
-   $output .= $field->name . "\"";
+   $output .= $field->html_name . "\"";
    $output .= " id=\"" . $field->id . "\"";
    $output .= " value=\"" . $fif . "\">";
    # value
@@ -146,8 +158,8 @@ sub render_select
 
    my $fif = $field->fif || '';
    my $output = "<label class=\"label\" for=\"";
-   $output .= $field->name . "\">" . $field->label . "</label>";
-   $output .= "<select name=\"" . $field->name . "\"";
+   $output .= $field->html_name . "\">" . $field->label . "</label>";
+   $output .= "<select name=\"" . $field->html_name . "\"";
    $output .= " multiple=\"multiple\" size=\"5\"" if $field->multiple == 1;
    $output .= "\">";
    foreach my $option ( $field->options )
@@ -191,9 +203,9 @@ sub render_checkbox
 
    my $fif = $field->fif || '';
    my $output = "<label class=\"label\" for=\"";
-   $output .= $field->name . "\">" . $field->label . "</label>";
+   $output .= $field->html_name . "\">" . $field->label . "</label>";
    $output .= "<input type=\"checkbox\" name=\"";
-   $output .= $field->name . '" value="' . $field->checkbox_value . '"';
+   $output .= $field->html_name . '" value="' . $field->checkbox_value . '"';
    $output .= " checked=\"checked\"" if $fif eq $field->checkbox_value;
    $output .= "/>";
    return $output;
@@ -217,9 +229,9 @@ sub render_radio_group
    foreach my $option ( $field->options )
    {
       $output = "<label class=\"label\" for=\"";
-      $output .= $field->name . "\">" . $option->{label} . "</label>";
+      $output .= $field->html_name . "\">" . $option->{label} . "</label>";
       $output .= "<input type=\"radio\" value=\"" . $option->{value} . "\"";
-      $output .= " name=\"" . $field->name;
+      $output .= " name=\"" . $field->html_name;
       $output .= " selected=\"selected\"" if $option->{value} eq $fif;
       $output .= " />\n";
    }
@@ -239,7 +251,7 @@ sub render_textarea
    my $id    = $field->id;
    my $cols  = $field->cols || 10;
    my $rows  = $field->rows || 5;
-   my $name  = $field->name;
+   my $name  = $field->html_name;
    my $label = $field->label;
 
    my $output =
@@ -261,7 +273,7 @@ sub render_compound
 {
    my ( $self, $field ) = @_;
 
-   my $output = '<fieldset class="' . $field->name . '">';
+   my $output = '<fieldset class="' . $field->html_name . '">';
    foreach my $subfield ($field->sorted_fields)
    {
       $output .= $self->render_field($subfield);

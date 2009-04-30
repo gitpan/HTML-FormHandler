@@ -66,9 +66,9 @@ MANIFEST			This list of files
 META.yml
 README
 script/form_generator.pl
+t/00create_db.t
 t/01app.t
 t/02pod.t
-t/03podcoverage.t
 t/add_field.t
 t/auto_fields.t
 t/bad_item_id.t
@@ -82,6 +82,7 @@ t/constraints.t
 t/controller.t
 t/db/book.db
 t/db/bookdb.sql
+t/db_fif.t
 t/db_options.t
 t/db_validate.t
 t/dbic_accessor.t
@@ -113,6 +114,7 @@ t/Field/weekdaystr.t
 t/Field/year.t
 t/field_counter.t
 t/field_has_field.t
+t/field_names.t
 t/field_select.t
 t/fif.t
 t/filters.t
@@ -142,6 +144,8 @@ t/lib/BookDB/Form/Field/AltText.pm
 t/lib/BookDB/Form/Profile.pm
 t/lib/BookDB/Form/Role/BookOwner.pm
 t/lib/BookDB/Form/User.pm
+t/lib/BookDB/Form/User2.pm
+t/lib/BookDB/Form/User3.pm
 t/lib/BookDB/Model/DB.pm
 t/lib/BookDB/root/book/form.tt
 t/lib/BookDB/root/book/list.tt

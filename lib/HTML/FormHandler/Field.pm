@@ -1,6 +1,6 @@
 package HTML::FormHandler::Field;
 
-use Moose;
+use HTML::FormHandler::Moose;
 use MooseX::AttributeHelpers;
 use HTML::FormHandler::I18N;    # only needed if running without a form object.
 
@@ -269,15 +269,7 @@ Field's css_class for use in templates.
 
 has 'css_class' => ( isa => 'Str', is => 'rw' );
 
-=head2 sub_form
-
-The field is made up of a sub-form.
-
-A single field can be represented by multiple sub-fields
-contained in a form.  This is a reference to that form.
-
-=cut
-
+# should we remove/deprecate this?
 has 'sub_form' => ( isa => 'HTML::FormHandler', is => 'rw' );
 
 =head2 form
@@ -288,27 +280,32 @@ A reference to the containing form.
 
 has 'form' => ( isa => 'HTML::FormHandler', is => 'rw', weak_ref => 1 );
 
-=head2 prename
+=head2 html_name
 
-Field name prefixed by the form name and a dot.
+Field name for use in HTML. If 'html_prefix' in the form has been set
+the name will prefixed by the form name and a dot, otherwise this
+attribute is the equivalient of 'full_name'.
 A field named "street" in a form named "address" would
-have a prename of "address.street". Use with the
-form attribute "html_prefix". Allows multiple forms with
+have a html_name of "address.street". Allows multiple forms with
 the same field names.
 
 =cut
 
-has 'prename' => (
+has 'html_name' => (
    isa     => 'Str',
    is      => 'rw',
    lazy    => 1,
-   builder => 'build_prename'
+   builder => 'build_html_name'
 );
 
-sub build_prename
+# following is to maintain compatibility. remove eventually
+sub prename { shift->html_name }
+
+sub build_html_name
 {
    my $self = shift;
-   my $prefix = $self->form ? $self->form->name . "." : '';
+   my $prefix = ($self->form && $self->form->html_prefix) ? 
+                                 $self->form->name . "." : '';
    return $prefix . $self->full_name;
 }
 
@@ -687,23 +684,45 @@ As you can see above, all three types define a message to be presented to the
 user in the case of failure. Transformations and coercions are called in an eval 
 to catch the errors.
 
-All the actions are called in the order that they are defined, so that you can check 
-constraints after transformations and vice versa. You can weave all three types of 
-actions in any order you need.
+All the actions are called in the order that they are defined, so that you can 
+check constraints after transformations and vice versa. You can weave all three 
+types of actions in any order you need. The actions specified with 'apply' will
+be stored in an 'actions' array. 
+
+To specify actions to declare inside a field class use 'apply' sugar:
+
+   apply [ 'SomeConstraint', 'AnotherActin' ];
+   
+Actions specified with apply are cumulative. Actions may be specified in
+field classes and additional actions added in the 'has_field' declaration.
 
 =cut
 
-has 'apply' => (
+has 'actions' => (
    metaclass  => 'Collection::Array',
    isa        => 'ArrayRef',
    is         => 'rw',
    auto_deref => 1,
    default    => sub { [] },
    provides   => {
-      'push'  => 'push_action',
+      'push'  => 'add_action',
       'count' => 'num_actions',
       'empty' => 'has_actions',
       'clear' => 'clear_actions',
+   }
+);
+
+has 'deflations' => (
+   metaclass  => 'Collection::Array',
+   isa        => 'ArrayRef',
+   is         => 'rw',
+   auto_deref => 1,
+   default    => sub { [] },
+   provides   => {
+      'push'  => 'add_deflation',
+      'count' => 'num_deflations',
+      'empty' => 'has_deflations',
+      'clear' => 'clear_deflations',
    }
 );
 
@@ -713,6 +732,41 @@ has 'apply' => (
 
 Create a new instance of a field.  Initial values are passed 
 as a list of parameters.
+
+=cut
+
+sub BUILD
+{
+   my ( $self, $params ) = @_;
+
+   $self->_build_apply_list;
+   $self->add_action( @{$params->{apply}} ) if $params->{apply};
+}
+
+sub _build_apply_list
+{
+   my $self = shift;
+   my @apply_list;
+   foreach my $sc ( reverse $self->meta->linearized_isa )
+   {
+      my $meta = $sc->meta;
+      if ( $meta->can('calculate_all_roles') )
+      {
+         foreach my $role ( $meta->calculate_all_roles )
+         {
+            if ( $role->can('apply_list') && $role->has_apply_list )
+            {
+               push @apply_list, @{ $role->apply_list };
+            }
+         }
+      }
+      if ( $meta->can('apply_list') && $meta->has_apply_list )
+      {
+         push @apply_list, @{ $meta->apply_list };
+      }
+   }
+   $self->add_action( @apply_list );
+}
 
 =head2 full_name
 
@@ -807,6 +861,7 @@ The field's error list and internal value are reset upon entry.
 sub process
 {
    my $field = shift;
+
    $field->clear_errors;
    # See if anything was submitted
    unless ( $field->input_defined )
@@ -825,11 +880,11 @@ sub process
 
    $field->_apply_actions;
 
+   $field->_build_fif if $field->can('_build_fif');
    return if $field->has_errors;
    return unless $field->validate;
    return unless $field->test_ranges;
 
-   $field->_build_fif if $field->can('_build_fif');
    return;
 }
 
@@ -848,7 +903,7 @@ sub _apply_actions
       $error_message = $error;
       return 1;
    };
-   for my $action ( @{ $self->apply || [] } )
+   for my $action ( @{ $self->actions || [] } )
    {
       $error_message = undef;
       my $input = $self->value;
@@ -858,7 +913,7 @@ sub _apply_actions
          my $tobj = Moose::Util::TypeConstraints::find_type_constraint($action)
             or die 'Cannot find type constraint';
          my $new_value = $input;
-         if ( $tobj->has_coercion )
+         if ( $tobj->has_coercion && $tobj->validate($new_value) )
          {
             eval { $new_value = $tobj->coerce($new_value) };
             if ($@)
@@ -938,6 +993,17 @@ sub _apply_actions
    }
 }
 
+sub _apply_deflations
+{
+   my ( $self, $value )  = @_;
+
+   for my $deflation ( @{ $self->deflations || [] } )
+   {
+       $value = $deflation->($value);
+   }
+   return $value;
+}
+
 =head2 validate
 
 This method validates the input data for the field and returns true if
@@ -999,6 +1065,7 @@ sub test_ranges
 
    return 1;
 }
+
 
 # removed pod because deprecating in favor of filters
 sub trim_value
@@ -1122,5 +1189,5 @@ the same terms as Perl itself.
 =cut
 
 __PACKAGE__->meta->make_immutable;
-no Moose;
+no HTML::FormHandler::Moose;
 1;

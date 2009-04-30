@@ -10,10 +10,11 @@ use UNIVERSAL::require;
 use Locale::Maketext;
 use HTML::FormHandler::I18N; 
 use HTML::FormHandler::Params;
+use Scalar::Util qw(blessed);
 
 
 use 5.008;
-our $VERSION = '0.20';
+our $VERSION = '0.21';
 
 =head1 NAME
 
@@ -195,6 +196,12 @@ this to work.
 =cut
 
 has 'field_list' => ( isa => 'HashRef', is => 'rw', default => sub { {} } );
+sub has_field_list
+{
+   my $self = shift;
+   return 1 if( scalar keys %{$self->field_list} );
+   return;
+}
 
 =head2 fields
 
@@ -364,7 +371,7 @@ would be just "borrower".
    has '+name' => ( default => 'book' );
    has '+html_prefix' => ( default => 1 );
 
-Also see the Field attribute "prename", a convenience function which
+Also see the Field attribute "html_name", a convenience function which
 will return the form name + "." + field name
 
 If you want to use some other pattern to create the HTML field name,
@@ -944,17 +951,6 @@ sub value
    return $field->value; 
 }
 
-=head2 field_exists
-
-Returns true (the field) if the field exists
-
-=cut
-
-sub field_exists
-{
-   my ( $self, $name ) = @_;
-   return $self->field( $name, 1 );
-}
 
 
 =head2 munge_params
@@ -1128,15 +1124,17 @@ sub init_from_object
    warn "HFH: init_from_object ", $self->name, "\n" if $self->verbose;
    for my $field ( $node->fields )
    {
+      next if $field->parent && $field->parent != $node;
+      next if ref $item eq 'HASH' && !exists $item->{$field->accessor};
+      my $value = $self->_get_value( $field, $item );
+      $value = $field->_apply_deflations( $value );
       if( $field->isa( 'HTML::FormHandler::Field::Compound' ) ){
-          my $accessor = $field->accessor;
-          my $new_item = $item->$accessor;
-          $self->init_from_object( $field, $new_item );
+         $self->init_from_object( $field, $value );
       }
       else{
-         my @values;
          if ( $field->_can_init )
          {
+            my @values;
             @values = $field->_init( $field, $item );
             my $value = @values > 1 ? \@values : shift @values;
             $field->init_value($value) if $value;
@@ -1144,19 +1142,13 @@ sub init_from_object
          }
          else
          {
-            $self->init_value( $field, $item );
+            $self->init_value( $field, $value );
          }
-     }
+      }
    }
 }
 
-=head2 init_value
-
-This method populates a form field's value from the item object.
-
-=cut
-
-sub init_value
+sub _get_value
 {
    my ( $self, $field, $item ) = @_;
    my $accessor = $field->accessor;
@@ -1175,6 +1167,12 @@ sub init_value
       return;
    }
    my $value = @values > 1 ? \@values : shift @values;
+   return $value;
+}
+
+sub init_value
+{
+   my ( $self, $field, $value ) = @_;
    $field->init_value($value);
    $field->value($value);
 }
@@ -1271,7 +1269,7 @@ sub set_dependency
          next unless defined $value;
          # The exception is a boolean can be zero which we count as not set.
          # This is to allow requiring a field when a boolean is true.
-         my $field = $self->field_exists($name);
+         my $field = $self->field($name);
          next if $self->field($name)->type eq 'Boolean' && $value == 0;
          if ( ref $value )
          {

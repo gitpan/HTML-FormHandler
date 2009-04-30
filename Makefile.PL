@@ -8,7 +8,7 @@ license 'perl';
 
 # prereqs
 requires 'Carp';
-requires 'Moose'              => '0.59';
+requires 'Moose'              => '0.70';
 requires 'MooseX::AttributeHelpers' => '0.14';
 requires 'UNIVERSAL::require' => '0';
 requires 'Locale::Maketext'   => '1.09';
@@ -16,6 +16,7 @@ requires 'DateTime';
 requires 'DBIx::Class';
 requires 'HTML::Entities';
 requires 'MooseX::Getopt' => '0.16';
+requires 'Scalar::Util' => 0;
 
 recommends 'Catalyst';
 recommends 'Catalyst::Component::InstancePerContext';
@@ -25,6 +26,7 @@ recommends 'Test::WWW::Mechanize::Catalyst' => '0.50';
 # things the tests need
 test_requires 'Test::More'      => '0.77';
 test_requires 'DateTime::Format::MySQL';
+test_requires 'DateTime::Format::W3CDTF' => 0;
 
 tests_recursive();
 
