@@ -6,7 +6,7 @@ use lib 't/lib';
 BEGIN {
    eval "use DBIx::Class";
    plan skip_all => 'DBIX::Class required' if $@;
-   plan tests => 20;
+   plan tests => 24;
 }
 
 use_ok( 'HTML::FormHandler' );
@@ -61,10 +61,13 @@ my $validated = $form->validate;
 ok( $validated, 'validated without params' );
 
 is( $form->field('author')->fif, 'S.Else', 'get field fif value after validate' );
-ok( !$form->field('author')->has_input, 'no input for field');
+#ok( !$form->field('author')->has_input, 'no input for field');
 
 
 $form->clear_state;
+ok( !$form->fif, 'clear_state clears fif' );
+
+
 my $params = {
    title => 'Testing form',
    isbn => '02340234',
@@ -89,3 +92,29 @@ is_deeply( $form->fif, {
    pages => '699',
    author => 'J.Doe' }, 'get form fif after validation' );
 
+{
+   package My::Form;
+   use HTML::FormHandler::Moose;
+   extends 'HTML::FormHandler';
+
+   has_field 'my_compound' => ( type => 'Compound' );
+   has_field 'my_compound.one';
+   has_field 'my_compound.two';
+   has_field 'my_compound.three' => ( type => 'Compound' );
+   has_field 'my_compound.three.first';
+   has_field 'my_compound.three.second';
+}
+
+$form = My::Form->new;
+ok( $form, 'get form with compound fields' );
+$params = {
+   'my_compound.one' => 'What',
+   'my_compound.two' => 'Is',
+   'my_compound.three.first' => 'Up',
+   'my_compound.three.second' => 'With you?'
+};
+$form->validate($params);
+ok($form->validated, 'form validated');
+is_deeply($form->fif, $params, 'fif is correct');
+$form->clear_fif;
+ok( !$form->fif, 'fif is cleared');

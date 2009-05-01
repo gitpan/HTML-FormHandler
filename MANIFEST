@@ -11,7 +11,6 @@ inc/Module/Install/Metadata.pm
 inc/Module/Install/Win32.pm
 inc/Module/Install/WriteAll.pm
 lib/HTML/FormHandler.pm
-lib/HTML/FormHandler/field.pm
 lib/HTML/FormHandler/Field.pm
 lib/HTML/FormHandler/Field/Boolean.pm
 lib/HTML/FormHandler/Field/Checkbox.pm
@@ -66,7 +65,6 @@ MANIFEST			This list of files
 META.yml
 README
 script/form_generator.pl
-t/00create_db.t
 t/01app.t
 t/02pod.t
 t/add_field.t
@@ -171,6 +169,7 @@ t/lib/BookDB/root/widget/select.tt
 t/lib/BookDB/root/widget/text.tt
 t/lib/BookDB/root/widget/textarea.tt
 t/lib/BookDB/Schema/DB.pm
+t/lib/BookDB/Schema/DB/Address.pm
 t/lib/BookDB/Schema/DB/Author.pm
 t/lib/BookDB/Schema/DB/Book.pm
 t/lib/BookDB/Schema/DB/BooksGenres.pm

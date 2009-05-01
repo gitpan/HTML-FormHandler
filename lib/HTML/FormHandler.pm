@@ -14,7 +14,7 @@ use Scalar::Util qw(blessed);
 
 
 use 5.008;
-our $VERSION = '0.21';
+our $VERSION = '0.22';
 
 =head1 NAME
 
@@ -692,8 +692,7 @@ sub validate_form
       # Trim values and move to "input" slot
       if ( exists $params->{$field->full_name} )
       {
-         # trim_value may be replaced by some kind of filter in the future
-         $field->input( $field->trim_value( $params->{$field->full_name} ) )
+         $field->input( $params->{$field->full_name} )
       }
       elsif ( $field->has_input_without_param )
       {
@@ -718,7 +717,6 @@ sub validate_form
    $self->ran_validation(1);
    $self->validated( !$errors );
    $self->dump_validated if $self->verbose;
-   $_->clear_input for $self->fields;
 
    return $self->validated;
 }
@@ -791,25 +789,9 @@ sub clear_state
 
 Clears field values
 
-=cut
-
-sub clear_values
-{
-   my $self = shift;
-   $_->clear_value for $self->fields;
-}
-
 =head2 clear_errors
 
 Clears field errors
-
-=cut
-
-sub clear_errors
-{
-   my $self = shift;
-   $_->clear_errors for $self->fields;
-}
 
 =head2 clear_fif
 
@@ -817,45 +799,17 @@ Clears fif values
 
 =cut
 
-sub clear_fif
-{
-   my $self = shift;
-   $_->clear_fif for $self->fields;
-}
+sub clear_fif { shift->clear_fifs }
 
 =head2 dump_fields
 
 Dumps the fields of the form for debugging. This method is called when
 the verbose flag is turned on.
 
-=cut
-
-sub dump_fields
-{
-   my $self = shift;
-
-   warn "HFH: ------- fields for form ", $self->name, "-------\n";
-   for my $field ( $self->sorted_fields )
-   {
-      $field->dump;
-   }
-   warn "HFH: ------- end fields -------\n";
-}
-
 =head2 dump_validated
 
 For debugging, dump the validated fields. This method is called when the
 verbose flag is on.
-
-=cut
-
-sub dump_validated
-{
-   my $self = shift;
-   warn "HFH: fields validated:\n";
-   warn "HFH: ", $_->name, ": ", ( $_->has_errors ? join( ' | ', $_->errors ) : 'validated' ), "\n"
-      for $self->fields;
-}
 
 =head2 fif  (fill in form)
 
@@ -921,7 +875,7 @@ sub values
    return $values;
 }
 
-=head2 field NAME
+=head2 field($name)
 
 This is the method that is usually called in your templates to
 access a field:
@@ -1152,7 +1106,6 @@ sub _get_value
 {
    my ( $self, $field, $item ) = @_;
    my $accessor = $field->accessor;
-   
    my @values;
    if (blessed $item && $item->can($accessor))
    {
