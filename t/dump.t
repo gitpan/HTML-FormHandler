@@ -1,9 +1,12 @@
 use strict;
 use warnings;
 use Test::More;
+use Test::Warn;
 use lib 't/lib';
 
 BEGIN {
+   plan skip_all => 'Set HFH_DUMP_TEST to run this test'
+      unless $ENV{HFH_DUMP_TEST};
    eval "use DBIx::Class";
    plan skip_all => 'DBIX::Class required' if $@;
    plan tests => 7;
@@ -31,10 +34,11 @@ my $good = {
     'publisher' => 'EreWhon Publishing',
 };
 
-ok( $form->update( schema => $schema, params => $good ), 'Good data' );
+ok( $form->process( schema => $schema, params => $good ), 'Good data' );
 my $book = $form->item;
 END {
   $book->delete;
 } 
 
 ok( $form->item, 'get new book object' );
+

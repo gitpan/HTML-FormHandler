@@ -11,8 +11,10 @@ HTML::FormHandler::Fields - role to build field array
 
 =head1 SYNOPSIS
 
-These are internal methods to build the field array. Probably
-not useful to users. 
+These are the methods that are necessary to build and access the
+fields arrays in a form and a compound field. This is a role which
+is composed into L<HTML::FormHandler> and 
+L<HTML::FormHandler::Field::Compound>
 
 =head2 fields
 
@@ -21,7 +23,34 @@ declarations. This is a MooseX::AttributeHelpers::Collection::Array,
 and provides clear_fields, add_field, remove_last_field, num_fields,
 has_fields, and set_field_at methods.
 
+=head2 field( $full_name )
+
+Return the field objct with the full_name passed. Will return undef
+if the field is not found, or will die if passed a second parameter.
+
+=head2 field_index
+
+Convenience function for use with 'set_field_at'. Pass in 'name' of field
+(not full_name)
+
+=head2 sorted_fields
+
+Calls fields and returns them in sorted order by their "order"
+value. Non-sorted fields are retrieved with 'fields'. 
+
+=head2 clear methods
+
+  clear_errors
+  clear_fifs
+  clear_values
+
+=head2 Dump information 
+
+   dump - turn verbose flag on to get this output
+   dump_validated - shorter version
+
 =cut
+
 
 has 'fields' => (
    metaclass  => 'Collection::Array',
@@ -31,7 +60,7 @@ has 'fields' => (
    auto_deref => 1,
    provides   => {
       clear => 'clear_fields',
-      push  => 'add_field',
+      push  => 'push_field',
       pop   => 'remove_last_field',
       count => 'num_fields',
       empty => 'has_fields',
@@ -39,23 +68,60 @@ has 'fields' => (
    }
 );
 
-=head2 build_fields
+sub add_field
+{
+   shift->push_field(@_);
+}
 
-This parses the field lists and creates the individual
-field objects.  It calls the _make_field() method for each field.
-This is called by the BUILD method. Users don't need to call this.
+has 'field_name_space' => (
+   isa     => 'Str|Undef',
+   is      => 'rw',
+   lazy    => 1,
+   default => '',
+);
 
-=cut
+has 'field_list' => ( isa => 'HashRef|ArrayRef', is => 'rw', default => sub { {} } );
+sub has_field_list
+{
+   my ( $self, $field_list ) = @_;
+   $field_list ||= $self->field_list;
+   if( ref $field_list eq 'HASH' )
+   {
+      return $field_list if( scalar keys %{$field_list} );
+   }
+   elsif( ref $field_list eq 'ARRAY' )
+   {
+      return $field_list if( scalar @{$field_list} );
+   }
+   return;
+}
 
-sub build_fields
+# _init is for building select lists and empty repeatables when
+# there is no initial object and no params
+sub _init
+{
+   $_->_init for shift->fields;
+}
+
+# calls routines to process various field lists
+# orders the fields after processing in order to skip
+# fields which have had the 'order' attribute set 
+sub _build_fields
 {
    my $self = shift;
 
    my $meta_flist = $self->_build_meta_field_list;
    $self->_process_field_array( $meta_flist, 0 ) if $meta_flist;
-   $self->_process_field_list( $self->field_list )
-      if ( $self->can('field_list') && $self->has_field_list );
+   my $flist = $self->has_field_list;
+   $self->_process_field_list( $flist ) if $flist;
    return unless $self->has_fields;
+
+   # order the fields
+   # There's a hole in this... if child fields are defined at
+   # a level above the containing parent, then they won't
+   # exist when this routine is called and won't be ordered.
+   # This probably needs to be moved out of here into
+   # a separate recursive step that's called after build_fields.
 
    # get highest order number
    my $order = 0;
@@ -65,67 +131,73 @@ sub build_fields
    }
    $order++;
    # number all unordered fields
-   my @expand_fields;
    foreach my $field ( $self->fields )
    {
       $field->order($order) unless $field->order;
       $order++;
-      # collect child references in parent field
-      push @expand_fields, $field if $field->name =~ /\./;
    }
-   @expand_fields = sort { $a->name cmp $b->name } @expand_fields;
-   foreach my $field (@expand_fields)
-   {
-      my @names       = split /\./, $field->name;
-      my $simple_name = pop @names;
-      my $parent_name = pop @names;
-      my $parent      = $self->field($parent_name);
-      next unless $parent;
-      $field->parent($parent);
-      $field->name($simple_name);
-      $parent->add_field($field);
-   }
-
 }
 
+
+# process all the stupidly many different formats for field_list
+# remove undocumented syntaxes after a while
 sub _process_field_list
 {
    my ( $self, $flist ) = @_;
 
+   if ( ref $flist eq 'ARRAY' )
+   {
+      $self->_process_field_array( $self->_array_fields( $flist ) );
+      return;
+   };
+   # these should go away. not really necessary
    $self->_process_field_array( $self->_hashref_fields( $flist->{'required'}, 1 ) )
       if $flist->{'required'};
    $self->_process_field_array( $self->_hashref_fields( $flist->{'optional'}, 0 ) )
       if $flist->{'optional'};
+   # these next two are deprecated. use array instead
    $self->_process_field_array( $self->_hashref_fields( $flist->{'fields'} ) )
       if ( $flist->{'fields'} && ref $flist->{'fields'} eq 'HASH' );
    $self->_process_field_array( $self->_array_fields( $flist->{'fields'} ) )
       if ( $flist->{'fields'} && ref $flist->{'fields'} eq 'ARRAY' );
+   # don't encourage use of these two. functionality too limited. 
    $self->_process_field_array( $self->_auto_fields( $flist->{'auto_required'}, 1 ) )
       if $flist->{'auto_required'};
    $self->_process_field_array( $self->_auto_fields( $flist->{'auto_optional'}, 0 ) )
       if $flist->{'auto_optional'};
 }
 
+# loops through all inherited classes and composed roles
+# to find fields specified with 'has_field'
 sub _build_meta_field_list
 {
    my $self = shift;
    my @field_list;
+
    foreach my $sc ( reverse $self->meta->linearized_isa )
    {
       my $meta = $sc->meta;
       if ( $meta->can('calculate_all_roles') )
       {
-         foreach my $role ( $meta->calculate_all_roles )
+         foreach my $role ( reverse $meta->calculate_all_roles )
          {
             if ( $role->can('field_list') && $role->has_field_list )
             {
-               push @field_list, @{ $role->field_list };
+               foreach my $fld_def ( @{ $role->field_list} )
+               {
+                  my %new_fld = %{$fld_def}; # copy hashref
+                  push @field_list, \%new_fld; 
+               }
             }
          }
       }
       if ( $meta->can('field_list') && $meta->has_field_list )
       {
-         push @field_list, @{ $meta->field_list };
+         foreach my $fld_def ( @{$meta->field_list} )
+         {
+            my %new_fld = %{$fld_def}; # copy hashref
+            push @field_list, \%new_fld; 
+         }
       }
    }
    return \@field_list if scalar @field_list;
@@ -188,10 +260,14 @@ sub _array_fields
    return \@new_fields;
 }
 
+# loop through array of field hashrefs
 sub _process_field_array
 {
    my ( $self, $fields ) = @_;
 
+   # the point here is to process fields in the order parents
+   # before children, so we process all fields with no dots
+   # first, then one dot, then two dots...
    my $num_fields   = scalar @$fields;
    my $num_dots     = 0;
    my $count_fields = 0;
@@ -201,7 +277,7 @@ sub _process_field_array
       {
          my $count = ( $field->{name} =~ tr/\.// );
          next unless $count == $num_dots;
-         $self->_set_field($field);
+         $self->_make_field($field);
          $count_fields++;
       }
       $num_dots++;
@@ -209,49 +285,9 @@ sub _process_field_array
 
 }
 
-# this looks for existing fields by $name or full_name
-# some fields don't have their names adjusted until later
-# (duration.month) in build_fields so some fields might not be found.
-# But parent field might not exist yet, so can't do here.
-# catch 22?
-sub _set_field
-{
-   my ( $self, $field_attr ) = @_;
-
-   if ( $field_attr->{name} =~ /^\+(.*)/ )
-   {
-      my $name           = $1;
-      my $existing_field = $self->field($name);
-      if ($existing_field)
-      {
-         delete $field_attr->{name};
-         foreach my $key ( keys %{$field_attr} )
-         {
-            $existing_field->$key( $field_attr->{$key} )
-               if $existing_field->can($key);
-         }
-      }
-      else
-      {
-         warn "HFH: field $name does not exist. Cannot update.";
-      }
-      return;
-   }
-   $self->_make_field($field_attr);
-}
-
-=head2 _make_field
-
-    $field = $form->_make_field( $field_attr );
-
-Maps the field type to a field class, creates a field object and
-and returns it.
-
-The 'field_attr' hashref must have a 'name' key
-
-
-=cut
-
+# Maps the field type to a field class, finds the parent,
+# sets the 'form' attribute, calls update_or_create
+# The 'field_attr' hashref must have a 'name' key
 sub _make_field
 {
    my ( $self, $field_attr ) = @_;
@@ -261,7 +297,13 @@ sub _make_field
    my $name = $field_attr->{name};
    return unless $name;
 
-   # TODO what about fields with fields? namespace from where?
+   my $do_update;
+   if( $name =~ /^\+(.*)/ )
+   {
+      $field_attr->{name} = $name = $1;
+      $do_update = 1;
+   }
+
    my $class =
         $type =~ s/^\+//
       ? $self->field_name_space
@@ -274,7 +316,7 @@ sub _make_field
       if !Class::Inspector->loaded($class);
 
    $field_attr->{form} = $self->form if $self->form;
-   # parent and name correction
+   # parent and name correction for names with dots
    if ( $field_attr->{name} =~ /\./ )
    {
       my @names       = split /\./, $field_attr->{name};
@@ -294,27 +336,44 @@ sub _make_field
       # set parent 
       $field_attr->{parent} = $self;
    }
-   my $field = $class->new( %{$field_attr} );
-   $self->update_or_create( $field->parent || $self->form, $field );
+   $self->_update_or_create( $field_attr->{parent} || $self->form, 
+                          $field_attr, $class, $do_update );
 }
 
-sub update_or_create
+
+# update, replace, or create field
+sub _update_or_create
 {
-   my ( $self, $parent, $field ) = @_; 
+   my ( $self, $parent, $field_attr, $class, $do_update ) = @_; 
 
-   my $index = $parent->field_index( $field->name );
+   my $index = $parent->field_index( $field_attr->{name} );
+   my $field;
    if ( defined $index ) 
-   { $parent->set_field_at( $index, $field ); }
-   else                  
-   { $parent->add_field($field); }
+   { 
+      if( $do_update ) # this field started with '+'. Update.
+      {
+         $field = $parent->field($field_attr->{name}); 
+         die "Field to update for " . $field_attr->{name} . " not found"
+            unless $field;
+         delete $field_attr->{name};
+         foreach my $key ( keys %{$field_attr} )
+         {
+            $field->$key( $field_attr->{$key} )
+               if $field->can($key);
+         }
+      }
+      else # replace existing field
+      {
+         $field = $class->new( %{$field_attr} );
+         $parent->set_field_at( $index, $field ); 
+      }
+   }
+   else # new field
+   {  
+      $field = $class->new( %{$field_attr} );
+      $parent->add_field($field); 
+   }
 }
-
-=head2 field_index
-
-Convenience function for use with 'set_field_at'. Pass in 'name' of field
-(not full_name)
-
-=cut 
 
 sub field_index
 {
@@ -328,26 +387,25 @@ sub field_index
    return;
 }
 
-=head2 field
-
-=cut
-
 sub field
 {
    my ( $self, $name, $die ) = @_;
 
    my $index;
+   # if this is a full_name for a compound field
+   # walk through the fields to get to it
    if( $name =~ /\./ )
    {
       my @names = split /\./, $name;
-      my $f = $self->form;
+      my $f = $self->form || $self;
       foreach my $fname (@names)
       {
          $f = $f->field($fname); 
+         return unless $f;
       }
       return $f;
    }
-   else
+   else # not a compound name
    {
       for my $field ( $self->fields )
       {
@@ -358,13 +416,7 @@ sub field
    croak "Field '$name' not found in '$self'";
 }
 
-=head2 sorted_fields
-
-Calls fields and returns them in sorted order by their "order"
-value. Non-sorted fields are retrieved with 'fields'. 
-
-=cut
-
+# this may be an array of fields flattened from the tree
 sub sorted_fields
 {
    my $self = shift;
@@ -373,44 +425,39 @@ sub sorted_fields
    return wantarray ? @fields : \@fields;
 }
 
-=head2 fields_validate
-
-=cut
-
-sub fields_validate
+#  the routine for looping through and processing each field
+#  Called by FormHandler and Field::Compound
+sub _fields_validate
 {
    my $self = shift;
    # validate all fields
    foreach my $field ( $self->fields )
    {
       next if $field->clear;    # Skip validation
-                                # parent fields will call validation for children
+      # parent fields will call validation for children
+      # there shouldn't be fields like this now. child fields should only
+      # exist beneath their parents
       next if $field->parent && $field->parent != $self;
       # Validate each field and "inflate" input -> value.
-      $field->process;          # this calls the field's 'validate' routine
+      $field->validate_field;          # this calls the field's 'validate' routine
       next unless $field->has_value && defined $field->value;
       # these methods have access to the inflated values
       $field->_validate($field);    # will execute a form-field validation routine
    }
+   $self->cross_validate;
 }
 
-=head2 clear_errors
+sub cross_validate { }
 
-Clears field errors
-
-=cut
+sub clear_other
+{
+   $_->clear_data for shift->fields;
+}
 
 sub clear_errors
 {
-   my $self = shift;
-   $_->clear_errors for $self->fields;
+   $_->clear_errors for shift->fields;
 }
-
-=head2 clear_fif
-
-Clears fif values
-
-=cut
 
 sub clear_fifs
 {
@@ -423,12 +470,6 @@ sub clear_fifs
    }
 }
 
-=head2 clear_values
-
-Clears fif values
-
-=cut
-
 sub clear_values
 {
    my $self = shift;
@@ -439,12 +480,15 @@ sub clear_values
    }
 }
 
-=head2 dump
-
-Dumps the the array of fields for debugging. This method is called when
-the verbose flag is turned on.
-
-=cut
+sub clear_inputs
+{
+   my $self = shift;
+   foreach my $field ($self->fields)
+   {
+      $field->clear_inputs if $field->can('clear_inputs');
+      $field->clear_input;
+   }
+}
 
 sub dump_fields { shift->dump( @_) }
 sub dump
@@ -458,13 +502,6 @@ sub dump
    }
    warn "HFH: ------- end fields -------\n";
 }
-
-=head2 dump_validated
-
-For debugging, dump the validated fields. This method is called when the
-verbose flag is on.
-
-=cut
 
 sub dump_validated
 {

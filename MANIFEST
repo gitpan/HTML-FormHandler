@@ -8,6 +8,7 @@ inc/Module/Install/Fetch.pm
 inc/Module/Install/Include.pm
 inc/Module/Install/Makefile.pm
 inc/Module/Install/Metadata.pm
+inc/Module/Install/Scripts.pm
 inc/Module/Install/Win32.pm
 inc/Module/Install/WriteAll.pm
 lib/HTML/FormHandler.pm
@@ -34,7 +35,10 @@ lib/HTML/FormHandler/Field/Multiple.pm
 lib/HTML/FormHandler/Field/Nested.pm
 lib/HTML/FormHandler/Field/Password.pm
 lib/HTML/FormHandler/Field/PosInteger.pm
+lib/HTML/FormHandler/Field/PrimaryKey.pm
 lib/HTML/FormHandler/Field/Radio.pm
+lib/HTML/FormHandler/Field/Repeatable.pm
+lib/HTML/FormHandler/Field/Repeatable/Instance.pm
 lib/HTML/FormHandler/Field/Second.pm
 lib/HTML/FormHandler/Field/Select.pm
 lib/HTML/FormHandler/Field/Text.pm
@@ -56,10 +60,13 @@ lib/HTML/FormHandler/Meta/Role.pm
 lib/HTML/FormHandler/Model.pm
 lib/HTML/FormHandler/Model/CDBI.pm
 lib/HTML/FormHandler/Model/DBIC.pm
+lib/HTML/FormHandler/Model/DBIC.pm.ru
+lib/HTML/FormHandler/Model/show.out
 lib/HTML/FormHandler/Moose.pm
 lib/HTML/FormHandler/Moose/Role.pm
 lib/HTML/FormHandler/Params.pm
 lib/HTML/FormHandler/Render/Simple.pm
+lib/HTML/FormHandler/Types.pm
 Makefile.PL
 MANIFEST			This list of files
 META.yml
@@ -81,6 +88,7 @@ t/controller.t
 t/db/book.db
 t/db/bookdb.sql
 t/db_fif.t
+t/db_has_many.t
 t/db_options.t
 t/db_validate.t
 t/dbic_accessor.t
@@ -110,7 +118,6 @@ t/Field/textarea.t
 t/Field/weekday.t
 t/Field/weekdaystr.t
 t/Field/year.t
-t/field_counter.t
 t/field_has_field.t
 t/field_names.t
 t/field_select.t
@@ -120,6 +127,7 @@ t/form_handler.t
 t/form_options.t
 t/generator.t
 t/has_field.t
+t/has_many.t
 t/init_object.t
 t/lib/BookDB.pm
 t/lib/BookDB/Controller/Author.pm
@@ -175,8 +183,10 @@ t/lib/BookDB/Schema/DB/Book.pm
 t/lib/BookDB/Schema/DB/BooksGenres.pm
 t/lib/BookDB/Schema/DB/Borrower.pm
 t/lib/BookDB/Schema/DB/Country.pm
+t/lib/BookDB/Schema/DB/Employer.pm
 t/lib/BookDB/Schema/DB/Format.pm
 t/lib/BookDB/Schema/DB/Genre.pm
+t/lib/BookDB/Schema/DB/License.pm
 t/lib/BookDB/Schema/DB/User.pm
 t/lib/BookDB/View/TT.pm
 t/lib/Field/Address.pm
@@ -188,6 +198,7 @@ t/lib/Form/Person.pm
 t/lib/Form/PersonRole.pm
 t/lib/Form/Test.pm
 t/lib/Form/Two.pm
+t/list.t
 t/load_field.t
 t/model.t
 t/model_cdbi.t
@@ -199,8 +210,10 @@ t/order.t
 t/params.t
 t/password.t
 t/process.t
+t/related.t
 t/render.t
 t/script/bookdb_server.pl
 t/script/bookdb_test.pl
+t/types.t
 t/unique.t
 TODO

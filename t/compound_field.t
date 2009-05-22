@@ -38,11 +38,11 @@ ok( $form->field('duration.hours'), 'duration.hours field' );
 
 my $params = { name => 'Testing', 'duration.hours' => 2, 'duration.minutes' => 30 };
 
-$form->validate( params => $params );
+$form->process( params => $params );
 ok( $form->validated, 'form validated' );
 
 is_deeply($form->fif, $params, 'get fif with right value');
-is( $form->value('duration')->hours, 2, 'duration value is correct');
+is( $form->field('duration')->value->hours, 2, 'duration value is correct');
 
 {
    package Form::Start;
@@ -61,11 +61,11 @@ my $dtform = Form::Start->new;
 ok( $dtform, 'datetime form' );
 $params = { name => 'DT_testing', 'start_date.month' => '10',
     'start_date.day' => '2', 'start_date.year' => '2008' };
-$dtform->validate( params => $params );
+$dtform->process( params => $params );
 
 ok( $dtform->validated, 'form validated' );
 
-is( $dtform->value('start_date')->mdy, '10-02-2008', 'datetime value');
+is( $dtform->field('start_date')->value->mdy, '10-02-2008', 'datetime value');
 
 {
    package Field::MyCompound;
@@ -91,7 +91,7 @@ $params = {
     'compound.aaa' => 'aaa',
     'compound.bbb' => 'bbb',
 };
-$form->validate( params => $params );
+$form->process( params => $params );
 is_deeply( $form->values, { compound => { aaa => 'aaa', bbb => 'bbb' } }, 'Compound with separate fields - values in hash' );
 is_deeply( $form->fif, $params, 'get fif from compound field' );
 

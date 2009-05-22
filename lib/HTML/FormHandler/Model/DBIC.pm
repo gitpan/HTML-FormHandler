@@ -5,6 +5,7 @@ extends 'HTML::FormHandler';
 use Carp;
 use UNIVERSAL::require;
 use DBIx::Class::ResultClass::HashRefInflator;
+use DBIx::Class::ResultSet::RecursiveUpdate;
 use Scalar::Util qw(blessed);
 
 our $VERSION = '0.03';
@@ -105,12 +106,6 @@ sub validate_model
    return 1;
 }
 
-=head2 clear_model
-
-Clear state for persistent forms
-
-=cut
-
 sub clear_model
 {
    my $self = shift;
@@ -137,129 +132,21 @@ in a hashref, followed by "other" fields and relationships.
 
 sub update_model
 {
-   my ($self) = @_;
-   my $item   = $self->item;
-   my $source = $self->source;
-   my $updated_or_created;
+    my $self = shift;
+    my $item   = $self->item;
+    my $source = $self->source;
 
-   warn "HFH: update_model for ", $self->name, "\n" if $self->verbose;
-   # get a hash of all fields, skipping fields marked 'noupdate'
-   my %columns;
-   my %multiple_has_many;
-   my %multiple_m2m;
-   my %select;
-   my %other_rel;
-   my %other;
-   my $field;
-   my $value;
-   # Save different flavors of fields into hashes for processing
-   foreach $field ( $self->fields )
-   {
-      next if $field->noupdate;
-      next unless $field->has_value;
-      my $accessor = $field->accessor;
-      # If the field is flagged "clear" then set to NULL.
-      $value = $field->clear ? undef : $field->value;
-      if ( $source->has_relationship($accessor) )
-      {
-         if ($field->can('options'))
-         {
-            $select{$accessor} = $value;
-         } 
-         else
-         {
-            # for now just remove other relationships because
-            # they aren't handled here, and could be handled in a subclass
-            $other_rel{$accessor} = $value;
-         }
-      }
-      elsif ( $source->has_column($accessor) )
-      {
-         $columns{$accessor} = $value;
-      }
-      elsif ( $field->can('multiple' ) && $field->multiple == 1 )
-      {
-         # didn't have a relationship and is multiple, so must be m2m
-         $multiple_m2m{$accessor} = $value;
-      }
-      else    # neither a column nor a rel
-      {
-         $other{$accessor} = $value;
-      }
-   }
-   my $changed;
-   # Handle database columns
-   if ($item)
-   {
-      for my $accessor ( keys %columns )
-      {
-         $value = $columns{$accessor};
-         my $cur = $item->$accessor;
-         next unless $value || $cur;
-         next if ( ( $value && $cur ) && ( $value eq $cur ) );
-         $item->$accessor($value);
-         $changed++;
-      }
-      $updated_or_created = 'updated';
-   }
-   else    # create new item
-   {
-      $item = $self->resultset->create( \%columns );
-      $self->item($item);
-      $updated_or_created = 'created';
-   }
-
-   # Set single select lists with rel different from column
-   for my $accessor ( keys %select )
-   {
-      my $rel_info = $item->relationship_info($accessor);
-      my ($cond)     = values %{ $rel_info->{cond} };
-      my ($self_col) = $cond =~ m/^self\.(\w+)$/;
-      $item->$self_col( $select{$accessor} );
-      $changed++;
-   }
-
-   # set non-column, non-rel attributes
-   for my $accessor ( keys %other )
-   {
-      next unless $item->can($accessor);
-      $item->$accessor( $other{$accessor} );
-      $changed++;
-   }
-   # update db
-   $item->update_or_insert if $changed;
-
-   # process Multiple field 'many_to_many' relationships
-   for my $accessor ( keys %multiple_m2m )
-   {
-      $value = $multiple_m2m{$accessor};
-      my %keep;
-      %keep = map { $_ => 1 } ref $value ? @$value : ($value)
-         if defined $value;
-      my $meth;
-      my $row;
-      if ( $updated_or_created eq 'updated' )
-      {
-         foreach $row ( $item->$accessor->all )
-         {
-            $meth = 'remove_from_' . $accessor;
-            $item->$meth( $row ) 
-               unless delete $keep{ $row->id };
-         }
-      }
-      my $source_name = $item->$accessor->result_source->source_name;
-      foreach my $id ( keys %keep )
-      {
-         $row = $self->schema->resultset($source_name)->find($id);
-         $meth = 'add_to_' . $accessor;
-         $item->$meth( $row );
-      }
-   }
-
-   # Save item in form object
-   $self->item($item);
-   warn "HFH: finished update_model for ", $self->name, "\n" if $self->verbose;
-   return $item;
+    warn "HFH: update_model for ", $self->name, "\n" if $self->verbose;
+    #warn "fif: " . Dumper ( $self->fif ); use Data::Dumper;
+    my %update_params = ( 
+        resultset => $self->resultset, 
+        updates => $self->values,
+    );
+    $update_params{ object } = $self->item if $self->item;
+    my $new_item = DBIx::Class::ResultSet::RecursiveUpdate::Functions::recursive_update( %update_params );
+    $new_item->discard_changes;
+    $self->item($new_item);
+    return $new_item;
 }
 
 
@@ -275,9 +162,9 @@ This subroutine is only called for "auto" fields, defined like:
 Pass in a column and it will guess the field type and return it.
 
 Currently returns:
-    DateTimeDMYHM   - for a has_a relationship that isa DateTime
-    Select          - for a has_a relationship
-    Multiple        - for a has_many
+    DateTime     - for a has_a relationship that isa DateTime
+    Select       - for a has_a relationship
+    Multiple     - for a has_many
 
 otherwise:
     DateTimeDMYHM   - if the field ends in _time
@@ -306,7 +193,7 @@ sub guess_field_type
       my $f_class = $source->related_class($column);
       @return =
          $f_class->isa('DateTime')
-         ? ('DateTimeDMYHM')
+         ? ('DateTime')
          : ('Select');
    }
    # Else is it has_many?
@@ -317,7 +204,7 @@ sub guess_field_type
    }
    elsif ( $column =~ /_time$/ )    # ends in time, must be time value
    {
-      @return = ('DateTimeDMYHM');
+      @return = ('DateTime');
    }
    else                             # default: Text
    {
@@ -358,10 +245,11 @@ The currently selected values in a Multiple list are grouped at the top
 
 sub lookup_options
 {
-   my ( $self, $field, $self_source ) = @_;
+   my ( $self, $field, $accessor_path ) = @_;
 
    return unless $self->schema;
-   $self_source ||= $self->source;
+   my $self_source = $self->get_source( $accessor_path );
+
    my $accessor = $field->accessor;
 
    # if this field doesn't refer to a foreign key, return
@@ -421,7 +309,6 @@ This method sets a field's value (for $field->value).
 
 This method is not called if a method "init_value_$field_name" is found 
 in the form class - that method is called instead.
-This allows overriding specific fields in your form class.
 
 =cut
 
@@ -447,17 +334,21 @@ sub _fix_value
    return $value;
 }
 
+=pod
 
 sub _get_pk_for_related {
-    my ( $object, $relation ) = @_;
+    my ( $self, $object, $relation ) = @_;
 
     my $source = $object->result_source;
-    my $result_source = _get_related_source( $source, $relation );
+    my $result_source = $self->_get_related_source( $source, $relation );
     return $result_source->primary_columns;
 }
 
+=cut
+
 sub _get_related_source {
-    my ( $source, $name ) = @_;
+    my ( $self, $source, $name ) = @_;
+
     if( $source->has_relationship( $name ) ){
         return $source->related_source( $name );
     }
@@ -498,7 +389,7 @@ sub validate_unique
       next
          if $count == 1
             && $self->item_id 
-            && $self->item_id == $rs->search( { $accessor => $value } )->first->id;
+            && $self->item_id eq $rs->search( { $accessor => $value } )->first->id;
       my $field_error = $field->unique_message || 'Duplicate value for ' . $field->label;
       $field->add_error( $field_error );
       $found_error++;
@@ -534,20 +425,34 @@ sub build_item
    return $item;
 }
 
-=head2 set_item
-
-Trigger that executes when 'item' is set. Sets 'item_id', 'item_class',
-and 'schema' from the 'item'. 
-
-=cut
-
 sub set_item
 {
    my ( $self, $item ) = @_;
    return unless $item;
-   $self->item_id( $item->id );
+   # when the item (DBIC row) is set, set the item_id, item_class
+   # and schema from the item
+   if( $item->id )
+   { $self->item_id($item->id); }
+   else
+   { $self->clear_item_id; }
    $self->item_class( $item->result_source->source_name );
    $self->schema( $item->result_source->schema );
+}
+
+sub set_item_id
+{
+   my ( $self, $item_id ) = @_;
+   # if a new item_id has been set
+   # clear an existing item
+   if( defined $self->item )
+   {
+      $self->clear_item
+         if( !defined $item_id || 
+             (ref $item_id eq 'ARRAY' &&
+              join('', @{$item_id}) ne join('', $self->item->id)) ||
+             (ref \$item_id eq 'SCALAR' && 
+              $item_id ne $self->item->id));
+   }
 }
 
 
@@ -584,20 +489,47 @@ sub resultset
    return $self->schema->resultset( $self->source_name || $self->item_class );
 }
 
+=pod
+
 sub compute_model_stuff {
     my ( $self, $field, $source ) = @_;
     if( ! $source ){
         return if !$self->schema;
         $source = $self->source;
     }
-    return _get_related_source( $source, $field->accessor );
+    return $self->_get_related_source( $source, $field->accessor );
+}
+
+=cut
+
+
+sub new_lookup_options
+{
+   my ( $self, $field, $accessor_path ) = @_;
+
+   my $source = $self->get_source( $accessor_path );
+   $self->lookup_options( $field, $source );
+}
+
+sub get_source
+{
+   my ( $self, $accessor_path ) = @_;
+   return unless $self->schema;
+   my $source = $self->source;
+   return $source unless $accessor_path;
+   my @accessors = split /\./, $accessor_path;
+   for my $accessor ( @accessors ) 
+   {
+       $source = $self->_get_related_source( $source, $accessor );
+       die "unable to get source for $accessor" unless $source;
+   }
+   return $source;
 }
  
 
 =head1 SUPPORT
 
-The author can be contacted through the L<Catalyst> or L<DBIx::Class> mailing 
-lists or IRC channels (gshank).
+See L<HTML::FormHandler>
 
 =head1 AUTHOR
 

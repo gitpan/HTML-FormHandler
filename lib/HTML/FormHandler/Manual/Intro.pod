@@ -4,11 +4,12 @@ HTML::FormHandler::Manual::Intro - basic usage of FormHandler
 
 =head1 SUMMARY
 
-HTML::FormHandler is a form handling class primarily useful for getting HMTL form
-data into the database. It provides attributes on fields that can be used
-for creating a set of widgets and highly automatic templates, but does
-not actually create the HTML code themselves, although there is an example of a
-rendering role.
+HTML::FormHandler is a form handling class that validates HTML form data
+and, for database forms, saves it to the database on validation. 
+It has field classes that can be used for creating a set of widgets 
+and highly automatic templates. There is a simple rendering role,
+L<HTML::FormHandler::Render::Simple>, and FormHandler is designed to
+make it easy to produce alternative rendering modules.
 
 The DBIC & CDBI  models will save form fields automatically to the database, will
 retrieve selection lists from the database (with type => 'Select' and a 
@@ -18,16 +19,15 @@ many_to_many relationship), and will save the selected values (one value for
 
 The 'form' is a Perl subclass of L<HTML::FormHandler> for non-database forms,
 or a subclass of a model class for database forms, and in it you define
-your fields (with many possible attributes), and initialization
-and validation routines. Because it's a Perl class, you have a lot of 
-flexibility.
+your fields and validation routines. Because it's a Perl class, you have a 
+lot of flexibility.
 
-You can use transformations. Moose type constraints, and coercions, listed 
+You can use transformations, Moose type constraints, and coercions, listed 
 in the field's 'apply' attribute, to validate or inflate the fields 
 (see L<HTML::FormHandler::Field/apply>).  You can define your own 
 L<HTML::FormHandler::Field> classes to create your own field types, and 
-perform specialized validation. And you can subclass the methods in 
-L<HTML::FormHandler::Model::DBIC> and L<HTML::FormHandler>.
+perform specialized validation. You can create L<MooseX::Types> libraries
+and use them to perform field validation.
 
 The L<HTML::FormHandler> package includes a working 
 example using a SQLite database and a number of forms in the test directory.
@@ -151,22 +151,16 @@ passed in, or from the primary key ('item_id') and schema.
 
 The example above uses persistent forms in a Moose attribute. The
 'process' method will clear out non-persistent form values and
-update the information from the database row (if given). If you
-modify form attributes that are not automatically cleared, you must
-set those attributes on every request or clear them yourself.
-
+update the information from the database row (if given). 
 You can also create a new form on each request with new:
 
    my $form = BookDB::Form::Book->new( item => $book );
-   return unless $form->update( params => $c->req->parameters );
+   return unless $form->process( params => $c->req->parameters );
 
-Here you use 'update', because 'process' is a convenience function
-that calls 'clear' and 'update', and you don't want to clear. There is 
-often no need to check the 'validated' flag, since that is the 
-return value from the 'process', 'update', and 'validate' methods, 
-although it can be useful if you are doing anything between the 
-update/process/validate call and displaying the form, such as setting
-the fillinform stash key.
+There is also a 'validated' flag that:
+
+   $form->process( params => $c->req->parameters );
+   return unless $form->validated;
 
 Form processing is a two-pass operation. The first time through
 the parameters will be an empty hashref, since the form has not been
@@ -180,7 +174,7 @@ using the 'fif' values or from L<HTML::FillInForm>) to allow user input.
 When the form is submitted, the action in the HTML form's 'action'
 value will be called (the same one that just displayed the form
 usually), and the second pass of calling the FormHandler 
-update/process/validate method will occur.
+process method will occur.
 
 This time there WILL be values in the parameters, and FormHandler
 will call the validation routines. If the validation succeeds, FormHandler
@@ -234,14 +228,13 @@ FillInForm:
 The base class for a  non-database form is HTML::FormHandler instead
 of a model class.
 You do not initialize a non-database form with an item or item_id,
-although you can use an init_object for the initial values. You 
-use the 'validate' method instead of 'update' or 'process'.  
+although you can use an init_object for the initial values. 
 
 After validation, you can get a hashref of values back from 
 the 'values' method. 
 
    my $form = MyApp::Form::Book->new( init_object => { ... } );
-   $form->validate( $params );
+   $form->process( $params );
    return unless $form->validated;
    my $result = $form->values;
 
@@ -266,7 +259,7 @@ The model will use the item_class (DBIC source name) to fetch the row from the
 database. If you pass in a row object (item), the schema, source_class, and 
 item_id will be set from the row. 
 
-The C<< $form->process >> or C<< $form->update >> methods will validate 
+The C<< $form->process >> will validate 
 the parameters and then update or create the database row object.  
 
 =head1 Field names
@@ -275,9 +268,8 @@ The standard way to use FormHandler is with field names that match your
 database accessors. If you want to prepend the HTML field names with a
 name plus dot, you can set the form 'name' and use the 'html_prefix'
 flag. "$name." will be stripped from the beginning of the HTML fields
-in 'munge_params' before the parameters are set, and will be added in
-'fif'. The field's 'html_name' convenience attribute will return this
-name for use in templates.
+before the parameters are set, and will be added in 'fif'. The field's 
+'html_name' convenience attribute will return this name for use in templates.
 
 If you want the FormHandler field name to be different than the
 database accessor, set 'accessor' on your fields. (It defaults to the field
@@ -319,17 +311,16 @@ To declare fields use the syntax:
 
 instead of:
 
-   sub field_list {
-      return {
-         fields => {
+   has 'field_list' => ( default => sub { 
+         [
             title => {
                type => 'Text',
                required => 1,
             },
             authors => 'Select',
-         }
-      }            
-   }
+         ]            
+      }
+   );
          
 Fields specified in a field_list will overwrite fields specified with 'has_field'.
 After processing, fields live in the 'fields' array, and can be accessed with the
@@ -374,84 +365,34 @@ will modify existing attributes or be added to an existing field definition:
 
 =head1 The form field_list
 
-Returns a hashref of field definitions.
-
-The possible keys in the field_list hashref are:
-
-   required
-   optional
-   fields
-   auto_required
-   auto_optional
+An array of name, specification pairs to define fields.
 
 The field_list is one way to define the fields in your form (though
 you can also add fields individually). 
 
-You can categorize your fields as required and optional with two separate 
-hashrefs:
-
-    my $field_list => {
-        required => {
-            field_one => 'Text', 
-        },
-        optional => {
-            field_two => 'Text', 
-        },
-    };
-
-Or you can use one hashref and indicate 'required' as yet another field
-attribute:
-
-    my $field_list => {
-        fields => [
+   has '+field_list' => ( default => sub { 
+         [
             field_one => {
                type => 'Text',
                required => 1
             },
             field_two => 'Text,
-         ],
-     }; 
-
-(Making the value of the "fields" key an array allows FormHandler to
-create the "order" of the fields in the order in which you define them.)
-The only required key is "type", which determines the field class.  
-All other keys are attributes of L<HTML::FormHandler::Field> or its subclasses.
+         ] 
+      }
+   ); 
 
 An example of a select field:
 
-    my $field_list = {
-        fields => {
+    sub field_list {
+       return [
             favorite_color => {
                 type            => 'Select',
                 label_column    => 'color_name',
                 active_column   => 'is_active',
             },
-        },
-    };
+        ];
+    }
 
-The definition above is the equivalent of the following code:
-
-    my $field = HTML::FormHandler::Field::Select->new(
-       name => 'favorite_color', 
-       required => 1,
-       label_column => 'color_name',
-       active_column => 'is_active' );
-    $form->add_field( $field );
-
-
-For the "auto" field_list keys, provide a list of field names.  
-The field types will be determined by calling 'guess_field_type' 
-in the model.  
-
-    auto_required => ['name', 'age', 'sex', 'birthdate'],
-    auto_optional => ['hobbies', 'address', 'city', 'state'],
-
-The 'guess_field_type' method could be customized to provide more
-sophisticated determination of types. For the DBIC model, the schema
-class must be available when the auto fields are constructed.
-
-Note that field_lists do not have the same flexibility in subclassing
-that 'has_field' fields do.
 
 =head1 Fields
 
@@ -490,16 +431,11 @@ Each field has a "value" method, which is the field's internal value.  This is
 the value your database object would have (e.g. scalar, boolean 0 or 1,
 DateTime object).  
 
-When data is passed in to validate the form, it is trimmed of leading and trailing
-whitespace by the base field class and placed in the field's "input" attribute.  
-Each field has a validate method that validates the input data and then moves 
-it to the internal representation in the "value" attribute.  Depending on the model, 
-it's this internal value that is stored or used by your application.
-
-By default, the validation is simply to copy the data from the "input" to the "value"
-field attribute, but you might have a field that must be converted from a text
-representation to an object (e.g. month, day, year to DateTime). These sorts of
-conversions can also be done by Moose type constraints or apply transformations.
+When data is passed in to validate the form, the input in copied into the
+'value' attribute of the field, and the actions specified by 'apply'
+will be performed on the value. This includes the 'trim' transform which
+will strip leading and trailing spaces. After the actions are applied,
+the field 'validate' method is called.
 
 =head2 Compound fields
 
@@ -542,6 +478,30 @@ with dots. The 'html_name' field attribute can be used to get
 this name:
 
    [% field.html_name %]
+
+A compound field can be used for a database relation that will have only
+one row (belongs_to or has_one).
+
+=head2 Repeatable fields
+
+Repeatable fields are used for arrays of compound fields.
+
+   
+   has_field 'addresses' => ( type => 'Repeatable' );
+   has_field 'addresses.address_id' => ( type => 'PrimaryKey' );
+   has_field 'addresses.street';
+   has_field 'addresses.city';
+   has_field 'addresses.country' => ( type => 'Select' );
+
+The arrays will be built from arrays passed in the params, or from
+related ('has_many') rows in the database.
+
+It is also used for arrays of single fields using the 'contains' keyword:
+
+  has_field 'tags' => ( type => 'Repeatable' );
+  has_field 'tags.contains' => ( type => '+Tag' );
+
+See L<HTML::FormHandler::Field::Repeatable> for more information.
 
 =head2 Filters, transformations, and constraints
 
@@ -780,7 +740,7 @@ has lots of examples. Here is an example of a test script for a DBIC form:
        'isbn'   => '123-02345-0502-2' ,
        'publisher' => 'EreWhon Publishing',
    };
-   ok( $form->update( params => $good ), 'Good data' );
+   ok( $form->process( params => $good ), 'Good data' );
 
    my $book = $form->item;
    END { $book->delete };
@@ -793,7 +753,7 @@ has lots of examples. Here is an example of a test script for a DBIC form:
        notitle => 'not req',
        silly_field   => 4,
    };
-   ok( !$form->validate( $bad_1 ), 'bad 1' );
+   ok( !$form->process( $bad_1 ), 'bad 1' );
 
    my $bad_2 = {
        'title' => "Another Silly Test Book",
@@ -802,7 +762,7 @@ has lots of examples. Here is an example of a test script for a DBIC form:
        'pages' => 'too few',
        'format' => '22',
    };
-   ok( !$form->validate( $bad_2 ), 'bad 2');
+   ok( !$form->process( $bad_2 ), 'bad 2');
    ok( $form->field('year')->has_errors, 'year has error' );
    ok( $form->field('pages')->has_errors, 'pages has error' );
    ok( !$form->field('author')->has_errors, 'author has no error' );
@@ -811,7 +771,7 @@ has lots of examples. Here is an example of a test script for a DBIC form:
    $form->set_param( year => 1999 );
    $form->set_param( pages => 101 );
    $form->set_param( format => 2 );
-   ok( $form->validate, 'now form validates' );
+   ok( $form->process, 'now form validates' );
    
 
 

@@ -1,41 +1,58 @@
 package HTML::FormHandler::Field::Password;
 
-use Moose;
+use HTML::FormHandler::Moose;
 extends 'HTML::FormHandler::Field::Text';
-our $VERSION = '0.01';
+our $VERSION = '0.02';
 
-has '+widget' => ( default => 'password' );
-has '+min_length' => ( default => 6 );
-has '+password' => ( default => 1 );
+has '+widget'           => ( default => 'password' );
+has '+min_length'       => ( default => 6 );
+has '+password'         => ( default => 1 );
 has '+required_message' => ( default => 'Please enter a password in this field' );
+has 'ne_username'       => ( isa => 'Str',  is => 'rw' );
 
-__PACKAGE__->meta->make_immutable;
+apply(
+   [
+      {
+         check   => sub { $_[0] !~ /\s/ },
+         message => 'Password can not contain spaces'
+      },
+      {
+         check => sub { $_[0] !~ /\W/ },
+         message => 'Password must be made up of letters, digits, and underscores'
+      },
+      {
+         check   => sub { $_[0] !~ /^\d+$/ },
+         message => 'Password must not be all digits'
+      },
+   ]
+);
 
-sub validate {
-    my $self = shift;
+after 'validate_field' => sub {
+   my $self = shift;
 
-    return unless $self->SUPER::validate;
+   if ( !$self->required && !$self->value )
+   {
+      $self->noupdate(1);
+      $self->clear_errors;
+   }
+};
 
-    my $value = $self->input;
+sub validate
+{
+   my $self = shift;
 
-    return $self->add_error( 'Passwords must not contain spaces' )
-        if $value =~ /\s/;
-    return $self->add_error( 'Passwords must be made up from letters, digits, or the underscore' )
-        if $value =~ /\W/;
-    return $self->add_error( 'Passwords must not be all digits' )
-        if $value =~ /^\d+$/;
+   $self->noupdate(0);
+   return unless $self->SUPER::validate;
 
-    my $params = $self->form->params;
-    for ('login', 'username') {
-        next if $self->name eq $_;
-
-        return $self->add_error( 'Password must not match ' . $_ )
-          if $params->{$_} && $params->{$_} eq $value;
-    }
-    return 1;
+   my $value = $self->value;
+   if ( $self->form && $self->ne_username )
+   {
+      my $username = $self->form->get_param( $self->ne_username );
+      return $self->add_error( 'Password must not match ' . $self->ne_username )
+         if $username && $username eq $value;
+   }
+   return 1;
 }
-
-
 
 =head1 NAME
 
@@ -45,27 +62,28 @@ HTML::FormHandler::Field::Password - Input a password
 
 Validates that it does not contain spaces (\s),
 contains only wordcharacters (alphanumeric and underscore \w),
-is not all digets, and is at least 6 characters long.
+is not all digits, and is at least 6 characters long.
 
-If there is another field called "login" or "username" will validate
-that it does not match this field (preventing the same text for both login
-and password.
+You can add additional checks by using 'apply' in the field definition:
 
-=head2 Widget
+   has_field 'password' => ( type => 'Password', 
+          apply => [ { check => sub { .... },
+                       message => 'Password must contain....' } ],
+   );
 
-Fields can be given a widget type that is used as a hint for
-the code that renders the field.
+If a password field is not required, then the field will be marked 'noupdate',
+to prevent a null from being saved into the database.
+                 
 
-This field's widget type is: "".
+=head2 ne_username
 
-=head2 Subclass
-
-Fields may inherit from other fields.  This field
-inherits from:
+Set this attribute to the name of your username field (default 'username')
+if you want to check that the password is not the same as the username.
+Does not check by default.
 
 =head1 AUTHORS
 
-Bill Moseley
+Gerda Shank
 
 =head1 COPYRIGHT
 
@@ -74,13 +92,8 @@ See L<HTML::FormHandler> for copyright.
 This library is free software, you can redistribute it and/or modify it under
 the same terms as Perl itself.
 
-=head1 SUPPORT / WARRANTY
-
-L<HTML::FormHandler> is free software and is provided WITHOUT WARRANTY OF ANY KIND.
-Users are expected to review software for fitness and usability.
-
 =cut
 
-
+__PACKAGE__->meta->make_immutable;
 no Moose;
 1;

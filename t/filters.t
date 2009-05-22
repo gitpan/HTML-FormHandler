@@ -9,7 +9,7 @@ use Scalar::Util qw(blessed);
 
 BEGIN
 {
-   plan tests => 11;
+   plan tests => 12;
 }
 
 {
@@ -76,6 +76,15 @@ BEGIN
    has_field 'date_coercion_error.month' => ( type => 'Text', );
    has_field 'date_coercion_error.day' => ( type => 'Text', );
 
+   has_field 'date_time_fif' => ( 
+      type => 'Compound',
+      apply => [ { transform => sub{ DateTime->new( $_[0] ) } } ],
+      deflation => sub { { year => 1000, month => 1, day => 1 } },
+      fif_from_value => 1,
+   );
+   has_field 'date_time_fif.year' => ( fif_from_value => 1 );
+   has_field 'date_time_fif.month';
+   has_field 'date_time_fif.day' => ( fif_from_value => 1 );
 }
 
 
@@ -96,8 +105,11 @@ my $params = {
       'date_coercion_error.year' => 2009,
       'date_coercion_error.month' => 20,
       'date_coercion_error.day' => 16,
+      'date_time_fif.year' => 2009,
+      'date_time_fif.month' => 4,
+      'date_time_fif.day' => 16,
 };
-$form->validate($params);
+$form->process($params);
 
 is( $form->field('sprintf_filter')->value, '<1e+02>', 'sprintf filter' );
 ok( $form->field('date_time_error')->has_errors,      'DateTime error catched' );
@@ -109,7 +121,10 @@ is( ref $form->field('date_coercion_pass')->value, 'DateTime',   'values coerced
 ok( $form->field('date_coercion_error')->has_errors,     'DateTime coercion error' );
 my ( $message ) = $form->field('date_coercion_error')->errors;
 is( $message, 'This is not a correct date', 'Error message for coercion' );
-$params->{coerce_pass} = '10';
-$params->{sprintf_filter} = '<1e+02>';
+
+is( $form->field( 'date_time_fif.year' )->fif, 1000, 'fif from deflation - year' );
+$params->{'date_time_fif.year'} = 1000;
+$params->{'date_time_fif.day'} = 1;
 is_deeply( $form->fif, $params, 'fif is correct' );
+
 

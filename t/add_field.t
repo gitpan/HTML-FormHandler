@@ -10,13 +10,11 @@ use HTML::FormHandler::Field;
 
    has '+name' => ( default => 'testform' );
    sub field_list {
-       {
-           fields    => {
-               meat        => 'Text',
-               starch      => { required => 1 },
-               fruit       => 'Select',
-           },
-       }
+       [
+           meat        => 'Text',
+           starch      => { required => 1 },
+           fruit       => 'Select',
+       ]
    }
 
    sub options_fruit {
@@ -34,7 +32,7 @@ ok( $form, 'get form' );
 
 my $field = HTML::FormHandler::Field::Text->new( name => 'Testfield' );
 
-$form->add_field($field);
+$form->push_field($field);
 
 ok( $form->field('Testfield'), 'form now has test field' );
 

@@ -42,6 +42,7 @@ has 'item' => (
    is      => 'rw',
    lazy    => 1,
    builder => 'build_item',
+   clearer => 'clear_item',
    trigger => sub { shift->set_item(@_) }
 );
 sub build_item  { return }
@@ -59,7 +60,10 @@ fetch the object from the item_class for this id.
 
 =cut
 
-has 'item_id' => ( is => 'rw' );
+has 'item_id' => ( is => 'rw', clearer => 'clear_item_id',
+   trigger => sub { shift->set_item_id(@_)} );
+
+sub set_item_id { }
 
 =head2 item_class
 
@@ -129,8 +133,7 @@ The default for label_column is "name".
 
 =cut
 
-sub lookup_options { return }
-
+sub lookup_options { }
 
 =head2 validate_model
 

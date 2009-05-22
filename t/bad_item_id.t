@@ -4,7 +4,7 @@ use lib 't/lib';
 BEGIN {
    eval "use DBIx::Class";
    plan skip_all => 'DBIX::Class required' if $@;
-   plan tests => 10;
+   plan tests => 9;
 }
 
 use_ok('HTML::FormHandler::Model::DBIC');
@@ -44,9 +44,7 @@ my $params = {
     'publisher' => 'EreWhon Publishing',
 };
 
-ok( $form->validate( $params ), 'validate data' );
-
-ok( $form->update_model, 'update validated data');
+ok( $form->process( $params ), 'validate data' );
 
 my $book = $form->item;
 END { $book->delete }
@@ -70,7 +68,7 @@ $id = $book->id;
 $form = My::Form2->new( $book );
 ok( $form, 'get form for Form2' );
 
-$form->update( params => { title => 'How to Test, Volume 2' } );
+$form->process( params => { title => 'How to Test, Volume 2' } );
 
 is( $book->title, 'How to Test, Volume 2', 'get new title');
 

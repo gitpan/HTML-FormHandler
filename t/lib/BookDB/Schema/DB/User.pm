@@ -22,6 +22,10 @@ __PACKAGE__->add_columns(
   { data_type => "character", default_value => undef, is_nullable => 1, size => 2, },
   "birthdate",
   { data_type => "DATETIME", is_nullable => 0 },
+  "opt_in",
+  { data_type => "INTEGER", size => 1 },
+  "license_id",
+  { data_type => "INTEGER", is_nullable => 0, size => 8 },
 );
 __PACKAGE__->set_primary_key("user_id");
 
@@ -32,7 +36,13 @@ __PACKAGE__->set_primary_key("user_id");
 #);
 
 __PACKAGE__->might_have(
-   "address",
+   "employer",
+   "BookDB::Schema::DB::Employer",
+   { 'foreign.user_id' => 'self.user_id' }
+);
+
+__PACKAGE__->has_many(
+   "addresses",
    "BookDB::Schema::DB::Address",
    { 'foreign.user_id' => 'self.user_id' }
 );
@@ -42,6 +52,8 @@ __PACKAGE__->belongs_to(
     'BookDB::Schema::DB::Country',
     { iso => 'country_iso' },
 );
+__PACKAGE__->belongs_to('license' => 'BookDB::Schema::DB::License', 
+   { 'foreign.license_id' => 'self.license_id' } );
 
 
 1;

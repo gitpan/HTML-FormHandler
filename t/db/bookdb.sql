@@ -6,21 +6,48 @@ CREATE TABLE user (
    fav_book VARCHAR(32),
    occupation VARCHAR(32),
    country_iso char(2),
-   birthdate DATETIME
+   birthdate DATETIME,
+   opt_in INTEGER,
+   license_id INTEGER
 );
-INSERT INTO "user" VALUES ( 1, 'jdoe', 'Sci-Fi', 'Necronomicon', 'management', 'US', '1970-04-23 21:06:00' );
-INSERT INTO "user" VALUES ( 2, 'muffet', 'Fantasy', 'Cooking Fungi', 'none', 'GB', '1983-10-24 22:22:22' );
-INSERT INTO "user" VALUES ( 3, 'sam', 'Technical', 'Higher Order Perl', 'programmer', 'US', '1973-05-24 22:22:22' );
-INSERT INTO "user" VALUES ( 4, 'jsw', 'Historical', 'History of the World', 'unemployed', 'RU', '1965-03-24 22:22:22' );
-INSERT INTO "user" VALUES ( 5, 'plax', 'Sci-Fi', 'Fungibility', 'editor', 'PL', '1977-10-24 22:22:22' );
+INSERT INTO "user" VALUES ( 1, 'jdoe', 'Sci-Fi', 'Necronomicon', 'management', 'US', '1970-04-23 21:06:00', 0, 3 );
+INSERT INTO "user" VALUES ( 2, 'muffet', 'Fantasy', 'Cooking Fungi', 'none', 'GB', '1983-10-24 22:22:22', 0, 2 );
+INSERT INTO "user" VALUES ( 3, 'sam', 'Technical', 'Higher Order Perl', 'programmer', 'US', '1973-05-24 22:22:22', 1, 3 );
+INSERT INTO "user" VALUES ( 4, 'jsw', 'Historical', 'History of the World', 'unemployed', 'RU', '1965-03-24 22:22:22', 0, 4 );
+INSERT INTO "user" VALUES ( 5, 'plax', 'Sci-Fi', 'Fungibility', 'editor', 'PL', '1977-10-24 22:22:22', 1, 1 );
+
+CREATE table licenses (
+   license_id INTEGER,
+   name VARCHAR(32),
+   label VARCHAR(32),
+   active INTEGER 
+);
+INSERT INTO "licenses" VALUES (1, "Perl Artistic", "Perl Artistic License", 1  );
+INSERT INTO "licenses" VALUES (2, "GPL", "GNU General Public License", 1 );
+INSERT INTO "licenses" VALUES (3, "LGPL", "GNU Lesser Public License", 1 );
+INSERT INTO "licenses" VALUES (4, "Creative Commons", "Creative Commons Attribution license", 1 );
+
+CREATE TABLE employer (
+   employer_id INTEGER PRIMARY KEY,
+   user_id INTEGER,
+   name VARCHAR(32),
+   category VARCHAR(32),
+   country VARCHAR(24)
+);
 
 CREATE TABLE address (
    address_id INTEGER PRIMARY KEY,
    user_id INTEGER,
    street VARCHAR(32),
    city VARCHAR(32),
-   state VARCHAR(12)
+   country_iso char(2)
 );
+INSERT INTO "address" VALUES (1, 1, "101 Main St", "Middle City", "GK");
+INSERT INTO "address" VALUES (2, 1, "99 Elm St", "DownTown", "UT");
+INSERT INTO "address" VALUES (3, 1, "1023 Side Ave", "Santa Lola", "GF");
+INSERT INTO "address" VALUES (4, 2, "142 Main St", "Middle City", "GK");
+INSERT INTO "address" VALUES (5, 2, "399 Cherry Park", "Jimsville", "UT");
+INSERT INTO "address" VALUES (6, 3, "991 Star St", "Nowhere City", "GK");
 
 CREATE TABLE book (
     id INTEGER PRIMARY KEY,
@@ -124,6 +151,10 @@ CREATE TABLE IF NOT EXISTS country (
 
 DELETE from country;
 
+INSERT INTO country VALUES ('GK','GRAUSTARK','Graustark','GRA','901');
+INSERT INTO country VALUES ('UT','UTOPIA','Utopia','UTO','902');
+INSERT INTO country VALUES ('GF','GRAND FENWICK','Grand Fenwick','GFK','903');
+INSERT INTO country VALUES ('AT','ATLANTIS','Atlantis','ATL','904');
 INSERT INTO country VALUES ('AU','AUSTRALIA','Australia','AUS','036');
 INSERT INTO country VALUES ('CZ','CZECH REPUBLIC','Czech Republic','CZE','203');
 INSERT INTO country VALUES ('DK','DENMARK','Denmark','DNK','208');

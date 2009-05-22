@@ -56,7 +56,7 @@ is( $form->get_param('pages'), '501', 'params contains new value' );
 
 is( $form->field('author')->fif, 'S.Else', 'get another field fif value' );
 
-my $validated = $form->validate;
+my $validated = $form->process;
 
 ok( $validated, 'validated without params' );
 
@@ -78,7 +78,7 @@ my $params = {
 
 $form = BookDB::Form::Book->new(item => $book, schema => $schema, params => $params);
 
-$validated = $form->validate( $params );
+$validated = $form->process( $params );
 
 ok( $validated, 'validated with params' );
 
@@ -86,11 +86,7 @@ is( $form->field('pages')->fif, 699, 'get field fif after validation' );
 
 is( $form->field('author')->fif, 'J.Doe', 'get field author after validation' );
 
-is_deeply( $form->fif, {
-   title => 'Testing form',
-   isbn => '02340234',
-   pages => '699',
-   author => 'J.Doe' }, 'get form fif after validation' );
+is_deeply( $form->fif, $params, 'get form fif after validation' );
 
 {
    package My::Form;
@@ -113,8 +109,9 @@ $params = {
    'my_compound.three.first' => 'Up',
    'my_compound.three.second' => 'With you?'
 };
-$form->validate($params);
+$form->process($params);
 ok($form->validated, 'form validated');
 is_deeply($form->fif, $params, 'fif is correct');
-$form->clear_fif;
+$form->clear_state;
 ok( !$form->fif, 'fif is cleared');
+

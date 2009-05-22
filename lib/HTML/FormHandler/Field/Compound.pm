@@ -54,23 +54,32 @@ Widget type is 'compound'
 
 has '+widget' => ( default => 'compound' );
 
+has '+field_name_space' => ( default => sub {
+      my $self = shift;
+      return $self->form->field_name_space
+           if $self->form && $self->form->field_name_space;
+      return '';
+   },
+);
 sub BUILD
 {
    my $self = shift;
-   $self->build_fields;
+   $self->_build_fields;
 }
 
-augment 'process' => sub {
+sub build_node
+{
    my $self = shift;
 
    my $input = $self->input;
-   # this isn't right
+
+   # is there a better way to do this? 
    if( ref $input eq 'HASH' )
    {
       foreach my $field ( $self->fields )
       {
-         my $field_name = substr( $field->full_name, length($self->full_name) + 1 );
-         # Trim values and move to "input" slot
+         my $field_name = $field->name;
+         # move values to "input" slot
          if ( exists $input->{$field_name} )
          {
             $field->input( $input->{$field_name} )
@@ -83,38 +92,14 @@ augment 'process' => sub {
    }
    $self->clear_fif;
    return unless $self->has_fields;
-   $self->fields_validate;
+   $self->_fields_validate;
    my %value_hash;
    for my $field ( $self->fields )
    { 
       $value_hash{ $field->accessor } = $field->value;
    }
    $self->value( \%value_hash );
-};
-
-
-
-# this is a kludge. We need to factor this stuff better...
-# create the 'fif' for compound fields
-sub _build_fif 
-{
-   my $self = shift;
-
-   my $fif = {}; 
-   for my $field ($self->fields)
-   {
-      if( ref $field->fif eq 'HASH' )
-      {
-         $fif = {%{$fif}, %{$field->fif}}; 
-      }
-      else
-      {
-         $fif->{$field->full_name} = $field->fif;
-      }
-   }
-   $self->fif($fif) if $fif;
-
-}
+} 
 
 
 __PACKAGE__->meta->make_immutable;

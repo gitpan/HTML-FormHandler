@@ -1,10 +1,12 @@
+use inc::Module::Install 0.89;
 use strict;
 use warnings;
-use inc::Module::Install;
 
 name 'HTML-FormHandler';
 all_from 'lib/HTML/FormHandler.pm';
 license 'perl';
+
+repository 'http://github.com/gshank/html-formhandler/tree/master';
 
 # prereqs
 requires 'Carp';
@@ -14,12 +16,13 @@ requires 'UNIVERSAL::require' => '0';
 requires 'Locale::Maketext'   => '1.09';
 requires 'DateTime';
 requires 'DBIx::Class';
-#requires 'DBIx::Class::ResultSet::RecursiveUpdate';
+requires 'DBIx::Class::ResultSet::RecursiveUpdate';
 requires 'HTML::Entities';
 requires 'MooseX::Getopt' => '0.16';
 requires 'MooseX::Types' => 0;
 requires 'MooseX::Types::Common' => 0;
 requires 'Scalar::Util' => 0;
+requires 'aliased';
 
 recommends 'Catalyst';
 recommends 'Catalyst::Component::InstancePerContext';
