@@ -2,8 +2,6 @@ package HTML::FormHandler::Fields;
 
 use Moose::Role;
 use Carp;
-use UNIVERSAL::require;
-use Class::Inspector;
 
 =head1 NAME
 
@@ -67,6 +65,22 @@ has 'fields' => (
       set   => 'set_field_at',
    }
 );
+has 'error_fields' => (
+   metaclass  => 'Collection::Array',
+   isa        => 'ArrayRef[HTML::FormHandler::Field]',
+   is         => 'rw',
+   default    => sub { [] },
+   auto_deref => 1,
+   provides   => {
+      empty => 'has_error_fields',
+      clear => 'clear_error_fields',
+      push  => 'add_error_field',
+      count => 'num_error_fields'
+   }
+);
+
+
+has 'fields_from_model' => ( isa => 'Bool', is => 'rw' );
 
 sub add_field
 {
@@ -156,11 +170,16 @@ sub _process_field_list
    $self->_process_field_array( $self->_hashref_fields( $flist->{'optional'}, 0 ) )
       if $flist->{'optional'};
    # these next two are deprecated. use array instead
-   $self->_process_field_array( $self->_hashref_fields( $flist->{'fields'} ) )
-      if ( $flist->{'fields'} && ref $flist->{'fields'} eq 'HASH' );
-   $self->_process_field_array( $self->_array_fields( $flist->{'fields'} ) )
-      if ( $flist->{'fields'} && ref $flist->{'fields'} eq 'ARRAY' );
+   if ( $flist->{'fields'} )
+   {
+      warn 'Using the \'fields\' key in field_list is deprecated. Please switch to using field_list => [ <fields> ] instead'; 
+      $self->_process_field_array( $self->_hashref_fields( $flist->{'fields'} ) )
+         if( ref $flist->{'fields'} eq 'HASH' );
+      $self->_process_field_array( $self->_array_fields( $flist->{'fields'} ) )
+         if ( ref $flist->{'fields'} eq 'ARRAY' );
+   }
    # don't encourage use of these two. functionality too limited. 
+   $self->_process_field_array( $self->model_fields ) if $self->fields_from_model;
    $self->_process_field_array( $self->_auto_fields( $flist->{'auto_required'}, 1 ) )
       if $flist->{'auto_required'};
    $self->_process_field_array( $self->_auto_fields( $flist->{'auto_optional'}, 0 ) )
@@ -311,9 +330,8 @@ sub _make_field
          : $type
       : 'HTML::FormHandler::Field::' . $type;
 
-   $class->require
-      or die "Could not load field class '$type' $class for field '$name'"
-      if !Class::Inspector->loaded($class);
+    Class::MOP::load_class($class)
+      or die "Could not load field class '$type' $class for field '$name'";
 
    $field_attr->{form} = $self->form if $self->form;
    # parent and name correction for names with dots
@@ -426,7 +444,7 @@ sub sorted_fields
 }
 
 #  the routine for looping through and processing each field
-#  Called by FormHandler and Field::Compound
+#  Called in build_node
 sub _fields_validate
 {
    my $self = shift;
@@ -434,60 +452,37 @@ sub _fields_validate
    foreach my $field ( $self->fields )
    {
       next if $field->clear;    # Skip validation
-      # parent fields will call validation for children
-      # there shouldn't be fields like this now. child fields should only
-      # exist beneath their parents
-      next if $field->parent && $field->parent != $self;
       # Validate each field and "inflate" input -> value.
-      $field->validate_field;          # this calls the field's 'validate' routine
-      next unless $field->has_value && defined $field->value;
-      # these methods have access to the inflated values
-      $field->_validate($field);    # will execute a form-field validation routine
+      $field->validate_field;   # this calls the field's 'validate' routine
+      $field->_validate($field) # form field validation method
+           if ($field->has_value && defined $field->value);
    }
    $self->cross_validate;
 }
 
 sub cross_validate { }
 
-sub clear_other
-{
-   $_->clear_data for shift->fields;
-}
-
-sub clear_errors
-{
-   $_->clear_errors for shift->fields;
-}
-
-sub clear_fifs
+after clear_data => sub
 {
    my $self = shift;
+   $self->clear_error_fields;
+   $_->clear_data for $self->fields;
+};
 
-   foreach my $field ($self->fields)
-   {
-      $field->clear_fifs if $field->can('clear_fifs');
-      $field->clear_fif;
-   }
-}
-
-sub clear_values
+sub get_error_fields
 {
    my $self = shift;
-   foreach my $field ($self->fields)
+   my @error_fields;
+   foreach my $field ($self->sorted_fields)
    {
-      $field->clear_values if $field->can('clear_values');
-      $field->clear_value;
+      if( $field->has_fields )
+      {
+         $field->get_error_fields;
+         push @error_fields, $field->error_fields if $field->has_error_fields;
+      }
+      push @error_fields, $field if $field->has_errors;
    }
-}
-
-sub clear_inputs
-{
-   my $self = shift;
-   foreach my $field ($self->fields)
-   {
-      $field->clear_inputs if $field->can('clear_inputs');
-      $field->clear_input;
-   }
+   $self->add_error_field(@error_fields) if scalar @error_fields;
 }
 
 sub dump_fields { shift->dump( @_) }
@@ -514,6 +509,45 @@ sub dump_validated
       ( $field->has_errors ? join( ' | ', $field->errors ) : 'validated' ), "\n";
    } 
 }
+
+sub build_node
+{  
+   my $self = shift;
+
+   return unless $self->has_fields;
+   my $input = $self->input;
+   # transfer the input values to the input attributes of the
+   # subfields 
+   if( ref $input eq 'HASH' )
+   {  
+      foreach my $field ( $self->fields )
+      {  
+         my $field_name = $field->name; 
+         # Trim values and move to "input" slot
+         if ( exists $input->{$field_name} )
+         {  
+            $field->input( $input->{$field_name} )
+         }
+         elsif( $field->DOES('HTML::FormHandler::Field::Repeatable') )
+         {
+            $field->clear_other;
+         }
+         elsif ( $field->has_input_without_param )
+         {  
+            $field->input( $field->input_without_param );
+         }
+      }
+   }
+   $self->_fields_validate;
+   my %value_hash;
+   for my $field ( $self->fields )
+   {  
+      next if $field->noupdate;
+      $value_hash{ $field->accessor } = $field->value if $field->has_value;
+   }
+   $self->value( \%value_hash );
+}
+
 
 no Moose::Role;
 1;

@@ -27,9 +27,9 @@ If all validation is performed in the parent class so that no
 validation is necessary in the child classes, then the field class
 'Nested' may be used.
 
-Error messages will be applied to both parent classes and child
-classes unless the 'errors_on_parent' flag is set. (This flag is
-set for the 'Nested' field class.)
+Error messages will be available in the field on which the error 
+occurred. You can access 'error_fields' on the form or on Compound
+fields (and subclasses, like Repeatable).
 
 The process method of this field runs the process methods on the child fields
 and then builds a hash of these fields values.  This hash is available for 
@@ -66,41 +66,6 @@ sub BUILD
    my $self = shift;
    $self->_build_fields;
 }
-
-sub build_node
-{
-   my $self = shift;
-
-   my $input = $self->input;
-
-   # is there a better way to do this? 
-   if( ref $input eq 'HASH' )
-   {
-      foreach my $field ( $self->fields )
-      {
-         my $field_name = $field->name;
-         # move values to "input" slot
-         if ( exists $input->{$field_name} )
-         {
-            $field->input( $input->{$field_name} )
-         }
-         elsif ( $field->has_input_without_param )
-         {
-            $field->input( $field->input_without_param );
-         }
-      }
-   }
-   $self->clear_fif;
-   return unless $self->has_fields;
-   $self->_fields_validate;
-   my %value_hash;
-   for my $field ( $self->fields )
-   { 
-      $value_hash{ $field->accessor } = $field->value;
-   }
-   $self->value( \%value_hash );
-} 
-
 
 __PACKAGE__->meta->make_immutable;
 no Moose;

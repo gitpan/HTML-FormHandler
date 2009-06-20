@@ -1,4 +1,4 @@
-use Test::More tests => 8;
+use Test::More tests => 9;
 
 use HTML::FormHandler::Field::Text;
 
@@ -17,6 +17,8 @@ use HTML::FormHandler::Field::Text;
             );
    has_field 'fruit' => ( type => 'Select' );
    has_field 'vegetables' => ( type => 'Multiple' );
+
+   sub init_value_fruit { 2 }
 
    sub options_fruit {
        return (
@@ -64,11 +66,13 @@ my $params = {
    vegetables => [2,4],
 };
 
+is( $form->field('fruit')->value, 2, 'initial value ok');
+
 $form->process( $params );
 ok( $form->validated, 'form validated' );
 is( $form->field('fruit')->value, 2, 'fruit value is correct');
 is_deeply( $form->field('vegetables')->value, [2,4], 'vegetables value is correct');
 
-is_deeply( $form->fif, { fruit => 2, vegetables => [2, 4] }, 'fif is correct');
+is_deeply( $form->fif, { fruit => 2, vegetables => [2, 4], test_field => '' }, 'fif is correct');
 is_deeply( $form->values, { fruit => 2, vegetables => [2, 4] }, 'values are correct');
 

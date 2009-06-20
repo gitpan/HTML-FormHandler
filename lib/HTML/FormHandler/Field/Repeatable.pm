@@ -15,7 +15,7 @@ In a form, for an array of hashrefs, equivalent to a 'has_many' database
 relationship. 
 
   has_field 'addresses' => ( type => 'Repeatable' );
-  has_field 'address_id' => ( type => 'PrimaryKey' );
+  has_field 'addresses.address_id' => ( type => 'PrimaryKey' );
   has_field 'addresses.street';
   has_field 'addresses.city';
   has_field 'addresses.state';
@@ -24,18 +24,22 @@ For a database field include a PrimaryKey hidden field, or set 'auto_id' to
 have an 'id' field automatically created.
 
 In a form, for an array of single fields (not directly equivalent to a
-database relationship):
+database relationship) use the 'contains' pseudo field name:
 
-  has_field 'tags' => ( type => 'List' );
+  has_field 'tags' => ( type => 'Repeatable' );
   has_field 'tags.contains' => ( type => 'Text',
        apply => [ { check => ['perl', 'programming', 'linux', 'internet'],
                     message => 'Not a valid tag' } ]
   );
 
-or single fields which are compound fields:
+or use 'contains' withsingle fields which are compound fields:
 
   has_field 'addresses' => ( type => 'Repeatable' );
   has_field 'addresses.contains' => ( type => '+MyAddress' );
+
+If the MyAddress field contains fields 'address_id', 'street', 'city', and
+'state', then this syntax is functionally equivalent to the first method
+where the fields are declared with dots ('addresses.city');
 
 =head1 DESCRIPTION
 
@@ -108,12 +112,14 @@ sub clear_other
       } 
    }
    $self->clear_fields;
+   $self->clear_value;
 }
 
 sub create_element
 {
    my ( $self ) = @_;
-   my $instance = Instance->new( name => 'contains', parent => $self ); 
+   my $instance = Instance->new( name => 'contains', parent => $self,
+      form => $self->form ); 
    # copy the fields from this field into the instance
    $instance->add_field( $self->fields );
    if( $self->auto_id )
@@ -133,7 +139,7 @@ sub clone_element
 {
    my ( $self, $index ) = @_;
 
-   my $field = $self->contains->clone;
+   my $field = $self->contains->clone( errors => [], error_fields => [] );
    $field->name($index);
    $field->parent($self);
    if( $field->has_fields )
@@ -149,7 +155,7 @@ sub clone_fields
    my @field_array;
    foreach my $field ( @{$fields} )
    {
-      my $new_field = $field->clone;
+      my $new_field = $field->clone( errors => [], error_fields => [] );
       if( $new_field->has_fields )
       {
          $self->clone_fields( $new_field, [$new_field->fields] );
@@ -178,6 +184,7 @@ sub build_node
       my $index = 0;
       foreach my $element ( @{$input} )
       {
+         next unless $element;
          my $field = $self->clone_element($index);
          $field->input($element);
          push @fields, $field;
@@ -186,7 +193,6 @@ sub build_node
       $self->index($index);
       $self->fields(\@fields);
    }
-   return unless $self->has_fields;
    # call fields_validate to loop through array of fields created
    $self->_fields_validate;
    # now that values have been filled in via fields_validate,
@@ -209,8 +215,10 @@ sub _init_from_object
    my $index = 0;
    my @fields;
    my @new_values;
+   $values = [$values] if ( $values && ref $values ne 'ARRAY');
    foreach my $element ( @{$values} )
    {
+      next unless $element;
       my $field = $self->clone_element($index);
       if( $field->has_fields )
       {
@@ -266,5 +274,6 @@ sub _init
    $self->fields(\@fields);
 }
 
-
+__PACKAGE__->meta->make_immutable;
+no Moose;
 1;

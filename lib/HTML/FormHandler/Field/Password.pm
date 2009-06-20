@@ -2,35 +2,54 @@ package HTML::FormHandler::Field::Password;
 
 use HTML::FormHandler::Moose;
 extends 'HTML::FormHandler::Field::Text';
-our $VERSION = '0.02';
+our $VERSION = '0.03';
+
+=head1 NAME
+
+HTML::FormHandler::Field::Password - Input a password
+
+=head1 DESCRIPTION
+
+The password field has a default minimum length of 6, which can be
+easily changed:
+
+  has_field 'password' => ( type => 'Password', min_length => 7 ); 
+
+It does not come with additional default checks, since password
+requirements vary so widely. There are a few constraints in the
+L<HTML::FormHandler::Types> modules which could be used with this
+field:  NoSpaces, WordChars, NotAllDigits.
+These constraints can be used in the field definitions 'apply':
+
+   use HTML::FormHandler::Types ('NoSpaces', 'WordChars', 'NotAllDigits' );
+   ...
+   has_field 'password' => ( type => 'Password', 
+          apply => [ NoSpaces, WordChars, NotAllDigits ],
+   );
+
+You can add your own constraints in addition, of course.
+
+If a password field is not required, then the field will be marked 'noupdate',
+to prevent a null from being saved into the database. 
+
+=head2 ne_username
+
+Set this attribute to the name of your username field (default 'username')
+if you want to check that the password is not the same as the username.
+Does not check by default.
+
+=cut
 
 has '+widget'           => ( default => 'password' );
 has '+min_length'       => ( default => 6 );
 has '+password'         => ( default => 1 );
 has '+required_message' => ( default => 'Please enter a password in this field' );
-has 'ne_username'       => ( isa => 'Str',  is => 'rw' );
-
-apply(
-   [
-      {
-         check   => sub { $_[0] !~ /\s/ },
-         message => 'Password can not contain spaces'
-      },
-      {
-         check => sub { $_[0] !~ /\W/ },
-         message => 'Password must be made up of letters, digits, and underscores'
-      },
-      {
-         check   => sub { $_[0] !~ /^\d+$/ },
-         message => 'Password must not be all digits'
-      },
-   ]
-);
+has 'ne_username'       => ( isa     => 'Str', is => 'rw' );
 
 after 'validate_field' => sub {
    my $self = shift;
 
-   if ( !$self->required && !$self->value )
+   if ( !$self->required && !( defined( $self->value ) && length( $self->value ) ) )
    {
       $self->noupdate(1);
       $self->clear_errors;
@@ -53,33 +72,6 @@ sub validate
    }
    return 1;
 }
-
-=head1 NAME
-
-HTML::FormHandler::Field::Password - Input a password
-
-=head1 DESCRIPTION
-
-Validates that it does not contain spaces (\s),
-contains only wordcharacters (alphanumeric and underscore \w),
-is not all digits, and is at least 6 characters long.
-
-You can add additional checks by using 'apply' in the field definition:
-
-   has_field 'password' => ( type => 'Password', 
-          apply => [ { check => sub { .... },
-                       message => 'Password must contain....' } ],
-   );
-
-If a password field is not required, then the field will be marked 'noupdate',
-to prevent a null from being saved into the database.
-                 
-
-=head2 ne_username
-
-Set this attribute to the name of your username field (default 'username')
-if you want to check that the password is not the same as the username.
-Does not check by default.
 
 =head1 AUTHORS
 

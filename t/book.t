@@ -6,7 +6,7 @@ use lib 't/lib';
 BEGIN {
    eval "use DBIx::Class";
    plan skip_all => 'DBIX::Class required' if $@;
-   plan tests => 27;
+   plan tests => 28;
 }
 
 use_ok( 'HTML::FormHandler' );
@@ -40,6 +40,7 @@ END { $book->delete };
 ok ($book, 'get book object from form');
 
 is_deeply( $form->values, $good, 'values correct' );
+$good->{$_} = '' for qw/ year comment pages/;
 is_deeply( $form->fif, $good, 'fif correct' );
 
 my $num_genres = $book->genres->count;
@@ -47,14 +48,18 @@ is( $num_genres, 2, 'multiple select list updated ok');
 
 is( $form->field('format')->value, 2, 'get value for format' );
 
+$good->{genres} = 2;
+ok( $form->process($good), 'handle one value for multiple select' );
+is_deeply( $form->field('genres')->value, [2], 'right value for genres' );
+
 my $id = $book->id;
 
 $good->{author} = '';
+$good->{genres} = [2,4];
 $form->process($good);
 
 ok( $form->validated, 'form validated with null author');
 
-ok( $form->field('author')->value_changed, 'init value and value of author are different');
 is( $book->author, undef, 'updated author with null value');
 is( $form->field('author')->value, undef, 'author value right in form');
 is( $form->field('publisher')->value, 'EreWhon Publishing', 'right publisher');
@@ -96,10 +101,11 @@ ok( $form->field('pages')->has_errors, 'pages has error' );
 ok( !$form->field('author')->has_errors, 'author has no error' );
 ok( $form->field('format')->has_errors, 'format has error' );
 
-$form->set_param( year => 1999 );
-$form->set_param( pages => 101 );
-$form->set_param( format => 2 );
-my $validated = $form->validate_form;
+my $values = $form->value;
+$values->{year} = 1999;
+$values->{pages} = 101;
+$values->{format} = 2;
+my $validated = $form->validate( $values );
 ok( $validated, 'now form validates' );
 
 $form->process;

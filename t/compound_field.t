@@ -1,4 +1,4 @@
-use Test::More tests => 16;
+use Test::More tests => 20;
 
 use lib 't/lib';
 
@@ -55,6 +55,13 @@ is( $form->field('duration')->value->hours, 2, 'duration value is correct');
    has_field 'start_date.day' => ( type => 'MonthDay' );
    has_field 'start_date.year' => ( type => 'Year' );
 
+   sub validate_start_date_month
+   {
+      my ( $self, $field ) = @_;
+      $field->add_error("That month is not available")
+          if( $field->value == 8 );
+   }
+
 }
 
 my $dtform = Form::Start->new;
@@ -62,18 +69,22 @@ ok( $dtform, 'datetime form' );
 $params = { name => 'DT_testing', 'start_date.month' => '10',
     'start_date.day' => '2', 'start_date.year' => '2008' };
 $dtform->process( params => $params );
-
 ok( $dtform->validated, 'form validated' );
-
 is( $dtform->field('start_date')->value->mdy, '10-02-2008', 'datetime value');
+$params->{'start_date.month'} = 8;
+$dtform->process( params => $params );
+ok( !$dtform->validated, 'form did not validate' );
+ok( $dtform->has_errors, 'form has error' );
+is_deeply( [$dtform->errors], ['That month is not available'], 'correct error' );
+
 
 {
    package Field::MyCompound;
    use HTML::FormHandler::Moose;
    extends 'HTML::FormHandler::Field::Compound';
 
-   has_field 'aaa' => ( type => 'Text' );
-   has_field 'bbb' => ( type => 'Text' );
+   has_field 'aaa';
+   has_field 'bbb';
 }
 
 
@@ -82,7 +93,7 @@ is( $dtform->field('start_date')->value->mdy, '10-02-2008', 'datetime value');
    use HTML::FormHandler::Moose;
    extends 'HTML::FormHandler';
 
-   has_field 'compound' => ( type => '+Field::MyCompound' );
+   has_field 'compound' => ( type => '+Field::MyCompound', apply => [ { check => sub { $_[0]->{aaa} eq 'aaa'}, message => 'Must be "aaa"' } ] );
 }
 $form = Form::TestValues->new;
 ok( $form, 'Compound form with separate fields declarations created' );
@@ -94,6 +105,7 @@ $params = {
 $form->process( params => $params );
 is_deeply( $form->values, { compound => { aaa => 'aaa', bbb => 'bbb' } }, 'Compound with separate fields - values in hash' );
 is_deeply( $form->fif, $params, 'get fif from compound field' );
-
+$form->process( params => { 'compound.aaa' => undef } );
+ok( !$form->field( 'compound' )->has_errors, 'Not required copound with empty sub values is not checked');
 
 

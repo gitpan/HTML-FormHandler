@@ -4,6 +4,8 @@ use HTML::FormHandler::Moose;
 use MooseX::AttributeHelpers;
 use HTML::FormHandler::I18N;    # only needed if running without a form object.
 
+with 'HTML::FormHandler::TransformAndCheck';
+
 our $VERSION = '0.02';
 
 =head1 NAME
@@ -37,12 +39,15 @@ This is the base class for form fields. The 'type' of a field class
 is used in the FormHandler field_list or has_field to identify which field class to
 load. If the type is not specified, it defaults to Text. 
 
+There are two rough categories of Field classes: those that do extra processing
+and those that are simple validators. The 'Compound', 'Repeatable', and
+'Select' fields are fields that are functional.
+
 A number of field classes are provided by the distribution. The basic
-field types are:
+validat field types are:
 
    Text
    Integer
-   Select
    Boolean
 
 These field types alone would be enough for most applications, since
@@ -54,6 +59,8 @@ good idea.
 
 Inheritance hierarchy of the distribution's field classes:
 
+   Compound
+      Repeatable
    Text
       Money
       Password
@@ -72,7 +79,6 @@ Inheritance hierarchy of the distribution's field classes:
          Year
       MonthName 
       Weekday
-         WeekdayStr
    Boolean
       Checkbox
    DateMDY
@@ -104,7 +110,7 @@ is 'Money'. Classes that you define yourself are prefixed with '+'.
 =item accessor
 
 If the name of your field is different than your database accessor, use
-this attribute to provide the name of accessor.
+this attribute to provide the accessor.
 
 =item full_name
 
@@ -208,21 +214,25 @@ Fields of different type can use the same widget.
 
 This attribute is set in the field classes, or in the fields
 defined in the form. If you want a new widget type, use a new
-name and provide a C<< 'widget_<name>' >> method in Render::Simple
-or a widget template if you are using a template based rendering
-system. (see L<HTML::FormHandler::Manual::Templates>) 
+name and provide a C<< 'widget_<name>' >> method in your copy
+of Render::Simple or in your form class.
+If you are using a template based rendering system you will want
+to create a widget template.
+(see L<HTML::FormHandler::Manual::Templates>) 
 
 Widget types for the provided field classes:
 
     Widget      : Field classes 
     ------------:-----------------------------------
     text        : Text, Integer
-    checkbox    : Checkbox, Select
-    radio       : Boolean, Select
-    select      : Select, Multiple
+    checkbox    : Checkbox, Boolean
+    radio_group : Select, Multiple, IntRange (etc) 
+    select      : Select, Multiple, IntRange (etc)
     textarea    : TextArea, HtmlArea
-    compound    : DateTime
+    compound    : Compound, Repeatable, DateTime
     password    : Password
+    hidden      : Hidden
+    submit      : Submit
 
 The default widget is 'text'.
 
@@ -458,26 +468,15 @@ data representation suitable for displaying in an HTML field
 
 =head2 validate_field
 
-This method does standard validation, which currently tests:
-
-    required        -- if field is required and value exists
-
-If these tests pass, the field's validate method is called
-
-    $field->validate;
-
-If C<< $field->validate >> returns true then the input value
-is copied from the input attribute to the field's value attribute.
-
-The field's error list and internal value are reset upon entry.
+This is the base class validation routine. Most users will not
+do anything with this. It might be useful for method modifiers.
 
 =head2 validate
 
 This field method can be used in addition to or instead of 'apply' actions
-in custom field classes. It is not called if the field already has errors.
-It should validate the field data and returns true if
-the data validates.  An error message must be added to the field with
-C<< $field->add_error( ... ) >> if the value does not validate. 
+in custom field classes. 
+It should validate the field data and set error messages on
+errors with C<< $field->add_error >>. 
 
     sub validate {
         my $field = shift;
@@ -491,19 +490,9 @@ C<< $field->add_error( ... ) >> if the value does not validate.
 has 'name' => ( isa => 'Str', is => 'rw', required => 1 );
 has 'type' => ( isa => 'Str', is => 'rw', default => sub { ref shift } );
 has 'init_value' => ( is => 'rw', clearer  => 'clear_init_value');
-has 'value' => (
-   is        => 'rw',
-   clearer   => 'clear_value',
-   predicate => 'has_value',
-);
 has 'parent' => ( is => 'rw', predicate => 'has_parent' );
 has 'errors_on_parent' => ( isa => 'Bool', is => 'rw' );
 sub has_fields { }
-has 'input' => (
-   is        => 'rw',
-   clearer   => 'clear_input',
-   predicate => 'has_input',
-);
 has 'input_without_param' => (
    is        => 'rw',
    predicate => 'has_input_without_param'
@@ -514,15 +503,14 @@ has 'fif' => (
     predicate => 'has_fif',
     lazy_build => 1,
 );
-has 'fif_from_value' => ( isa => 'Str', is => 'rw',
-    clearer => 'clear_fif_from_value');
+has 'fif_from_value' => ( isa => 'Str', is => 'ro' );
 sub _build_fif {
    my $self = shift;
 
-   return if( defined $self->password && $self->password == 1 );
+   return '' if( defined $self->password && $self->password == 1 );
    if ( $self->has_input && !$self->fif_from_value )
    {
-      return $self->input;
+      return defined $self->input ? $self->input : '';
    }
    my $parent = $self->parent;
    if ( defined $parent &&
@@ -539,9 +527,9 @@ sub _build_fif {
    }
    if ( $self->fif_from_value )
    {
-      return $self->input;
+      return defined $self->input ? $self->input : '';
    }
-   return;
+   return '';
 }
 
 has 'accessor' => (
@@ -574,8 +562,6 @@ has 'html_name' => (
    lazy    => 1,
    builder => 'build_html_name'
 );
-# following is to maintain compatibility. remove eventually
-sub prename { shift->html_name }
 sub build_html_name
 {
    my $self = shift;
@@ -585,25 +571,8 @@ sub build_html_name
 }
 has 'widget' => ( isa => 'Str', is => 'rw', default => 'text' );
 has 'order' => ( isa => 'Int', is => 'rw', default => 0 );
-has 'required' => ( isa => 'Bool', is => 'rw', default => '0' );
-has 'required_message' => (
-   isa     => 'Str',
-   is      => 'rw',
-   lazy    => 1,
-   default => sub { shift->label . ' field is required' }
-);
 has 'unique' => ( isa => 'Bool', is => 'rw' );
 has 'unique_message' => ( isa => 'Str', is => 'rw' );
-has 'range_start' => ( isa => 'Int|Undef', is => 'rw', default => undef );
-has 'range_end'   => ( isa => 'Int|Undef', is => 'rw', default => undef );
-sub value_sprintf
-{
-   die "The 'value_sprintf' attribute has been removed. Please use a transformation instead.";
-}
-sub input_to_value
-{
-   die "The 'input_to_value' method has been removed. Use a transformation or move to the 'validate' method.";
-}
 has 'id' => ( isa => 'Str', is => 'rw', lazy => 1, builder => 'build_id' );
 sub build_id
 {
@@ -678,26 +647,13 @@ sub _can_init_value
          && $self->form->can( $self->set_init );
    return 1;
 }
-sub _init_value
+sub get_init_value
 {
    my $self = shift;
    return unless $self->_can_init_value;
    my $meth = $self->set_init;
    $self->form->$meth($self, $self->form->item);
 }
-has 'actions' => (
-   metaclass  => 'Collection::Array',
-   isa        => 'ArrayRef',
-   is         => 'rw',
-   auto_deref => 1,
-   default    => sub { [] },
-   provides   => {
-      'push'  => 'add_action',
-      'count' => 'num_actions',
-      'empty' => 'has_actions',
-      'clear' => 'clear_actions',
-   }
-);
 has 'deflation' => (
    is         => 'rw',
    predicate  => 'has_deflation',
@@ -728,42 +684,24 @@ sub BUILD
    $self->add_action($self->trim) if $self->trim;
    $self->_build_apply_list;
    $self->add_action( @{$params->{apply}} ) if $params->{apply};
+   $self->set_validate; # to vivify
+   $self->set_init;     # to vivify
+
 }
 
-sub _build_apply_list
-{
+# this is the recursive routine that is used
+# to initial fields if there is no initial object and no params
+sub _init 
+{ 
    my $self = shift;
-   my @apply_list;
-   foreach my $sc ( reverse $self->meta->linearized_isa )
-   {
-      my $meta = $sc->meta;
-      if ( $meta->can('calculate_all_roles') )
-      {
-         foreach my $role ( $meta->calculate_all_roles )
-         {
-            if ( $role->can('apply_list') && $role->has_apply_list )
-            {
-               foreach my $apply_def ( @{ $role->apply_list} )
-               {
-                  my %new_apply = %{$apply_def}; # copy hashref
-                  push @apply_list, \%new_apply; 
-               }
-            }
-         }
-      }
-      if ( $meta->can('apply_list') && $meta->has_apply_list )
-      {
-         foreach my $apply_def ( @{ $meta->apply_list} )
-         {
-            my %new_apply = %{$apply_def}; # copy hashref
-            push @apply_list, \%new_apply; 
-         }
-      }
-   }
-   $self->add_action( @apply_list );
-}
 
-sub _init { }
+   if ( my @values = $self->get_init_value )
+   {
+      my $value = @values > 1 ? \@values : shift @values;
+      $self->init_value($value) if $value;
+      $self->value($value)      if $value;
+   }
+}
 
 sub full_name
 {
@@ -804,173 +742,8 @@ sub add_error
          || die "Failed call to Locale::Maketext->get_handle";
    }
    my $message = $lh->maketext(@message);
-   $self->push_errors( $message ) unless $self->errors_on_parent;
-   $self->parent->push_errors( $message ) if $self->parent;
+   $self->push_errors( $message );
    return;
-}
-
-sub validate_field
-{
-   my $field = shift;
-
-   $field->clear_errors;
-   # See if anything was submitted
-   if( !$field->has_input || !$field->input_defined )
-   {
-      if( $field->required )
-      {
-         $field->add_error( $field->required_message ) if ( $field->required );
-         $field->value(undef)                          if ( $field->has_input );
-         return;
-      }
-      elsif ( !$field->has_input )
-      {
-         return;
-      }
-      elsif( !$field->input_defined )
-      {
-         $field->value(undef);
-         return;
-      }
-   }
-   else
-   {
-      $field->clear_value;
-      $field->value( $field->input );
-   }
-
-   $field->_inner_validate_field;
-   # do building of node 
-   $field->build_node;
-
-   $field->_apply_actions;
-
-#   $field->_build_fif if $field->can('_build_fif');
-   return unless $field->validate;
-   return if $field->has_errors;
-   return unless $field->test_ranges;
-
-   return !$field->has_errors;
-}
-sub _inner_validate_field { }
-sub build_node { }
-
-sub _apply_actions
-{
-   my $self  = shift;
-
-   my $error_message;
-   local $SIG{__WARN__} = sub {
-      my $error = shift;
-      $error_message = $error;
-      return 1;
-   };
-   for my $action ( @{ $self->actions || [] } )
-   {
-      $error_message = undef;
-      # the first time through value == input
-      my $value = $self->value;
-      my $new_value = $value;
-      # Moose constraints 
-      if ( !ref $action || ref $action eq 'MooseX::Types::TypeDecorator' )
-      {
-         $action = { type => $action };
-      }
-      if ( exists $action->{type} )
-      {
-         my $tobj;
-         if( ref $action->{type} eq 'MooseX::Types::TypeDecorator' )
-         {
-            $tobj = $action->{type};
-         }
-         else
-         {
-            my $type = $action->{type};
-            $tobj = Moose::Util::TypeConstraints::find_type_constraint($type)
-               or die "Cannot find type constraint $type";
-         }
-         if ( $tobj->has_coercion && $tobj->validate($value) )
-         {
-            eval { $new_value = $tobj->coerce($value) };
-            if ($@)
-            {
-               if ( $tobj->has_message )
-               {
-                  $error_message = $tobj->message->($value);
-               }
-               else
-               {
-                  $error_message = $@;
-               }
-            }
-            else
-            {
-               $self->value($new_value);
-            }
-            
-         }
-         $error_message ||= $tobj->validate($new_value);
-      }
-      # now maybe: http://search.cpan.org/~rgarcia/perl-5.10.0/pod/perlsyn.pod#Smart_matching_in_detail
-      # actions in a hashref
-      elsif ( ref $action->{check} eq 'CODE' )
-      {
-         if ( !$action->{check}->($value) )
-         {
-            $error_message = 'Wrong value';
-         }
-      }
-      elsif ( ref $action->{check} eq 'Regexp' )
-      {
-         if ( $value !~ $action->{check} )
-         {
-            $error_message = "\"$value\" does not match";
-         }
-      }
-      elsif ( ref $action->{check} eq 'ARRAY' )
-      {
-         if ( !grep { $value eq $_ } @{ $action->{check} } )
-         {
-            $error_message = "\"$value\" not allowed";
-         }
-      }
-      elsif ( ref $action->{transform} eq 'CODE' )
-      {
-         $new_value = eval { 
-            no warnings 'all';
-            $action->{transform}->($value);
-         };
-         if ($@)
-         {
-            $error_message = $@ || 'error occurred';
-         }
-         else
-         {
-            $self->value($new_value);
-         }
-      }
-      if ( defined $error_message )
-      {
-         my @message = ($error_message);
-         if ( defined $action->{message} )
-         {
-            my $act_msg = $action->{message};
-            if ( ref $act_msg eq 'CODEREF' )
-            {
-               $act_msg = $act_msg->($value); 
-            }
-            if ( ref $act_msg eq 'ARRAY' )
-            {
-               @message = @{ $act_msg };
-            }
-            elsif ( ref \$act_msg eq 'SCALAR' )
-            {
-               @message = ( $act_msg );
-            }
-         }
-         $self->add_error(@message);
-      }
-   }
 }
 
 sub _apply_deflation
@@ -982,56 +755,6 @@ sub _apply_deflation
       $value = $self->deflation->($value);
    }
    return $value;
-}
-
-sub validate { 1 }
-
-sub test_ranges
-{
-   my $field = shift;
-   return 1 if $field->can('options') || $field->has_errors;
-
-   my $input = $field->input;
-
-   return 1 unless defined $input;
-
-   my $low  = $field->range_start;
-   my $high = $field->range_end;
-
-   if ( defined $low && defined $high )
-   {
-      return $input >= $low && $input <= $high
-         ? 1
-         : $field->add_error( 'value must be between [_1] and [_2]', $low, $high );
-   }
-
-   if ( defined $low )
-   {
-      return $input >= $low
-         ? 1
-         : $field->add_error( 'value must be greater than or equal to [_1]', $low );
-   }
-
-   if ( defined $high )
-   {
-      return $input <= $high
-         ? 1
-         : $field->add_error( 'value must be less than or equal to [_1]', $high );
-   }
-
-   return 1;
-}
-
-
-sub input_defined
-{
-   my ($self) = @_;
-   return unless $self->has_input;
-   my $value = $self->input;
-   # check for one value as defined
-   return grep { /\S/ } @$value
-      if ref $value eq 'ARRAY';
-   return defined $value && $value =~ /\S/;
 }
 
 # use Class::MOP to clone 
@@ -1049,19 +772,10 @@ sub clear_data
    $self->clear_fif;
    $self->clear_errors;
    $self->clear_init_value;
-   $self->clear_fif_from_value;
    $self->clear_other;
 }
+# clear_other used in Repeatable
 sub clear_other { }
-
-# removed pod to discourage use of fif_value
-# This method will probably be replaced by deflate or something
-# similar in the near future
-sub fif_value
-{
-   my ( $self, $value ) = @_;
-   return $value;
-}
 
 sub value_changed
 {

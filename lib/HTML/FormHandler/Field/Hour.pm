@@ -1,13 +1,12 @@
 package HTML::FormHandler::Field::Hour;
 
 use Moose;
-extends 'Form::Processor::Field::IntRange';
+extends 'HTML::FormHandler::Field::IntRange';
 our $VERSION = '0.03';
 
 has '+range_start' => ( default => 0 );
 has '+range_end' => ( default => 23 );
 
-__PACKAGE__->meta->make_immutable;
 
 =head1 NAME
 
@@ -28,5 +27,6 @@ the same terms as Perl itself.
 
 =cut
 
+__PACKAGE__->meta->make_immutable;
 no Moose;
 1;

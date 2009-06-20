@@ -2,7 +2,7 @@ package HTML::FormHandler::Field::Checkbox;
 
 use HTML::FormHandler::Moose;
 extends 'HTML::FormHandler::Field';
-our $VERSION = '0.01';
+our $VERSION = '0.02';
 
 =head1 NAME
 
@@ -25,11 +25,6 @@ checkbox
 has '+widget' => ( default => 'checkbox' );
 has 'checkbox_value' => ( is => 'rw', default => 1 );
 
-=pod
-apply( [ { transform => sub { defined $_ ? $_ : 0 } }
-       ]
-);
-
 =head2 input_without_param
 
 If the checkbox is not checked, it will be set to the value
@@ -39,13 +34,18 @@ of this attribute (the unchecked value). Default = 0
 
 has '+input_without_param' => ( default => 0 );
 
-__PACKAGE__->meta->make_immutable;
-
-sub value {
+sub value 
+{
     my $field = shift;
     return $field->SUPER::value( @_ ) if @_;
     my $v = $field->SUPER::value;
     return defined $v ? $v : 0;
+}
+
+sub validate
+{
+   my $self = shift;
+   $self->add_error( $self->required_message) if( $self->required && !$self->value );
 }
 
 
@@ -60,5 +60,6 @@ the same terms as Perl itself.
 
 =cut
 
+__PACKAGE__->meta->make_immutable;
 no Moose;
 1;

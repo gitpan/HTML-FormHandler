@@ -61,10 +61,10 @@ sub render
 {
    my $self = shift;
    my $output = '<form ';
-   $output .= 'action="' . $self->action if $self->action;
-   $output .= '" id="' . $self->name if $self->name;
-   $output .= '" method="' . $self->http_method if $self->http_method;
-   $output .= '">' . "\n";
+   $output .= 'action="' . $self->action . '" ' if $self->action;
+   $output .= 'id="' . $self->name . '" ' if $self->name;
+   $output .= 'method="' . $self->http_method . '"' if $self->http_method;
+   $output .= '>' . "\n";
    $output .= '<fieldset class="main_fieldset">' if $self->auto_fieldset;
 
    foreach my $field ( $self->sorted_fields )
@@ -96,7 +96,12 @@ sub render_field
    die "Widget method $method not implemented in H::F::Render::Simple"
       unless $self->can($method);
    my $class = '';
-   $class = ' class="error"' if $field->has_errors;
+   if( $field->css_class || $field->has_errors )
+   {
+      $class .= ' class="';
+      $class .= $field->css_class . ' ' if $field->css_class;
+      $class .= ' error"' if $field->has_errors;
+   }
    my $output = qq{\n<div$class>};
    $output .= $self->$method($field);
    $output .= qq{\n<span class="error_message">$_</span>} for $field->errors;
@@ -114,15 +119,12 @@ sub render_text
 {
    my ( $self, $field ) = @_;
    # label
-   my $fif = $field->fif || '';
-   my $output .= "\n<label class=\"label\" for=\"";
-   $output    .= $field->html_name . "\">";
-   $output    .= $field->label . ": </label>";
+   my $output = $self->_label( $field );
    # input
-   $output .= "<input type=\"text\" name=\"";
-   $output .= $field->html_name . "\"";
-   $output .= " id=\"" . $field->id . "\"";
-   $output .= " value=\"" . $fif . "\">";
+   $output .= '<input type="text" name="';
+   $output .= $field->html_name . '"';
+   $output .= ' id="' . $field->id . '"';
+   $output .= ' value="' . $field->fif . '" />';
    # value
    return $output;
 }
@@ -137,15 +139,12 @@ sub render_password
 {
    my ( $self, $field ) = @_;
    # label
-   my $fif = $field->fif || '';
-   my $output .= "\n<label class=\"label\" for=\"";
-   $output    .= $field->html_name . "\">";
-   $output    .= $field->label . ": </label>";
+   my $output = $self->_label( $field );
    # input
-   $output .= "<input type=\"password\" name=\"";
-   $output .= $field->html_name . "\"";
-   $output .= " id=\"" . $field->id . "\"";
-   $output .= " value=\"" . $fif . "\">";
+   $output .= '<input type="password" name="';
+   $output .= $field->html_name . '"';
+   $output .= ' id="' . $field->id . '"';
+   $output .= ' value="' . $field->fif . '" />';
    # value
    return $output;
 }
@@ -160,11 +159,10 @@ sub render_hidden
 {
    my ( $self, $field ) = @_;
    # input
-   my $fif = $field->fif || '';
-   my $output = "<input type=\"hidden\" name=\"";
-   $output .= $field->html_name . "\"";
-   $output .= " id=\"" . $field->id . "\"";
-   $output .= " value=\"" . $fif . "\">";
+   my $output = '<input type="hidden" name="';
+   $output .= $field->html_name . '"';
+   $output .= ' id="' . $field->id . '"';
+   $output .= ' value="' . $field->fif . '" />';
    # value
    return $output;
 }
@@ -179,17 +177,17 @@ sub render_select
 {
    my ( $self, $field ) = @_;
 
-   my $fif = $field->fif || '';
-   my $output = "<label class=\"label\" for=\"";
-   $output .= $field->html_name . "\">" . $field->label . ": </label>";
-   $output .= "<select name=\"" . $field->html_name . "\"";
-   $output .= " multiple=\"multiple\" size=\"5\"" if $field->multiple == 1;
-   $output .= "\">";
+   my $output = $self->_label( $field );
+   $output .= '<select name="' . $field->html_name . '"';
+   $output .= ' id="' . $field->id . '"';
+   $output .= ' multiple="multiple"' if $field->multiple == 1; 
+   $output .= ' size="' . $field->size . '"' if $field->size;
+   $output .= '>';
    foreach my $option ( $field->options )
    {
-      $output .= "<option value=\"" . $option->{value} . "\" ";
+      $output .= '<option value="' . $option->{value} . '" ';
 
-      if ($fif)
+      if ($field->fif)
       {
          if ( $field->multiple == 1 )
          {
@@ -202,19 +200,19 @@ sub render_select
             }
             foreach my $optval ( @fif )
             {
-               $output .= " selected=\"selected\""
+               $output .= ' selected="selected"'
                   if $optval == $option->{value};
             }
          }
          else
          {
-            $output .= "selected=\"selected\""
-               if $option->{value} eq $fif;
+            $output .= 'selected="selected"'
+               if $option->{value} eq $field->fif;
          }
       }
-      $output .= ">" . $option->{label} . "</option>";
+      $output .= '>' . $option->{label} . '</option>';
    }
-   $output .= "</select>";
+   $output .= '</select>';
    return $output;
 }
 
@@ -231,13 +229,11 @@ sub render_checkbox
 {
    my ( $self, $field ) = @_;
 
-   my $fif = $field->fif || '';
-   my $output = "<label class=\"label\" for=\"";
-   $output .= $field->html_name . "\">" . $field->label . ": </label>";
-   $output .= "<input type=\"checkbox\" name=\"";
-   $output .= $field->html_name . '" value="' . $field->checkbox_value . '"';
-   $output .= " checked=\"checked\"" if $fif eq $field->checkbox_value;
-   $output .= "/>";
+   my $output = $self->_label( $field );
+   $output .= '<input type="checkbox" name="';
+   $output .= $field->html_name . '" id="' . $field->id . '" value="' . $field->checkbox_value . '"';
+   $output .= ' checked="checked"' if $field->fif eq $field->checkbox_value;
+   $output .= ' />';
    return $output;
 }
 
@@ -255,15 +251,14 @@ sub render_radio_group
    my ( $self, $field ) = @_;
 
    my $output = "\n";
-   my $fif = $field->fif || '';
+   $output .= $self->_label($field) . " <br />";
    foreach my $option ( $field->options )
    {
-      $output = "<label class=\"label\" for=\"";
-      $output .= $field->html_name . "\">" . $option->{label} . ": </label>";
-      $output .= "<input type=\"radio\" value=\"" . $option->{value} . "\"";
-      $output .= " name=\"" . $field->html_name;
-      $output .= " selected=\"selected\"" if $option->{value} eq $fif;
-      $output .= " />\n";
+      $output .= '<input type="radio" value="' . $option->{value} . '"';
+      $output .= ' name="' . $field->html_name . '" id="' . $field->id . '"';
+      $output .= ' selected="selected"' if $option->{value} eq $self->fif;
+      $output .= ' />';
+      $output .= $option->{label} . '<br />';
    }
    return $output;
 }
@@ -282,15 +277,22 @@ sub render_textarea
    my $cols  = $field->cols || 10;
    my $rows  = $field->rows || 5;
    my $name  = $field->html_name;
-   my $label = $field->label;
 
-   my $output =
-        qq(\n<label class="label" for="$name">)
-      . qq($label: </label>)
+   my $output = $self->_label( $field )
       . qq(<textarea name="$name" id="$id" )
       . qq(rows="$rows" cols="$cols">$fif</textarea>);
 
    return $output;
+}
+
+sub _label
+{
+   my ( $self, $field ) = @_;
+   return '<label class="label" for="' 
+   . $field->id
+   . '">'
+   . $field->label 
+   . ': </label>'
 }
 
 =head2 render_compound
@@ -304,11 +306,12 @@ sub render_compound
    my ( $self, $field ) = @_;
 
    my $output = '<fieldset class="' . $field->html_name . '">';
+   $output .= '<legend>' . $field->label . '</legend>';
    foreach my $subfield ($field->sorted_fields)
    {
       $output .= $self->render_field($subfield);
    }
-   $output .= "</fieldset>";
+   $output .= '</fieldset>';
 }
 
 =head2 render_submit
@@ -324,7 +327,7 @@ sub render_submit
    my $output = '<input type="submit" name="';
    $output .= $field->html_name . '"';
    $output .= ' id="' . $field->id . '"';
-   $output .= ' value="' . $fif . '">';
+   $output .= ' value="' . $fif . '" />';
    return $output;
 }
 

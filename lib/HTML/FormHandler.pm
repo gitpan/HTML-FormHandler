@@ -2,20 +2,18 @@ package HTML::FormHandler;
 
 use Moose;
 use MooseX::AttributeHelpers;
-extends 'HTML::FormHandler::Model';
+with 'HTML::FormHandler::Model';
 with 'HTML::FormHandler::Fields';
+with 'HTML::FormHandler::TransformAndCheck';
 
 use Carp;
-use UNIVERSAL::require;
 use Locale::Maketext;
 use HTML::FormHandler::I18N; 
 use HTML::FormHandler::Params;
-use Scalar::Util qw(blessed);
-
 
 use 5.008;
 
-our $VERSION = '0.23';
+our $VERSION = '0.24';
 
 =head1 NAME
 
@@ -64,8 +62,6 @@ to update a 'Book' record:
       extends 'Catalyst::Controller';
    }
    use MyApp::Form::Book;
-   has 'edit_form' => ( isa => 'MyApp::Form::Book', is => 'rw',
-       lazy => 1, default => sub { MyApp::Form::Book->new } );
 
    sub book_base : Chained PathPart('book') CaptureArgs(0)
    {
@@ -81,24 +77,19 @@ to update a 'Book' record:
    {
       my ( $self, $c ) = @_;
 
-      $c->stash( form => $self->edit_form, template => 'book/form.tt' );
-      return unless $self->edit_form->process( item => $c->stash->{book},
+      my $form = MyApp::Form::Book->new;
+      $c->stash( form => $form, template => 'book/form.tt' );
+      return unless $form->process( item => $c->stash->{book},
          params => $c->req->parameters );
       $c->res->redirect( $c->uri_for('list') );
    }
 
-The example above creates the form as a persistent part of the application
-with the Moose <C has 'edit_form' > declaration.
-If you prefer, it also works fine to create the form on each request:
+The example above creates the form dynamically on each request. 
+You can also use a Moose attribute for the form.
     
-    my $form = MyApp::Form->new;
-    $form->process( item => $book, params => $params );
+    has 'form' => ( isa => 'MyApp::Form::Book', is => 'ro',
+       default => sub { MyApp::Form::Book->new } );
 
-or, for a non-database form:
-
-    my $form = MyApp::Form->new;
-    $form->process( $params );
-   
 A dynamic form may be created in a controller using the field_list
 attribute to set fields:
 
@@ -115,7 +106,8 @@ attribute to set fields:
 
 HTML::FormHandler allows you to define HTML form fields and validators. It can
 be used for both database and non-database forms, and will
-automatically update or create rows in a database.
+automatically update or create rows in a database. It can also be used
+to process structured data that doesn't come from an HTML form.
 
 One of its goals is to keep the controller interface as simple as possible,
 and to minimize the duplication of code. In most cases, interfacing your
@@ -269,24 +261,9 @@ or as structured data in the form of hashes and lists:
 CGI style parameters will be converted to hashes and lists for HFH to
 operate on.
 
-The parameters are stored in a 'params' attribute.
-Also: set_param, get_param, clear_params, delete_param, 
-has_params from Moose 'Collection::Hash' metaclass. 
+You can add an additional param when setting params:
 
-The 'set_param' method could be used to add additional field
-input that doesn't come from the HTML form, similar to a hidden field:
-
-   my $form = MyApp::Form->new( item => $item, params => $params );
-   $form->set_param('comment', 'updated by edit form');
-   return unless $form->process;
-
-Params are cleared at the beginning of 'process' if the form has been 
-processed before. For that case you can clear the form yourself: 
-   
-   $self->form->clear;
-   $self->form->params($params);
-   $self->form->set_param('comment', 'updated by edit form');
-   return unless $self->form->process($item => $item); 
+   $form->process( params => { %{$c->req->params}, new_param  => 'something' } );
 
 =head2 Getting data out
 
@@ -304,13 +281,18 @@ Or you can use the 'fif' method on individual fields:
 
 =head3 values
 
-Returns a hashref of all field values. Useful for non-database forms.
-The 'fif' and 'values' hashrefs will be the same unless there's a
+Returns a hashref of all field values. Useful for non-database forms, or if
+you want to update the databse yourself.
+The 'fif' and 'values' hashrefs might be the same for simple forms unless there's a
 difference in format between the HTML field values (in fif) and the saved value
 or unless the field 'name' and 'accessor' are different. 'fif' returns
 a hash with the field names for the keys and the field's 'fif' for the
 values; 'values' returns a hash with the field accessors for the keys, and the
 field's 'value' for the the values. 
+
+Forms containing arrays to be processed with L<HTML::FormHandler::Field::Repeatable>
+will have parameters with dots and numbers, like 'addresses.0.city', while the
+values hash will transform the fields with numbers to arrays.
 
 =head2 Accessing and setting up fields
 
@@ -323,6 +305,7 @@ of the field class.
 
 The most common way of declaring fields is the 'has_field' syntax.
 Using the 'has_field' syntax sugar requires C< use HTML::FormHandler::Moose; >.
+or C< use HTML::FormHandler::Moose::Role; > in a role. 
 See L<HTML::FormHandler::Manual::Intro>
 
    use HTML::FormHandler::Moose;
@@ -363,16 +346,13 @@ This is the method that is usually called to access a field:
     my $title = $form->field('title')->value;
     [% f = form.field('title') %]
 
+    my $city = $form->field('addresses.0.city')->value;
+
 Pass a second true value to die on errors.
  
-=head3 value($name)
-
-Convenience function to return the value of the field. Returns
-undef if field not found. The equivalent of C<< $form->field('name')->value >>
-
 =head2 Constraints and validation
 
-Most validation in performed on a per-field basis, and there are a number
+Most validation is performed on a per-field basis, and there are a number
 of different places in which validation can be performed. 
 
 =head3 Apply actions
@@ -384,9 +364,9 @@ no access to other field information.
 This is probably the best place to 
 put constraints and transforms if all that is needed is the current value.
 The L<HTML::FormHandler::Field::Compound> fields receive as value 
-a hash containing values of their child fields - this maybe used for
+a hash containing values of their child fields - this may be used for
 easy creation of objects (like DateTime).
-See the L<HTML::FormHandler::Field/apply> for more documentation.
+See L<HTML::FormHandler::Field/apply> for more documentation.
 
    has_field 'test' => ( apply => [ 'MyConstraint', 
                          { check => sub {... },
@@ -414,9 +394,12 @@ this method can be set with 'set_validate' on the field. The default is
 
    sub validate_testfield { my ( $self, $field ) = @_; ... }
 
+If the field name has dots they should be replaced with underscores.
 
-=head3 cross_validate
+=head3 validate
 
+(This method used to be called 'cross_validate'. It was renamed to 'validate'
+to make the api more consistent.)
 This is a form method that is useful for cross checking values after they have
 been saved as their final validated value, and for performing more complex 
 dependency validation. It is called after all other field validation is done, 
@@ -432,12 +415,10 @@ post-validation values of all the fields.
 
 =head2 Clear form state
 
-Various clear methods are used in internal processing, and might be
-useful in some situations.
-
-   clear - clears state, params, ctx
-   clear_state - clears flags, errors, fif, values, input 
-   clear_values, clear_errors, clear_fif - on all fields
+The clear method is called at the beginning of 'process' if the form
+object is reused, such as when it is persistent in a Moose attribute,
+or in tests.  If you add other attributes to your form that are set on 
+each request, you may need to clear those yourself.
 
 =head2 Miscellaneous attributes
 
@@ -459,7 +440,7 @@ the DBIC model).
 
 =head3 ctx
 
-Place to store application context
+Place to store application context for your use in your form's methods.
 
 =head3 language_handle, build_language_handle
 
@@ -528,7 +509,6 @@ will return the form name + "." + field full_name
    submit - Store form submit field info. No default value.
    uuid - generates a string containing an HTML field with UUID
 
-
 =cut
 
 # Moose attributes
@@ -553,7 +533,6 @@ has 'language_handle' => (
    is      => 'rw',
    builder => 'build_language_handle'
 );
-has 'num_errors' => ( isa => 'Int', is => 'rw', default => 0 );
 has 'html_prefix' => ( isa => 'Bool', is => 'rw' );
 has 'active_column' => ( isa => 'Str', is => 'rw' );
 has 'http_method' => ( isa => 'Str', is => 'rw', default => 'post' );
@@ -634,21 +613,14 @@ sub update
    warn "HFH update method is deprecated. Please switch to using 'process'.";
    shift->process(@_);
 }
-
-# deprecated
-sub validate
-{
-   warn "HFH validate method is deprecated. Please switch to using 'process'.";
-   shift->process(@_);
-}
-  
+ 
 sub process
 {
-   my ( $self, @args ) = @_;
+   my $self = shift;
 
    warn "HFH: process ", $self->name, "\n" if $self->verbose;
    $self->clear if $self->processed;
-   $self->_setup_form(@args);
+   $self->_setup_form(@_);
    $self->validate_form if $self->has_params;
    $self->update_model if $self->validated;
    $self->dump_fields if $self->verbose;
@@ -668,28 +640,21 @@ sub clear
 { 
    my $self = shift;
    warn "HFH: clear ", $self->name, "\n" if $self->verbose;
-   $self->clear_state;
+   $self->clear_data;
+   $self->validated(0);
+   $self->ran_validation(0);
    $self->clear_params;
    $self->clear_ctx;
    $self->processed(0);
    $self->did_init_obj(0);
 }
 
-sub clear_state
-{
-   my $self = shift;
-   $self->validated(0);
-   $self->ran_validation(0);
-   $self->num_errors(0);
-   $self->clear_data;
-}
-
 sub clear_data
 {
-   $_->clear_data for shift->fields;
+   my $self = shift;
+   $self->clear_value;
+   $self->clear_input;
 }
-
-sub clear_fif { shift->clear_fifs }
 
 sub fif
 {
@@ -722,50 +687,12 @@ sub fif
    return \%params;
 }
 
-sub values
-{
-   my $self = shift;
-   my $values;
-   foreach my $field( $self->fields )
-   {
-      next if $field->noupdate;
-      next unless $field->has_value;
-      next if $field->has_parent;
-      $values->{$field->accessor} = $field->value unless $field->clear;
-      $values->{$field->accessor} = undef if $field->clear; 
-   }
-   return $values;
-}
-
-sub value
-{
-   my ( $self, $fieldname ) = @_;
-   Carp::carp "The value method is deprecated and will change semantics in next release"; 
-   my $field = $self->field( $fieldname, 1 ) || return;
-   return $field->value; 
-}
-
-sub cross_validate { 1 }
+sub values { shift->value }
 
 # deprecated
 sub has_error
 {
    my $self = shift;
-   return $self->ran_validation && !$self->validated;
-}
-
-sub has_errors
-{
-   for ( shift->fields )
-   {
-      return 1 if $_->has_errors;
-   }
-   return 0;
-}
-
-sub error_fields
-{
-   return grep { $_->has_errors } shift->sorted_fields;
 }
 
 # deprecated?
@@ -796,44 +723,24 @@ sub validate_form
    my $self = shift;
    my $params = $self->params; 
    $self->_set_dependency;    # set required dependencies
-   my $fields_in_params;
-   foreach my $field ( $self->fields )
-   {
-      # Trim values and move to "input" slot
-      if ( exists $params->{$field->full_name} )
-      {
-         $field->input( $params->{$field->full_name} );
-         $fields_in_params++;
-      }
-      elsif ( $field->has_input_without_param )
-      {
-         $field->input( $field->input_without_param );
-         $fields_in_params++;
-      }
-   }
-   return unless $fields_in_params;
-
-
-   $self->_fields_validate;
-      
-   $self->cross_validate($params);
+   $self->input( $params );
+   $self->build_node;
+   $self->_apply_actions;
+   $self->validate();
    # model specific validation 
    $self->validate_model;
    $self->_clear_dependency;
-
-   # count errors 
-   my $errors;
-   for ( $self->fields )
-   {
-      $errors++ if $_->has_errors;
-   }
-   $self->num_errors( $errors || 0 );
+   $self->get_error_fields;
    $self->ran_validation(1);
-   $self->validated( !$errors );
+   $self->validated( $self->num_errors == 0  );
    $self->dump_validated if $self->verbose;
-
    return $self->validated;
 }
+
+sub cross_validate { shift->validate(@_) }
+
+sub has_errors { shift->has_error_fields }
+sub num_errors { shift->num_error_fields }
 
 sub _setup_form
 {
@@ -858,14 +765,17 @@ sub _setup_form
    # will be done in init_object when there's an initial object
    # in validation routines when there are params
    # and by _init for empty forms
-   if( ($self->init_object || $self->item) && !$self->did_init_obj )
+   if( !$self->did_init_obj )
    {
-      $self->_init_from_object( $self, $self->init_object || $self->item );
-   }
-   if ( !$self->has_params && !$self->did_init_obj )
-   {
-      # no initial object. empty form form must be initialized
-      $self->_init;
+      if( $self->init_object || $self->item )
+      {
+         $self->_init_from_object( $self, $self->init_object || $self->item );
+      }
+      elsif ( !$self->has_params )
+      {
+         # no initial object. empty form form must be initialized
+         $self->_init;
+      }
    }
 }
 
@@ -876,9 +786,11 @@ sub _init_from_object
    $node ||= $self;
    return unless $item; 
    warn "HFH: init_from_object ", $self->name, "\n" if $self->verbose;
+   my $my_value;
    for my $field ( $node->fields )
    {
       next if $field->parent && $field->parent != $node;
+      next if $field->writeonly;
       next if ref $item eq 'HASH' && !exists $item->{ $field->accessor };
       my $value = $self->_get_value( $field, $item );
       #      $value = $field->_apply_deflations( $value );
@@ -893,13 +805,11 @@ sub _init_from_object
       }
       else
       {
-         if ( $field->_can_init_value )
+         if ( my @values = $field->get_init_value )
          {
-            my @values;
-            @values = $field->_init_value( $field, $item );
             my $value = @values > 1 ? \@values : shift @values;
-            $field->init_value($value) if $value;
-            $field->value($value)      if $value;
+            $field->init_value($value) if defined $value;
+            $field->value($value)      if defined $value;
          }
          else
          {
@@ -907,7 +817,9 @@ sub _init_from_object
          }
          $field->_load_options if $field->can('_load_options');
       }
+      $my_value->{$field->name} = $field->value;
    }
+   $self->value( $my_value );
    $self->did_init_obj(1);
 }
 
@@ -991,13 +903,14 @@ sub _clear_dependency
 sub _munge_params
 {
    my ( $self, $params, $attr ) = @_;
-   my $new_params = HTML::FormHandler::Params->expand_hash($params);
+   my $_fix_params = HTML::FormHandler::Params->new;
+   my $new_params = $_fix_params->expand_hash($params);
    if ( $self->html_prefix )
    {
       $new_params = $new_params->{$self->name};
    }
-   my $final_params = {%{$params}, %{$new_params}};
-   $self->{params} = $final_params;
+   $new_params = {} if !defined $new_params;
+   $self->{params} = $new_params;
 }
 
 =head1 SUPPORT

@@ -8,9 +8,8 @@ our $VERSION = '0.01';
 use MooseX::Types -declare => [
   'PositiveNum', 'PositiveInt', 'NegativeNum', 'NegativeInt', 'SingleDigit',
   'SimpleStr', 'NonEmptySimpleStr', 'Password', 'StrongPassword', 'NonEmptyStr',
-  'Trim', 'Email', 'State', 'StateOrProvince', 'Province', 'Zip', 'PostCode',
-  'ZipOrPostCode', 'Phone', 'AmericanPhone', 'CCNumber', 'CCExp', 'CCType',
-  'IPAddress', 'DateTime', 'Word',
+  'Email', 'State', 'Zip', 'IPAddress', 'NoSpaces', 'WordChars', 'NotAllDigits', 
+  'Printable', 'SingleWord',
 ];
 
 use MooseX::Types::Moose ('Str', 'Num', 'Int');
@@ -48,6 +47,12 @@ It would be possible to import the MooseX types (Common, etc), but for now
 we'll just re-implement them here in order to be able to change the
 messages and keep control of what types we provide.
 
+From MooseX::Types::Common:
+
+  'PositiveNum', 'PositiveInt', 'NegativeNum', 'NegativeInt', 'SingleDigit',
+  'SimpleStr', 'NonEmptySimpleStr', 'Password', 'StrongPassword', 'NonEmptyStr',
+
+
 =head1 TYPES
 
 =over
@@ -63,6 +68,22 @@ Checks that the state is in a list of two uppercase letters.
 =item Zip
 
 =item IPAddress
+
+=item NoSpaces
+
+  No spaces in string
+
+=item WordChars
+
+=item NotAllDigits
+
+  Might be useful for passwords
+
+=item Printable
+
+=item SingleWord
+
+  Contains a single word
 
 =back
 
@@ -157,6 +178,31 @@ subtype IPAddress,
      $4 >= 0 && $4 <= 255 
   },
   message {"Not a valid IP address"};
+
+subtype NoSpaces,
+  as Str,
+  where { $_[0] !~ /\s/ },
+  message { 'Password can not contain spaces' };
+
+subtype WordChars,
+  as Str,
+  where { $_ !~ /\s/ },
+  message { 'Password must be made up of letters, digits, and underscores' };
+
+subtype NotAllDigits,
+  as Str,
+  where { $_ !~ /^\d+$/ },
+  message { 'Password must not be all digits' };
+
+subtype Printable,
+  as Str,
+  where { $_ =~ /^\p{IsPrint}*\z/ },
+  message { 'Field contains non-printable characters' };
+
+subtype SingleWord,
+  as Str,
+  where { $_ =~ /^\w*\z/ },
+  message { 'Field must contain a single word' };
 
 1;
 

@@ -2,23 +2,33 @@ use strict;
 use warnings;
 
 use lib './t';
+use lib 't/lib';
+use BookDB::Schema::DB;
 use MyTest
-    tests   => 2,
-    recommended => [qw/ DateTime /];
+    tests   => 3,
+    recommended => ['DBIx::Class', 'DateTime'];
 
+use_ok( 'HTML::FormHandler::Field::DateTime' );
 
+my $field = HTML::FormHandler::Field::DateTime->new( name => 'test_field' );
 
-    my $class = 'HTML::FormHandler::Field::DateTime';
+ok( defined $field,  'new() called' );
 
-    my $name = $1 if $class =~ /::([^:]+)$/;
+{ 
+   package UserForm;
+   
+   use HTML::FormHandler::Moose;
+   extends 'HTML::FormHandler::Model::DBIC';
+   with 'HTML::FormHandler::Render::Simple';
+   
+   has_field 'birthdate' => ( type => 'DateTime' ); 
+   has_field 'birthdate.year' => ( type => 'Year' );
+}
 
-    use_ok( $class );
+my $schema = BookDB::Schema::DB->connect('dbi:SQLite:t/db/book.db');
 
-    my $field = $class->new(
-        name    => 'test_field',
-        type    => $name,
-    );
-
-    ok( defined $field,  'new() called' );
-
+my $user = $schema->resultset( 'User' )->first;
+my $form = UserForm->new( item => $user );
+ok( $form, 'Form with DateTime field loaded from the db' );
+   
 

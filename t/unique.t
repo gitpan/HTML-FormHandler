@@ -20,8 +20,6 @@ my $form = BookDB::Form::Book->new(item_id => undef, schema => $schema);
 
 ok( !$form->process, 'Empty data' );
 
-$form->clear_state;
-
 # This is munging up the equivalent of param data from a form
 my $params = {
     'title' => 'How to Test Perl Form Processors',
@@ -44,20 +42,18 @@ is( $errors[0], 'Duplicate value for ISBN', 'error message for duplicate');
    has '+item_class' => ( default => 'Book' );
 
    sub field_list {
-       return {
-           fields    => [
-               title     => {
-                  type => 'Text',
-                  required => 1,
-               },
-               author    => 'Text',
-               isbn => {
-                  type => 'Text',
-                  unique => 1,
-                  unique_message => 'Duplicate ISBN number',
-               }
-           ],
-       };
+        [
+            title     => {
+               type => 'Text',
+               required => 1,
+            },
+            author    => 'Text',
+            isbn => {
+               type => 'Text',
+               unique => 1,
+               unique_message => 'Duplicate ISBN number',
+            }
+        ]
    }
 }
 
