@@ -14,7 +14,6 @@ inc/Module/Install/WriteAll.pm
 lib/HTML/FormHandler.pm
 lib/HTML/FormHandler/Field.pm
 lib/HTML/FormHandler/Field/Boolean.pm
-lib/HTML/FormHandler/Field/Boolean.pm.ps
 lib/HTML/FormHandler/Field/Checkbox.pm
 lib/HTML/FormHandler/Field/Compound.pm
 lib/HTML/FormHandler/Field/Date.pm
@@ -65,6 +64,7 @@ lib/HTML/FormHandler/Moose.pm
 lib/HTML/FormHandler/Moose/Role.pm
 lib/HTML/FormHandler/Params.pm
 lib/HTML/FormHandler/Render/Simple.pm
+lib/HTML/FormHandler/Render/Table.pm
 lib/HTML/FormHandler/TransformAndCheck.pm
 lib/HTML/FormHandler/Types.pm
 Makefile.PL
@@ -200,7 +200,6 @@ t/lib/Form/Test.pm
 t/lib/Form/Two.pm
 t/list.t
 t/load_field.t
-t/model.t
 t/model_cdbi.t
 t/model_dbic.t
 t/mult_pk.t
@@ -213,6 +212,7 @@ t/process.t
 t/regression_field_error.t
 t/related.t
 t/render.t
+t/render_table.t
 t/repeatable_errors.t
 t/script/bookdb_server.pl
 t/script/bookdb_test.pl
