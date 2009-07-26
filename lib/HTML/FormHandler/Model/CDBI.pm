@@ -58,7 +58,7 @@ HTML::FormHandler::Model::CDBI->meta->make_immutable;
 =head2 init_item
 
 This is called first time $form->item is called.
-It does the equivalent of: 
+It does the equivalent of:
 
     return $self->item_class->retrieve( $self->item_id );
 
@@ -337,7 +337,7 @@ sub update_model
       next unless exists $fields{$col};
       my $field = delete $fields{$col};
       # If the field is flagged "clear" then set to NULL.
-      my $value = $field->clear ? undef : $field->value;
+      my $value = $field->value;
       if ($item)
       {
          my $cur = $item->$col;
@@ -408,7 +408,7 @@ sub update_model
 =head2 items_same
 
 Returns true if the two passed in cdbi objects are the same object.
-If both are undefined returns true.  
+If both are undefined returns true.
 
 =cut
 
@@ -449,5 +449,6 @@ the same terms as Perl itself.
 
 =cut
 
+__PACKAGE__->meta->make_immutable;
 no Moose;
 1;

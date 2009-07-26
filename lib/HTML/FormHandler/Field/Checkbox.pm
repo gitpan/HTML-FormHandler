@@ -10,31 +10,40 @@ HTML::FormHandler::Field::Checkbox - A checkbox field type
 
 =head1 DESCRIPTION
 
-This field is very similar to the Boolean Widget except that this 
-field allows other positive values besides 1. Since unselected 
-checkboxes do not return a parameter, fields with Checkbox type 
-will always be set to the 'input_without_param' default if they 
+This field is very similar to the Boolean Widget except that this
+field allows other positive values besides 1. Since unselected
+checkboxes do not return a parameter, fields with Checkbox type
+will always be set to the 'input_without_param' default if they
 do not appear in the form.
 
 =head2 widget
 
 checkbox
 
-=cut
+=head2 checkbox_value
 
-has '+widget' => ( default => 'checkbox' );
-has 'checkbox_value' => ( is => 'rw', default => 1 );
+In order to create the HTML for a checkbox, there must be a 'value="xx"'.
+This value is specified with the 'checkbox_value' attribute, which
+defaults to 1.
 
 =head2 input_without_param
 
 If the checkbox is not checked, it will be set to the value
-of this attribute (the unchecked value). Default = 0
+of this attribute (the unchecked value). Default = 0. Because
+unchecked checkboxes do not return anything in the HTTP parameters,
+the absence of a checkbox key in the parameters hash forces this
+field to this value. This means that Checkbox fields, unlike other
+fields, will not be ignored if there is no input. If a particular
+checkbox should not be processed for a particular form, you must
+set 'inactive' to 1 instead.
 
 =cut
 
+has '+widget' => ( default => 'checkbox' );
+has 'checkbox_value' => ( is => 'rw', default => 1 );
 has '+input_without_param' => ( default => 0 );
 
-sub value 
+sub value
 {
     my $field = shift;
     return $field->SUPER::value( @_ ) if @_;

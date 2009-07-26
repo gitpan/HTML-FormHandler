@@ -1,16 +1,14 @@
 ---
-abstract: 'form handler written in Moose '
-author: ~
+abstract: 'form handler written in Moose'
+author:
+  - 'Gerda Shank'
 build_requires:
-  DateTime::Format::MySQL: 0
-  DateTime::Format::SQLite: 0
-  DateTime::Format::W3CDTF: 0
   ExtUtils::MakeMaker: 6.42
   Test::More: 0.77
 configure_requires:
   ExtUtils::MakeMaker: 6.42
 distribution_type: module
-generated_by: 'Module::Install version 0.89'
+generated_by: 'Module::Install version 0.91'
 license: perl
 meta-spec:
   url: http://module-build.sourceforge.net/META-spec-v1.4.html
@@ -20,15 +18,8 @@ no_index:
   directory:
     - inc
     - t
-recommends:
-  Catalyst: 0
-  Catalyst::Component::InstancePerContext: 0
-  Template: 0
-  Test::WWW::Mechanize::Catalyst: 0.50
 requires:
   Carp: 0
-  DBIx::Class: 0
-  DBIx::Class::ResultSet::RecursiveUpdate: 0.010
   DateTime: 0
   HTML::Entities: 0
   Locale::Maketext: 1.09
@@ -42,4 +33,4 @@ requires:
 resources:
   license: http://dev.perl.org/licenses/
   repository: http://github.com/gshank/html-formhandler/tree/master
-version: 0.26
+version: 0.27

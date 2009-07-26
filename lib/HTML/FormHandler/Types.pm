@@ -1,4 +1,4 @@
-package HTML::FormHandler::Types; 
+package HTML::FormHandler::Types;
 
 use strict;
 use warnings;
@@ -8,7 +8,7 @@ our $VERSION = '0.01';
 use MooseX::Types -declare => [
   'PositiveNum', 'PositiveInt', 'NegativeNum', 'NegativeInt', 'SingleDigit',
   'SimpleStr', 'NonEmptySimpleStr', 'Password', 'StrongPassword', 'NonEmptyStr',
-  'Email', 'State', 'Zip', 'IPAddress', 'NoSpaces', 'WordChars', 'NotAllDigits', 
+  'Email', 'State', 'Zip', 'IPAddress', 'NoSpaces', 'WordChars', 'NotAllDigits',
   'Printable', 'SingleWord',
 ];
 
@@ -159,7 +159,7 @@ subtype Email,
     require Email::Valid;
     my $valid;
     return ($valid = Email::Valid->address($value)) &&
-        ($valid eq $value); 
+        ($valid eq $value);
   },
   message {"Email is not valid"};
 
@@ -175,7 +175,7 @@ subtype IPAddress,
      $1 >= 0 && $1 <= 255 &&
      $2 >= 0 && $2 <= 255 &&
      $3 >= 0 && $3 <= 255 &&
-     $4 >= 0 && $4 <= 255 
+     $4 >= 0 && $4 <= 255
   },
   message {"Not a valid IP address"};
 
@@ -203,6 +203,17 @@ subtype SingleWord,
   as Str,
   where { $_ =~ /^\w*\z/ },
   message { 'Field must contain a single word' };
+
+=head1 AUTHORS
+
+  HTML::FormHandler Contributors; see HTML::FormHandler
+
+=head1 COPYRIGHT
+
+  This library is free software, you can redistribute it and/or modify it under
+  the same terms as Perl itself.
+
+=cut
 
 1;
 

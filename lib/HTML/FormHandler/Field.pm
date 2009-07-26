@@ -15,7 +15,7 @@ HTML::FormHandler::Field - Base class for HTML::FormHandler Fields
 =head1 SYNOPSIS
 
 Instances of Field subclasses are generally built by L<HTML::FormHandler>
-from 'has_field' declarations or the field_list, but they can also be constructed 
+from 'has_field' declarations or the field_list, but they can also be constructed
 using new (usually for test purposes).
 
     use HTML::FormHandler::Field::Text;
@@ -37,14 +37,14 @@ In your custom field class:
 
 This is the base class for form fields. The 'type' of a field class
 is used in the FormHandler field_list or has_field to identify which field class to
-load. If the type is not specified, it defaults to Text. 
+load. If the type is not specified, it defaults to Text.
 
 There are two rough categories of Field classes: those that do extra processing
 and those that are simple validators. The 'Compound', 'Repeatable', and
 'Select' fields are fields that are functional.
 
 A number of field classes are provided by the distribution. The basic
-validat field types are:
+for-validation (as opposed to 'functional') field types are:
 
    Text
    Integer
@@ -52,8 +52,8 @@ validat field types are:
 
 These field types alone would be enough for most applications, since
 the equivalent of the others could be defined using field attributes,
-custom validation methods, and applied actions.  There is some benefit 
-to having descriptive names, of course, and if you have multiple fields  
+custom validation methods, and applied actions.  There is some benefit
+to having descriptive names, of course, and if you have multiple fields
 requiring the same validation, defining a custom field class may be a
 good idea.
 
@@ -77,14 +77,15 @@ Inheritance hierarchy of the distribution's field classes:
          Month
          Second
          Year
-      MonthName 
+      MonthName
       Weekday
    Boolean
       Checkbox
    DateMDY
    DateTime
    Email
-      
+   PrimaryKey 
+
 See the documentation or source for the individual fields.
 
 Many field classes contain only a list of constraints and transformations
@@ -93,16 +94,16 @@ are applied. Some build a custom select list using 'build_options'.
 
 =head1 ATTRIBUTES
 
-=head2 Names, types, accessor 
+=head2 Names, types, accessor
 
 =over
 
 =item name
 
 The name of the field. Used in the HTML form. Often a db accessor.
-The only required attribute. 
+The only required attribute.
 
-=item type 
+=item type
 
 The class or type of the field. The 'type' of L<HTML::FormHandler::Field::Money>
 is 'Money'. Classes that you define yourself are prefixed with '+'.
@@ -118,6 +119,10 @@ The name of the field with all parents:
 
    'event.start_date.month'
 
+=item full_accesor
+
+The field accessor with all parents
+
 =item html_name
 
 The full_name plus the form name if 'html_prefix' is set.
@@ -127,6 +132,11 @@ The full_name plus the form name if 'html_prefix' is set.
 =head2 Field data
 
 =over
+
+=item inactive
+
+Set this attribute if this field is inactive. This provides a way to define fields
+in the form and selectively set them to inactive.
 
 =item input
 
@@ -140,7 +150,8 @@ hash. Validation and constraints act on 'value'.
 
 =item fif
 
-Values used to fill in the form. Read only.
+Values used to fill in the form. Read only. Use a deflation to get
+from 'value' to 'fif' if the an inflator was used.
 
    [% form.field('title').fif %]
 
@@ -178,24 +189,28 @@ parents for the fields they contain.
 =item errors
 
 Returns the error list for the field. Also provides 'num_errors',
-'has_errors', 'push_errors' and 'clear_errors' from Collection::Array 
+'has_errors', 'push_errors' and 'clear_errors' from Collection::Array
 metaclass. Use 'add_error' to add an error to the array if you
-want to use a MakeText language handle. Default is an empty list. 
+want to use a MakeText language handle. Default is an empty list.
 
 =item add_error
 
 Add an error to the list of errors.  If $field->form
 is defined then process error message as Maketext input.
-See $form->language_handle for details. Returns undef.  
+See $form->language_handle for details. Returns undef.
 
     return $field->add_error( 'bad data' ) if $bad;
+
+=item error_fields
+
+Compound fields will have an array of errors from the subfields.
 
 =back
 
 =head2 Attributes for creating HTML
 
    label - Text label for this field. Defaults to ucfirst field name.
-   title - Place to put title for field. 
+   title - Place to put title for field.
    style - Place to put field style string
    css_class - For a css class name
    id    - Useful for javascript (default is form_name + field_name)
@@ -208,8 +223,8 @@ See $form->language_handle for details. Returns undef.
 =head2 widget
 
 The 'widget' attribute is not used by base FormHandler code.
-It is intended for use in generating HTML, in templates and the 
-rendering roles, and is used in L<HTML::FormHandler::Render::Simple>. 
+It is intended for use in generating HTML, in templates and the
+rendering roles, and is used in L<HTML::FormHandler::Render::Simple>.
 Fields of different type can use the same widget.
 
 This attribute is set in the field classes, or in the fields
@@ -218,15 +233,15 @@ name and provide a C<< 'widget_<name>' >> method in your copy
 of Render::Simple or in your form class.
 If you are using a template based rendering system you will want
 to create a widget template.
-(see L<HTML::FormHandler::Manual::Templates>) 
+(see L<HTML::FormHandler::Manual::Templates>)
 
 Widget types for the provided field classes:
 
-    Widget      : Field classes 
+    Widget      : Field classes
     ------------:-----------------------------------
     text        : Text, Integer
     checkbox    : Checkbox, Boolean
-    radio_group : Select, Multiple, IntRange (etc) 
+    radio_group : Select, Multiple, IntRange (etc)
     select      : Select, Multiple, IntRange (etc)
     textarea    : TextArea, HtmlArea
     compound    : Compound, Repeatable, DateTime
@@ -234,18 +249,15 @@ Widget types for the provided field classes:
     hidden      : Hidden
     submit      : Submit
 
-The default widget is 'text'.
-
 =head2 Flags
 
    password  - prevents the entered value from being displayed in the form
    writeonly - The initial value is not taken from the database
-   clear     - Always set the database column to null.
-   noupdate  - Do not update this field in the database
+   noupdate  - Do not update this field in the database (does not appear in $form->value)
 
 =head2 Form methods for fields
 
-These provide the name of a method in a form (not the field ) which will act 
+These provide the name of a method in a form (not the field ) which will act
 on a particular field.
 
 =over
@@ -253,15 +265,18 @@ on a particular field.
 =item set_validate
 
 Specify a form method to be used to validate this field.
-The default is C<< 'validate_' . $field->name >>. (Periods in
+The default is C<< 'validate_' . $field->name >>. Periods in field names
+will be replaced by underscores, so that the field 'addresses.city' will
+use the 'validate_addresses_city' method for validation.
 
    has_field 'title' => ( isa => 'Str', set_validate => 'check_title' );
    has_field 'subtitle' => ( isa => 'Str', set_validate => 'check_title' );
 
 =item set_init
 
-The name of the method in the form that provides a field's initial value
- 
+The name of the method in the form that provides a field's initial value.
+Default is C<< 'init_' . $field->name >>. Periods replaced by underscores.
+
 =back
 
 =head1 Constraints and Validations
@@ -295,7 +310,7 @@ Field values are validated against the specified range if one
 or both of range_start and range_end are set and the field
 does not have 'options'.
 
-The IntRange field uses this range to create a select list 
+The IntRange field uses this range to create a select list
 with a range of integers.
 
 In a FormHandler field_list
@@ -310,41 +325,41 @@ In a FormHandler field_list
 
 =head2 apply
 
-Use the 'apply' keyword to specify an ArrayRef of constraints and coercions to 
-be executed on the field at validate_field time.  
+Use the 'apply' keyword to specify an ArrayRef of constraints and coercions to
+be executed on the field at validate_field time.
 
-   has_field 'test' => ( 
-      apply => [ 'MooseType', { check => sub {...}, message => { } } 
+   has_field 'test' => (
+      apply => [ 'MooseType', { check => sub {...}, message => { } }
    );
 
-In general the action can be of three types: a Moose type (which is 
-represented by it's name), a transformation (which is a callback called on 
-the value of the field), or a constraint ('check') which performs a 'smart match' 
+In general the action can be of three types: a Moose type (which is
+represented by its name), a transformation (which is a callback called on
+the value of the field), or a constraint ('check') which performs a 'smart match'
 on the value of the field.  Currently we implement the smart match
-in our code - but in the future when Perl 5.10 is more widely used we'll switch 
+in our code - but in the future when Perl 5.10 is more widely used we'll switch
 to the core
 L<http://search.cpan.org/~rgarcia/perl-5.10.0/pod/perlsyn.pod#Smart_matching_in_detail>
-smart match operator.  
+smart match operator.
 
-The Moose type action first tries to coerce the value - 
-then it checks the result, so you can use it instead of both constraints and 
-tranformations - TIMTOWTDI.  For most constraints and transformations it is 
-your choice as to whether you use a Moose type or use a 'check' or 'transform'. 
+The Moose type action first tries to coerce the value -
+then it checks the result, so you can use it instead of both constraints and
+tranformations - TIMTOWTDI.  For most constraints and transformations it is
+your choice as to whether you use a Moose type or use a 'check' or 'transform'.
 
-All three types define a message to be presented to the user in the case of 
+All three types define a message to be presented to the user in the case of
 failure. Messages are passed to L<Locale::MakeText>, and can either be simple
 strings or an array suitable for MakeText, such as:
 
      message => ['Email should be of the format [_1]',
-                 'someuser@example.com' ] 
+                 'someuser@example.com' ]
 
-Transformations and coercions are called in an eval 
+Transformations and coercions are called in an eval
 to catch the errors. Warnings are trapped in a sigwarn handler.
 
-All the actions are called in the order that they are defined, so that you can 
-check constraints after transformations and vice versa. You can weave all three 
+All the actions are called in the order that they are defined, so that you can
+check constraints after transformations and vice versa. You can weave all three
 types of actions in any order you need. The actions specified with 'apply' will
-be stored in an 'actions' array. 
+be stored in an 'actions' array.
 
 To declare actions inside a field class use L<HTML::FormHandler::Moose> and
 'apply' sugar:
@@ -356,18 +371,18 @@ To declare actions inside a field class use L<HTML::FormHandler::Moose> and
    apply [ 'SomeConstraint', { check => ..., message => .... } ];
 
    1;
-   
+
 Actions specified with apply are cumulative. Actions may be specified in
 field classes and additional actions added in the 'has_field' declaration.
 
-You can see examples of field classes with 'apply' actions in the source for 
+You can see examples of field classes with 'apply' actions in the source for
 L<HTML::FormHandler::Field::Money> and L<HTML::FormHandler::Field::Email>.
 
 =head2 Moose types for constraints and transformations
 
 Moose types can be used to do both constraints and transformations. If a coercion
 exists it will be applied, resulting in a transformation. You can use type
-constraints form L<MooseX::Types>> libraries or defined using 
+constraints form L<MooseX::Types>> libraries or defined using
 L<Moose::Util::TypeConstraints>.
 
 A Moose type defined with L<Moose::Util::TypeConstraints>:
@@ -393,11 +408,11 @@ would not be quoted):
        apply => [ 'MyStr', 'MyInt' ]
    );
 
-This will check if the field contains a string starting with 'a' - and then 
+This will check if the field contains a string starting with 'a' - and then
 coerce it to an integer by extracting the first continuous string of digits.
 
 If the error message returned by the Moose type is not suitable for displaying
-in a form, you can define a different error message by using the 'type' and 
+in a form, you can define a different error message by using the 'type' and
 'message' keys in a hashref:
 
    apply => [ { type => 'MyStr', message => 'Not a valid value' } ];
@@ -452,9 +467,12 @@ Trimming is performed before any other defined actions.
 =head2 deflation
 
 A coderef that will convert from an inflated value back to a flat
-data representation suitable for displaying in an HTML field 
+data representation suitable for displaying in an HTML field.
+Usually the fif string is taken straight from the input string if
+it exists, so if you want to use a deflated value instead, set
+the 'fif_from_value' flag on the field.
 
-   has_field 'my_date_time' => ( 
+   has_field 'my_date_time' => (
       type => 'Compound',
       apply => [ { transform => sub{ DateTime->new( $_[0] ) } } ],
       deflation => sub { { year => $_->year, month => $_->month, day => $_->day } },
@@ -469,20 +487,21 @@ data representation suitable for displaying in an HTML field
 =head2 validate_field
 
 This is the base class validation routine. Most users will not
-do anything with this. It might be useful for method modifiers.
+do anything with this. It might be useful for method modifiers,
+if you want code that executed before or after the validation
+process.
 
 =head2 validate
 
 This field method can be used in addition to or instead of 'apply' actions
-in custom field classes. 
+in custom field classes.
 It should validate the field data and set error messages on
-errors with C<< $field->add_error >>. 
+errors with C<< $field->add_error >>.
 
     sub validate {
         my $field = shift;
         my $value = $field->value;
         return $field->add_error( ... ) if ( ... );
-        return 1;
     }
 
 =cut
@@ -497,9 +516,9 @@ has 'input_without_param' => (
    is        => 'rw',
    predicate => 'has_input_without_param'
 );
-has 'fif' => ( 
-    is => 'rw', 
-    clearer => 'clear_fif', 
+has 'fif' => (
+    is => 'rw',
+    clearer => 'clear_fif',
     predicate => 'has_fif',
     lazy_build => 1,
 );
@@ -507,6 +526,8 @@ has 'fif_from_value' => ( isa => 'Str', is => 'ro' );
 sub _build_fif {
    my $self = shift;
 
+   return if $self->inactive;
+   $self->form->processed(1) if $self->form;
    return '' if( defined $self->password && $self->password == 1 );
    if ( $self->has_input && !$self->fif_from_value )
    {
@@ -553,8 +574,6 @@ has 'label' => (
 has 'title' => ( isa => 'Str', is => 'rw' );
 has 'style' => ( isa => 'Str', is => 'rw' );
 has 'css_class' => ( isa => 'Str', is => 'rw' );
-# should we remove/deprecate this?
-has 'sub_form' => ( isa => 'HTML::FormHandler', is => 'rw' );
 has 'form' => ( isa => 'HTML::FormHandler', is => 'rw', weak_ref => 1 );
 has 'html_name' => (
    isa     => 'Str',
@@ -565,25 +584,20 @@ has 'html_name' => (
 sub build_html_name
 {
    my $self = shift;
-   my $prefix = ($self->form && $self->form->html_prefix) ? 
+   my $prefix = ($self->form && $self->form->html_prefix) ?
                                  $self->form->name . "." : '';
    return $prefix . $self->full_name;
 }
-has 'widget' => ( isa => 'Str', is => 'rw', default => 'text' );
+has 'widget' => ( isa => 'Str', is => 'rw' );
 has 'order' => ( isa => 'Int', is => 'rw', default => 0 );
+has 'inactive' => ( isa => 'Bool', is => 'rw', clearer => 'clear_inactive' );
 has 'unique' => ( isa => 'Bool', is => 'rw' );
 has 'unique_message' => ( isa => 'Str', is => 'rw' );
 has 'id' => ( isa => 'Str', is => 'rw', lazy => 1, builder => 'build_id' );
-sub build_id
-{
-   my $field = shift;
-   my $form_name = $field->form ? $field->form->name : 'fld-';
-   return $form_name . $field->name;
-}
+sub build_id { shift->html_name }
 has 'javascript' => ( isa => 'Str', is => 'rw' );
 has 'password' => ( isa => 'Bool', is => 'rw' );
 has 'writeonly' => ( isa => 'Bool', is => 'rw' );
-has 'clear' => ( isa => 'Bool', is => 'rw' );
 has 'disabled' => ( isa => 'Bool', is => 'rw' );
 has 'readonly' => ( isa => 'Bool', is => 'rw' );
 has 'noupdate' => ( isa => 'Bool', is => 'rw' );
@@ -600,6 +614,7 @@ has 'errors' => (
       'clear' => 'clear_errors',
    }
 );
+sub validated { !shift->has_errors }
 has 'set_validate' => (
    isa     => 'Str',
    is      => 'rw',
@@ -658,9 +673,9 @@ has 'deflation' => (
    is         => 'rw',
    predicate  => 'has_deflation',
 );
-has 'trim' => ( isa => 'HashRef', is => 'rw', 
-   default => sub {{ 
-      transform => 
+has 'trim' => ( isa => 'HashRef', is => 'rw',
+   default => sub {{
+      transform =>
       sub {
          my $value = shift;
          return unless defined $value;
@@ -691,8 +706,8 @@ sub BUILD
 
 # this is the recursive routine that is used
 # to initial fields if there is no initial object and no params
-sub _init 
-{ 
+sub _init
+{
    my $self = shift;
 
    if ( my @values = $self->get_init_value )
@@ -757,7 +772,7 @@ sub _apply_deflation
    return $value;
 }
 
-# use Class::MOP to clone 
+# use Class::MOP to clone
 sub clone
 {
    my ( $self, %params ) = @_;
@@ -823,9 +838,9 @@ sub dump
 
 =head1 AUTHORS
 
-Gerda Shank, gshank@cpan.org
+HTML::FormHandler Contributors; see HTML::FormHandler
 
-Based on the original source code of L<Form::Processor::Field> by Bill Moseley
+Initially based on the original source code of L<Form::Processor::Field> by Bill Moseley
 
 =head1 COPYRIGHT
 
