@@ -21,7 +21,6 @@ lib/HTML/FormHandler/Field/DateMDY.pm
 lib/HTML/FormHandler/Field/DateTime.pm
 lib/HTML/FormHandler/Field/Duration.pm
 lib/HTML/FormHandler/Field/Email.pm
-lib/HTML/FormHandler/Field/File.pm
 lib/HTML/FormHandler/Field/Hidden.pm
 lib/HTML/FormHandler/Field/Hour.pm
 lib/HTML/FormHandler/Field/HtmlArea.pm
@@ -77,9 +76,11 @@ t/01app.t
 t/02pod.t
 t/compound_field.t
 t/constraints.t
+t/db/book.db
 t/dependency.t
 t/errors.t
 t/field_custom_attr.t
+t/field_msg.t
 t/fields.t
 t/filters.t
 t/form_handler.t

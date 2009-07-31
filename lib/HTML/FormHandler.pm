@@ -11,7 +11,7 @@ use HTML::FormHandler::Params;
 
 use 5.008;
 
-our $VERSION = '0.27';
+our $VERSION = '0.27001';
 
 =head1 NAME
 
@@ -26,6 +26,7 @@ An example of a form class:
 
     package MyApp::Form::User;
 
+    use MooseX::Types;
     use HTML::FormHandler::Moose;
     extends 'HTML::FormHandler::Model::DBIC';
 
@@ -58,10 +59,8 @@ An example of a Catalyst controller that uses an HTML::FormHandler form
 to update a 'Book' record:
 
    package MyApp::Controller::Book;
-   BEGIN {
-      use Moose;
-      extends 'Catalyst::Controller';
-   }
+   use Moose;
+   BEGIN { extends 'Catalyst::Controller' }
    use MyApp::Form::Book;
 
    sub book_base : Chained PathPart('book') CaptureArgs(0)
@@ -442,7 +441,7 @@ clear_errors)
 
   $form->field('title')->errors;
 
-Compound fields also have an error of error_fields.
+Compound fields also have an array of error_fields.
 
 =head2 Clear form state
 
@@ -697,10 +696,9 @@ sub fif
    my %params;
    foreach my $field ( $node->fields )
    {
-      next if $field->inactive;
-      next if $field->password;
-      my $fif = $field->fif;    # need to force lazy build
-      next unless $field->has_fif && defined $fif;
+      next if ( $field->inactive || $field->password );
+      my $fif = $field->fif;
+      next unless defined $fif;
       if ( $field->DOES('HTML::FormHandler::Fields') )
       {
          my $next_params = $self->fif( $prefix . $field->name . '.', $field );
@@ -972,7 +970,9 @@ L<HTML::FormHandler::Moose>
 =head1 CONTRIBUTORS
 
 gshank: Gerda Shank <gshank@cpan.org>
+
 zby:    Zbigniew Lukasiak <zby@cpan.org>
+
 t0m:    Tomas Doran <bobtfish@bobtfish.net>
 
 Initially based on the source code of L<Form::Processor> by Bill Moseley

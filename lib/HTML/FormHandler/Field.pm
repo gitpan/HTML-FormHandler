@@ -464,13 +464,16 @@ transform.
 
 Trimming is performed before any other defined actions.
 
-=head2 deflation
+=head2 deflation, deflate
 
-A coderef that will convert from an inflated value back to a flat
-data representation suitable for displaying in an HTML field.
-Usually the fif string is taken straight from the input string if
-it exists, so if you want to use a deflated value instead, set
-the 'fif_from_value' flag on the field.
+A 'deflation' is a coderef that will convert from an inflated value back to a 
+flat data representation suitable for displaying in an HTML field.
+A deflation is automatically used for data that is taken from the database.
+For the fill-in-form value (fif) usually the fif string is taken straight from 
+the input string if it exists, so if you want to use a deflated value instead, set
+the 'fif_from_value' flag on the field. Normally you'd only need to do that if
+you want to 'canonicalize' the entered data, such as if a user enters '09' for
+the year and you want to re-display it as '2009'.
 
    has_field 'my_date_time' => (
       type => 'Compound',
@@ -478,9 +481,14 @@ the 'fif_from_value' flag on the field.
       deflation => sub { { year => $_->year, month => $_->month, day => $_->day } },
       fif_from_value => 1,
    );
-   has_field 'date_time_fif.year' => ( fif_from_value => 1 );
-   has_field 'date_time_fif.month';
-   has_field 'date_time_fif.day' => ( fif_from_value => 1 );
+   has_field 'my_date_time.year' => ( fif_from_value => 1 );
+   has_field 'my_date_time.month';
+   has_field 'my_date_time.day' => ( fif_from_value => 1 );
+
+You can also use a 'deflate' method in a custom field class. See the Date field
+for an example. If the deflation requires data that may vary (such as a format)
+string and thus needs access to 'self', you would need to use the deflate method
+since the deflation coderef is only passed the current value of the field
 
 =head1 Processing and validating the field
 
@@ -516,39 +524,33 @@ has 'input_without_param' => (
    is        => 'rw',
    predicate => 'has_input_without_param'
 );
-has 'fif' => (
-    is => 'rw',
-    clearer => 'clear_fif',
-    predicate => 'has_fif',
-    lazy_build => 1,
-);
+
 has 'fif_from_value' => ( isa => 'Str', is => 'ro' );
-sub _build_fif {
+sub fif {
    my $self = shift;
 
    return if $self->inactive;
-   $self->form->processed(1) if $self->form;
-   return '' if( defined $self->password && $self->password == 1 );
-   if ( $self->has_input && !$self->fif_from_value )
+   return '' if $self->password; 
+   if ( ($self->has_input && !$self->fif_from_value) ||
+        ($self->fif_from_value && !defined $self->value) )
    {
       return defined $self->input ? $self->input : '';
    }
    my $parent = $self->parent;
    if ( defined $parent &&
       $parent->isa('HTML::FormHandler::Field') &&
-      $parent->has_deflation &&
-      ref $parent->fif eq 'HASH' &&
-      exists $parent->fif->{ $self->name } )
+      ( $parent->has_deflation || $parent->can('deflate') ) )
    {
-      return $self->_apply_deflation( $parent->fif->{ $self->name } );
+      my $parent_fif = $parent->fif;
+      if( ref $parent_fif eq 'HASH' &&
+      exists $parent_fif->{ $self->name } )
+      {
+         return $self->_apply_deflation( $parent_fif->{ $self->name } );
+      }
    }
    if ( defined $self->value )
    {
       return $self->_apply_deflation( $self->value );
-   }
-   if ( $self->fif_from_value )
-   {
-      return defined $self->input ? $self->input : '';
    }
    return '';
 }
@@ -769,6 +771,10 @@ sub _apply_deflation
    {
       $value = $self->deflation->($value);
    }
+   elsif( $self->can('deflate') )
+   {
+      $value = $self->deflate;
+   }
    return $value;
 }
 
@@ -784,7 +790,7 @@ sub clear_data
    my $self = shift;
    $self->clear_input;
    $self->clear_value;
-   $self->clear_fif;
+#   $self->clear_fif;
    $self->clear_errors;
    $self->clear_init_value;
    $self->clear_other;
