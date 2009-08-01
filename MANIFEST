@@ -76,6 +76,7 @@ t/01app.t
 t/02pod.t
 t/compound_field.t
 t/constraints.t
+t/dates.t
 t/db/book.db
 t/dependency.t
 t/errors.t
@@ -110,11 +111,11 @@ t/xt/add_field.t
 t/xt/captcha.t
 t/xt/deprecations.t
 t/xt/email.t
+t/xt/field_list.t
 t/xt/init.t
 t/xt/load_field.t
 t/xt/model_cdbi.t
 t/xt/multiple_forms.t
 t/xt/order.t
 t/xt/params.t
-t/xt/validate.t
 TODO
