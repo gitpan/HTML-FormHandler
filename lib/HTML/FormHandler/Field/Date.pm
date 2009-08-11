@@ -1,7 +1,7 @@
 package HTML::FormHandler::Field::Date;
 
 use Moose;
-extends 'HTML::FormHandler::Field';
+extends 'HTML::FormHandler::Field::Text';
 use DateTime;
 use DateTime::Format::Strptime;
 our $VERSION = '0.02';
@@ -33,47 +33,48 @@ or DateTime strftime formats. (Default format is format => '%Y-%m-%d'.)
 
 For example:  
 
-   has_field 'start_date' => ( type => 'Datepicker', format => "dd/mm/y" );
+   has_field 'start_date' => ( type => 'Date', format => "dd/mm/y" );
 
 or
 
-   has_field 'start_date' => ( type => 'Datepicker', format => "%d/%m/%y" );
+   has_field 'start_date' => ( type => 'Date', format => "%d/%m/%y" );
 
 You can also set 'date_end' and 'date_start' attributes for validation
 of the date range. Use iso_8601 formats for these dates ("yyyy-mm-dd");
 
-   has_field 'start_date' => ( type => 'Datepicker', date_start => "2009-12-25" );
+   has_field 'start_date' => ( type => 'Date', date_start => "2009-12-25" );
 
 =cut
 
 has 'format' => ( is => 'rw', isa => 'Str', default => "%Y-%m-%d" );
-has 'locale' => ( is => 'rw', isa => 'Str' ); # TODO
-has 'time_zone' => ( is => 'rw' , isa => 'Str' ); # TODO
+has 'locale'     => ( is => 'rw', isa => 'Str' );                                  # TODO
+has 'time_zone'  => ( is => 'rw', isa => 'Str' );                                  # TODO
 has 'date_start' => ( is => 'rw', isa => 'Str', clearer => 'clear_date_start' );
 has 'date_end' => ( is => 'rw', isa => 'Str', clearer => 'clear_date_end' );
+has '+size' => ( default => '10' );
 
 # translator for Datepicker formats to DateTime strftime formats
 my $dp_to_dt = {
-   "d" => "\%e",  # day of month (no leading zero)
-   "dd" => "\%1", # day of month (2 digits) "%d"
-   "o" =>  "\%4", # day of year (no leading zero) "%{day_of_year}"
-   "oo" => "\%j", # day of year (3 digits)
-   "D" => "\%a",  # day name long
-   "DD" => "\%A", # day name short
-   "m" => "\%5",  # month of year (no leading zero) "%{day_of_month}"
-   "mm" => "\%3", # month of year (two digits) "%m"
-   "M" => "\%b",  # Month name short
-   "MM" => "\%B", # Month name long
-   "y" => "\%2",  # year (2 digits) "%y"
-   "yy" => "\%Y", # year (4 digits)
-   "@" => "\%s",  # epoch
+   "d"  => "\%e",    # day of month (no leading zero)
+   "dd" => "\%1",    # day of month (2 digits) "%d"
+   "o"  => "\%4",    # day of year (no leading zero) "%{day_of_year}"
+   "oo" => "\%j",    # day of year (3 digits)
+   "D"  => "\%a",    # day name long
+   "DD" => "\%A",    # day name short
+   "m"  => "\%5",    # month of year (no leading zero) "%{day_of_month}"
+   "mm" => "\%3",    # month of year (two digits) "%m"
+   "M"  => "\%b",    # Month name short
+   "MM" => "\%B",    # Month name long
+   "y"  => "\%2",    # year (2 digits) "%y"
+   "yy" => "\%Y",    # year (4 digits)
+   "@"  => "\%s",    # epoch
 };
 
 sub deflate
 {
    my $self = shift;
 
-   my $value = $self->value;     
+   my $value = $self->value;
    return unless ref $value eq 'DateTime';
    my $format = $self->get_strf_format;
    my $string = $value->strftime($format);
@@ -85,28 +86,25 @@ sub validate
    my $self = shift;
 
    my $format = $self->get_strf_format;
-   my $strp = DateTime::Format::Strptime->new( pattern => $format ); 
+   my $strp = DateTime::Format::Strptime->new( pattern => $format );
 
-   my $dt = $strp->parse_datetime($self->value);
-   unless ($dt)
-   {
-      $self->add_error($strp->errmsg);
+   my $dt = eval { $strp->parse_datetime( $self->value ) };
+   unless ($dt) {
+      $self->add_error( $strp->errmsg || $@ );
       return;
    }
    $self->value($dt);
    my $val_strp = DateTime::Format::Strptime->new( pattern => "%Y-%m-%d" );
-   if( $self->date_start )
-   {
-      my $date_start = $val_strp->parse_datetime($self->date_start);
+   if ( $self->date_start ) {
+      my $date_start = $val_strp->parse_datetime( $self->date_start );
       die "date_start: " . $val_strp->errmsg unless $date_start;
-      my $cmp = DateTime->compare($date_start, $dt); 
+      my $cmp = DateTime->compare( $date_start, $dt );
       $self->add_error("Date is too early") if $cmp eq 1;
    }
-   if( $self->date_end )
-   {
-      my $date_end = $val_strp->parse_datetime($self->date_end);
-      die "date_end: ". $val_strp->errmsg unless $date_end;
-      my $cmp = DateTime->compare($date_end, $dt); 
+   if ( $self->date_end ) {
+      my $date_end = $val_strp->parse_datetime( $self->date_end );
+      die "date_end: " . $val_strp->errmsg unless $date_end;
+      my $cmp = DateTime->compare( $date_end, $dt );
       $self->add_error("Date is too late") if $cmp eq -1;
    }
 }
@@ -116,19 +114,18 @@ sub get_strf_format
    my $self = shift;
 
    # if contains %, then it's a strftime format
-   return $self->format if $self->format =~ /\%/; 
+   return $self->format if $self->format =~ /\%/;
    my $format = $self->format;
-   foreach my $dpf ( reverse sort keys %{$dp_to_dt} )
-   {
+   foreach my $dpf ( reverse sort keys %{$dp_to_dt} ) {
       my $strf = $dp_to_dt->{$dpf};
       $format =~ s/$dpf/$strf/g;
    }
-   $format =~ s/\%1/\%d/g,
-   $format =~ s/\%2/\%y/g,
-   $format =~ s/\%3/\%m/g,
-   $format =~ s/\%4/\%{day_of_year}/g,
-   $format =~ s/\%5/\%{day_of_month}/g,
-   return $format;
+   $format    =~ s/\%1/\%d/g,
+      $format =~ s/\%2/\%y/g,
+      $format =~ s/\%3/\%m/g,
+      $format =~ s/\%4/\%{day_of_year}/g,
+      $format =~ s/\%5/\%{day_of_month}/g,
+      return $format;
 }
 
 no Moose;

@@ -77,11 +77,9 @@ t/02pod.t
 t/compound_field.t
 t/constraints.t
 t/dates.t
-t/db/book.db
 t/dependency.t
 t/errors.t
 t/field_custom_attr.t
-t/field_msg.t
 t/fields.t
 t/filters.t
 t/form_handler.t
