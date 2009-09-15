@@ -1,3 +1,11 @@
+0.28
+    Switched to using native traits
+    Add Widget roles
+    Major refactor to support result classes
+    Reformatting source to more Perl standard
+    Fix bug generating CSS classes in Render::Simple (mazpe)
+    Fix POD example in ::Intro (mazpe)
+
 0.27006 Mon Aug 17, 2009
     Add ability to set params class and arguments
 

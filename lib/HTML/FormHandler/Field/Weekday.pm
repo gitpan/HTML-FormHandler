@@ -4,19 +4,18 @@ use Moose;
 extends 'HTML::FormHandler::Field::Select';
 our $VERSION = '0.01';
 
-sub build_options
-{
-   my $i    = 0;
-   my @days = qw/
-      Sunday
-      Monday
-      Tuesday
-      Wednesday
-      Thursday
-      Friday
-      Saturday
-      /;
-   return [ map { { value => $i++, label => $_ } } @days ];
+sub build_options {
+    my $i    = 0;
+    my @days = qw/
+        Sunday
+        Monday
+        Tuesday
+        Wednesday
+        Thursday
+        Friday
+        Saturday
+        /;
+    return [ map { { value => $i++, label => $_ } } @days ];
 }
 
 =head1 NAME
@@ -39,5 +38,5 @@ the same terms as Perl itself.
 =cut
 
 __PACKAGE__->meta->make_immutable;
-no Moose;
+use namespace::autoclean;
 1;

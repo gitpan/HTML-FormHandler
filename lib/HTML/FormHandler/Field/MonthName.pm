@@ -4,24 +4,23 @@ use Moose;
 extends 'HTML::FormHandler::Field::Select';
 our $VERSION = '0.01';
 
-sub build_options
-{
-   my $i      = 1;
-   my @months = qw/
-      January
-      February
-      March
-      April
-      May
-      June
-      July
-      August
-      September
-      October
-      November
-      December
-      /;
-   return [ map { { value => $i++, label => $_ } } @months ];
+sub build_options {
+    my $i      = 1;
+    my @months = qw/
+        January
+        February
+        March
+        April
+        May
+        June
+        July
+        August
+        September
+        October
+        November
+        December
+        /;
+    return [ map { { value => $i++, label => $_ } } @months ];
 }
 
 =head1 NAME
@@ -44,5 +43,5 @@ the same terms as Perl itself.
 =cut
 
 __PACKAGE__->meta->make_immutable;
-no Moose;
+use namespace::autoclean;
 1;

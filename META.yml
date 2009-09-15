@@ -4,6 +4,8 @@ author:
   - 'Gerda Shank'
 build_requires:
   ExtUtils::MakeMaker: 6.42
+  Test::Differences: 0
+  Test::Exception: 0
   Test::More: 0.88
 configure_requires:
   ExtUtils::MakeMaker: 6.42
@@ -20,17 +22,19 @@ no_index:
     - t
 requires:
   Carp: 0
+  Class::Load: 0.05
   DateTime: 0
+  File::Spec: 0
   HTML::Entities: 0
   Locale::Maketext: 1.09
-  Moose: 0.70
-  MooseX::AttributeHelpers: 0.14
+  Moose: 0.90
   MooseX::Getopt: 0.16
-  MooseX::Types: 0
+  MooseX::Types: 0.20
   MooseX::Types::Common: 0
   aliased: 0
+  namespace::autoclean: 0.09
   perl: 5.8.0
 resources:
   license: http://dev.perl.org/licenses/
   repository: http://github.com/gshank/html-formhandler/tree/master
-version: 0.27006
+version: 0.28

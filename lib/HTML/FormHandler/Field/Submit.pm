@@ -1,7 +1,7 @@
 package HTML::FormHandler::Field::Submit;
 
 use Moose;
-extends 'HTML::FormHandler::Field';
+extends 'HTML::FormHandler::Field::Display';
 
 =head1 NAME
 
@@ -20,20 +20,17 @@ Uses the 'submit' widget.
 
 =cut
 
-has 'value' => (
-   is        => 'rw',
-   predicate => 'has_value',
-   default   => 'Save'
-);
+has '+value'  => ( default => 'Save' );
+has '+widget' => ( default => 'submit' );
 
-has '+widget'    => ( default => 'submit' );
-has '+writeonly' => ( default => 1 );
-has '+noupdate'  => ( default => 1 );
-
-sub validate_field { }
-
-sub clear_value { }
+sub _result_from_input {
+    my ( $self, $result, $input, $exists ) = @_;
+    $self->_set_result($result);
+    $result->_set_input($input);
+    $result->_set_field_def($self);
+    return $result;
+}
 
 __PACKAGE__->meta->make_immutable;
-no Moose;
+use namespace::autoclean;
 1;

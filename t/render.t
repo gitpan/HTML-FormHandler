@@ -110,9 +110,9 @@ is( $output2,
 my $output3 = $form->render_field( $form->field('vegetables') );
 is( $output3,
    '
-<div><label class="label" for="vegetables">Vegetables: </label><select name="vegetables" id="vegetables" multiple="multiple" size="5"><option value="2" id="vegetables.0" selected="selected">broccoli</option><option value="4" id="vegetables.1" selected="selected">peas</option><option value="1" id="vegetables.2" >lettuce</option><option value="3" id="vegetables.3" >carrots</option></select></div>
+<div><label class="label" for="vegetables">Vegetables: </label><select name="vegetables" id="vegetables" multiple="multiple" size="5"><option value="1" id="vegetables.0" >lettuce</option><option value="2" id="vegetables.1" selected="selected">broccoli</option><option value="3" id="vegetables.2" >carrots</option><option value="4" id="vegetables.3" selected="selected">peas</option></select></div>
 ',
-   'output from select multiple field');
+'output from select multiple field');
 
 my $output4 = $form->render_field( $form->field('active') );
 is( $output4,
@@ -162,11 +162,11 @@ is( $output9, '
 
 my $output10 = $form->render_field( $form->field('opt_in') );
 is( $output10, '
-<div><label class="label" for="opt_in">Opt_in: </label> <br /><input type="radio" value="0" name="opt_in" id="opt_in.0" />No<br /><input type="radio" value="1" name="opt_in" id="opt_in.1" />Yes<br /></div>
+<div><label class="label" for="opt_in">Opt_in: </label> <br /><input type="radio" value="0" name="opt_in" id="opt_in.0" checked="checked" />No<br /><input type="radio" value="1" name="opt_in" id="opt_in.1" />Yes<br /></div>
 ', 'output from radio group' );
 
 my $output11 = $form->render_start;
-is( $output11,'<form id="testform" method="post">
+is( $output11,'<form id="testform" method="post" >
 <fieldset class="main_fieldset">', 'Form start OK' );
 
 my $output = $form->render;

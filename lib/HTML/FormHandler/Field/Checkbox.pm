@@ -43,18 +43,16 @@ has '+widget'              => ( default => 'checkbox' );
 has 'checkbox_value'       => ( is      => 'rw', default => 1 );
 has '+input_without_param' => ( default => 0 );
 
-sub value
-{
-   my $field = shift;
-   return $field->SUPER::value(@_) if @_;
-   my $v = $field->SUPER::value;
-   return defined $v ? $v : 0;
+sub value {
+    my $field = shift;
+    return $field->SUPER::value(@_) if @_;
+    my $v = $field->SUPER::value;
+    return defined $v ? $v : 0;
 }
 
-sub validate
-{
-   my $self = shift;
-   $self->add_error( $self->required_message ) if ( $self->required && !$self->value );
+sub validate {
+    my $self = shift;
+    $self->add_error( $self->required_message ) if ( $self->required && !$self->value );
 }
 
 =head1 AUTHORS
@@ -69,5 +67,5 @@ the same terms as Perl itself.
 =cut
 
 __PACKAGE__->meta->make_immutable;
-no Moose;
+use namespace::autoclean;
 1;
