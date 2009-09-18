@@ -67,6 +67,7 @@ lib/HTML/FormHandler/Manual/Tutorial.pod
 lib/HTML/FormHandler/Meta/Role.pm
 lib/HTML/FormHandler/Model.pm
 lib/HTML/FormHandler/Model/CDBI.pm
+lib/HTML/FormHandler/Model/Object.pm
 lib/HTML/FormHandler/Moose.pm
 lib/HTML/FormHandler/Moose/Role.pm
 lib/HTML/FormHandler/Params.pm
@@ -102,7 +103,6 @@ MANIFEST			This list of files
 META.yml
 README
 t/01app.t
-t/02pod.t
 t/compound_field.t
 t/constraints.t
 t/dates.t
@@ -118,12 +118,15 @@ t/has_field.t
 t/has_many.t
 t/inactive_fields.t
 t/init_object.t
+t/lib/BookDB/Form/Upload.pm
 t/lib/Field/Address.pm
 t/lib/Field/AltText.pm
+t/lib/Field/MyField.pm
 t/lib/Form/Address.pm
 t/lib/Form/AddressRole.pm
 t/lib/Form/Multiple.pm
 t/lib/Form/MultipleRole.pm
+t/lib/Form/MyForm.pm
 t/lib/Form/Person.pm
 t/lib/Form/PersonRole.pm
 t/lib/Form/Test.pm
@@ -140,8 +143,7 @@ t/result.t
 t/result_compound.t
 t/structured.t
 t/types.t
-t/var/MyField.pm
-t/var/MyForm.pm
+t/xt/02pod.t
 t/xt/add_field.t
 t/xt/captcha.t
 t/xt/deprecations.t
@@ -154,4 +156,5 @@ t/xt/multiple_forms.t
 t/xt/order.t
 t/xt/params.t
 t/xt/submit.t
+t/xt/upload.t
 TODO

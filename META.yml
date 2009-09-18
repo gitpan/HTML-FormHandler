@@ -29,6 +29,7 @@ requires:
   Locale::Maketext: 1.09
   Moose: 0.90
   MooseX::Getopt: 0.16
+  MooseX::Traits: 0
   MooseX::Types: 0.20
   MooseX::Types::Common: 0
   aliased: 0
@@ -37,4 +38,4 @@ requires:
 resources:
   license: http://dev.perl.org/licenses/
   repository: http://github.com/gshank/html-formhandler/tree/master
-version: 0.28
+version: 0.28001

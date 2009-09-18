@@ -4,6 +4,7 @@ use HTML::FormHandler::Moose;
 use HTML::FormHandler::I18N;    # only needed if running without a form object.
 use HTML::FormHandler::Field::Result;
 
+with 'MooseX::Traits';
 with 'HTML::FormHandler::Validate';
 with 'HTML::FormHandler::Validate::Actions';
 with 'HTML::FormHandler::Widget::ApplyRole';
@@ -280,6 +281,13 @@ use the 'validate_addresses_city' method for validation.
 The name of the method in the form that provides a field's initial value.
 Default is C<< 'init_value_' . $field->name >>. Periods replaced by underscores.
 
+=item default
+
+Provide an initial value just like the 'set_init' method, except in the field
+declaration:
+
+  has_field 'bax' => ( default => 'Default bax' );
+
 =back
 
 =head1 Constraints and Validations
@@ -528,6 +536,7 @@ has 'input_without_param' => (
 );
 has 'not_nullable' => ( is => 'ro', isa => 'Bool' );
 has 'init_value' => ( is => 'rw', clearer => 'clear_init_value' );
+has 'default' => ( is => 'ro' );
 has 'result' => (
     isa       => 'HTML::FormHandler::Field::Result',
     is        => 'ro',
@@ -696,66 +705,63 @@ has 'order'             => ( isa => 'Int',  is => 'rw', default => 0 );
 has 'inactive'          => ( isa => 'Bool', is => 'rw', clearer => 'clear_inactive' );
 has 'id'                => ( isa => 'Str',  is => 'rw', lazy => 1, builder => 'build_id' );
 sub build_id { shift->html_name }
-has 'javascript' => ( isa => 'Str',  is => 'rw' );
-has 'password'   => ( isa => 'Bool', is => 'rw' );
-has 'writeonly'  => ( isa => 'Bool', is => 'rw' );
+has 'javascript' => ( isa => 'Str',  is => 'ro' );
+has 'password'   => ( isa => 'Bool', is => 'ro' );
+has 'writeonly'  => ( isa => 'Bool', is => 'ro' );
 has 'disabled'   => ( isa => 'Bool', is => 'rw' );
-has 'readonly'   => ( isa => 'Bool', is => 'rw' );
+has 'readonly'   => ( isa => 'Bool', is => 'ro' );
 has 'noupdate'   => ( isa => 'Bool', is => 'rw' );
 sub has_static_value { }
-has 'set_validate' => (
-    isa     => 'Str',
-    is      => 'rw',
-    lazy    => 1,
-    default => sub {
-        my $self = shift;
-        my $name = $self->full_name;
-        $name =~ s/\./_/g;
-        return 'validate_' . $name;
-    }
-);
-
+has 'set_validate' => ( isa => 'Str', is => 'ro',);
 sub _can_validate {
     my $self = shift;
+    my $set_validate = $self->_set_validate_meth;
     return
         unless $self->form &&
-            $self->set_validate &&
-            $self->form->can( $self->set_validate );
-    return 1;
+            $set_validate &&
+            $self->form->can( $set_validate );
+    return $set_validate;
 }
-
+sub _set_validate_meth {
+    my $self = shift;
+    return $self->set_validate if $self->set_validate;
+    my $name = $self->full_name;
+    $name =~ s/\./_/g;
+    $name =~ s/_\d_/_/g; # remove repeatable field instances
+    return 'validate_' . $name;
+}
 sub _validate {
     my $self = shift;
-    return unless $self->_can_validate;
-    my $meth = $self->set_validate;
+    return unless (my $meth = $self->_can_validate);
     $self->form->$meth($self);
 }
-has 'set_init' => (
-    isa     => 'Str',
-    is      => 'rw',
-    lazy    => 1,
-    default => sub {
-        my $self = shift;
-        my $name = $self->full_name;
-        $name =~ s/\./_/g;
-        return 'init_value_' . $name;
-    }
-);
-
+has 'set_init' => ( isa => 'Str', is => 'ro',);
 sub _can_init_value {
     my $self = shift;
+    my $set_init = $self->_set_init_meth; 
     return
         unless $self->form &&
-            $self->set_init &&
-            $self->form->can( $self->set_init );
-    return 1;
+            $set_init &&
+            $self->form->can( $set_init );
+    return $set_init;
 }
-
+sub _set_init_meth {
+    my $self = shift;
+    return $self->set_init if $self->set_init;
+    my $name = $self->full_name;
+    $name =~ s/\./_/g;
+    $name =~ s/_\d_/_/g;
+    return 'init_value_' . $name;
+}
 sub get_init_value {
     my $self = shift;
-    return unless $self->_can_init_value;
-    my $meth = $self->set_init;
-    $self->form->$meth( $self, $self->form->item );
+    if ( my $meth = $self->_can_init_value ) {
+        return $self->form->$meth( $self, $self->form->item );
+    }
+    elsif ( $self->default ) {
+        return $self->default;
+    }
+    return;
 }
 has 'deflation' => (
     is        => 'rw',
@@ -785,9 +791,6 @@ sub BUILD {
     $self->add_action( $self->trim ) if $self->trim;
     $self->_build_apply_list;
     $self->add_action( @{ $params->{apply} } ) if $params->{apply};
-    $self->set_validate;    # to vivify
-    $self->set_init;        # to vivify
-
 }
 
 # this is the recursive routine that is used
@@ -823,14 +826,8 @@ sub _result_from_object {
     my ( $self, $result, $value ) = @_;
 
     $self->_set_result($result);
-    if ( my @values = $self->get_init_value ) {
-        my $values_ref = @values > 1 ? \@values : shift @values;
-        if ( defined $values_ref ) {
-            $self->init_value($values_ref);
-            $result->_set_value($values_ref);
-        }
-    }
-    elsif ( $self->form ) {
+
+    if ( $self->form ) {
         $self->form->init_value( $self, $value );
     }
     else {
@@ -930,7 +927,7 @@ sub has_some_value {
         }
         return 0;
     }
-    return blessed $x;    # true if blessed, otherwise false
+    return blessed($x);    # true if blessed, otherwise false
 }
 
 sub input_defined {
