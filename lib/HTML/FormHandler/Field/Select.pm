@@ -161,8 +161,8 @@ the label_column is used as the sort condition.
 
 If the widget is 'select' for the field then will look if the field
 also has a L<auto_widget_size>.  If the options list is less than or equal
-to the L<auto_widget_size> then will return C<radio> if L<multiple> is false,
-otherwise will return C<checkbox>.
+to the L<auto_widget_size> then will return C<radio_group> if L<multiple> is false,
+otherwise will return C<checkbox_group>.
 
 =head2 as_label
 
@@ -238,7 +238,7 @@ sub select_widget {
     return $field->widget unless $field->widget eq 'select' && $size;
     my $options = $field->options || [];
     return 'select' if @$options > $size;
-    return $field->multiple ? 'checkbox' : 'radio';
+    return $field->multiple ? 'checkbox_group' : 'radio_group';
 }
 
 sub as_label {
@@ -329,7 +329,7 @@ sub _load_options {
     if ( ref $options[0] eq 'ARRAY' ) {
         @options = @{ $options[0] };
     }
-
+    return unless @options;
     my $opts;
     # if options_<field_name> is returning an already constructed array of hashrefs
     if ( ref $options[0] eq 'HASH' ) {
@@ -340,7 +340,7 @@ sub _load_options {
             if @options % 2;
         push @{$opts}, { value => shift @options, label => shift @options } while @options;
     }
-    if (@$opts) {
+    if ($opts) {
         my $opts = $self->sort_options($opts);    # allow sorting options
         $self->options($opts);
     }

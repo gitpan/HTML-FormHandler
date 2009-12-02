@@ -18,7 +18,7 @@ Internal role for initializing the result objects.
 sub _result_from_fields {
     my ( $self, $self_result ) = @_;
     for my $field ( $self->sorted_fields ) {
-        next if $field->inactive;
+        next if ($field->inactive && !$field->_active);
         my $result = HTML::FormHandler::Field::Result->new(
             name   => $field->name,
             parent => $self_result
@@ -42,7 +42,7 @@ sub _result_from_input {
     $self_result->_set_input($input);
     if ( ref $input eq 'HASH' ) {
         foreach my $field ( $self->sorted_fields ) {
-            next if $field->inactive;
+            next if ($field->inactive && !$field->_active);
             my $field_name = $field->name;
             my $result     = HTML::FormHandler::Field::Result->new(
                 name   => $field_name,
@@ -67,7 +67,7 @@ sub _result_from_object {
     return unless ( $item || $self->has_fields );    # empty fields for compounds
     my $my_value;
     for my $field ( $self->sorted_fields ) {
-        next if $field->inactive;
+        next if ( $field->inactive && !$field->_active );
         my $result = HTML::FormHandler::Field::Result->new(
             name   => $field->name,
             parent => $self_result
@@ -94,7 +94,9 @@ sub _get_value {
     my ( $self, $field, $item ) = @_;
     my $accessor = $field->accessor;
     my @values;
-    if ( blessed($item) && $item->can($accessor) ) {
+    if ( @values = $field->get_default_value ) {
+    }
+    elsif ( blessed($item) && $item->can($accessor) ) {
         @values = $item->$accessor;
     }
     elsif ( exists $item->{$accessor} ) {
@@ -110,8 +112,6 @@ sub _get_value {
 =head1 AUTHORS
 
 HTML::FormHandler Contributors; see HTML::FormHandler
-
-Initially based on the original source code of L<Form::Processor::Field> by Bill Moseley
 
 =head1 COPYRIGHT
 

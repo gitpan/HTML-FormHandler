@@ -178,7 +178,7 @@ my $output8 = $form->field('start_date')->render;
 is(
     $output8,
     '
-<div><fieldset class="start_date"><legend>Start_date</legend>
+<div><fieldset class="start_date"><legend>Start date</legend>
 <div><label class="label" for="start_date.month">Month: </label><input type="text" name="start_date.month" id="start_date.month" size="8" value="7" /></div>
 
 <div><label class="label" for="start_date.day">Day: </label><input type="text" name="start_date.day" id="start_date.day" size="8" value="14" /></div>
@@ -199,7 +199,7 @@ is(
 my $output10 = $form->field('opt_in')->render;
 is(
     $output10, '
-<div><label class="label" for="opt_in">Opt_in: </label> <br /><input type="radio" value="0" name="opt_in" id="opt_in.0" checked="checked" />No<br /><input type="radio" value="1" name="opt_in" id="opt_in.1" />Yes<br /></div>
+<div><label class="label" for="opt_in">Opt in: </label> <br /><input type="radio" value="0" name="opt_in" id="opt_in.0" checked="checked" />No<br /><input type="radio" value="1" name="opt_in" id="opt_in.1" />Yes<br /></div>
 ', 'output from radio group'
 );
 
@@ -265,6 +265,8 @@ ok( $outputT, 'output from table rendering' );
             };
         }
     );
+    has_field 'bar' => ( widget_tags => 
+         {wrapper_start => '<span>', wrapper_end => '</span>'});
 }
 
 $form = Test::Tags->new;
@@ -272,5 +274,9 @@ $form->process( { foo => 'bar' } );
 is( $form->field('foo')->render, '
 <p><label class="label" for="foo">Foo: </label><input type="text" name="foo" id="foo" value="bar" /></p>
 ', 'renders with different tags');
+
+is( $form->field('bar')->render, '
+<span><label class="label" for="bar">Bar: </label><input type="text" name="bar" id="bar" value="" /></span>
+', 'field renders with custom widget_tags' );
 
 done_testing;

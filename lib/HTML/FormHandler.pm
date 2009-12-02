@@ -16,7 +16,7 @@ use HTML::FormHandler::Result;
 
 use 5.008;
 
-our $VERSION = '0.28001';
+our $VERSION = '0.29';
 
 =head1 NAME
 
@@ -33,7 +33,6 @@ An example of a form class:
 
     use HTML::FormHandler::Moose;
     extends 'HTML::FormHandler';
-    with 'HTML::FormHandler::Render::Simple';
 
     has '+item_class' => ( default => 'User' );
 
@@ -134,12 +133,16 @@ You can write custom methods to process forms, add any attribute you like,
 use Moose method modifiers.  FormHandler forms are Perl classes, so there's
 a lot of flexibility in what you can do.
 
-HTML::FormHandler does not (yet) provide a complex HTML generating facility,
-but a simple, straightforward rendering role is provided by
-L<HTML::FormHandler::Render::Simple>, which will output HTML formatted
-strings for a field or a form. L<HTML::FormHandler::Render::Table> will
-display the form using an HTML table layout.  There are also sample Template
-Toolkit widget files, documented at L<HTML::FormHandler::Manual::Templates>.
+HTML::FormHandler provides rendering through roles which are applied to
+form and field classes. There are currently two flavors: all-in-on
+solutions like L<HTML::FormHandler::Render::Simple> and 
+L<HTML::FormHandler::Render::Table> that contain methods for rendering 
+field widget classes, and the L<HTML::FormHandler::Widget> roles, which are 
+more atomic roles which are automatically applied to fields and form if a 
+'render' method does not already exist. See
+L<HTML::FormHandler::Manual::Rendering> for more details.
+(And you can easily use hand-build forms - FormHandler doesn't care.)
+
 
 The typical application for FormHandler would be in a Catalyst, DBIx::Class,
 Template Toolkit web application, but use is not limited to that. FormHandler
@@ -350,6 +353,24 @@ add fields to the form depending on some other state.
       return \@field_list;
    }
 
+=head3 active
+
+If a form has a variable number of fields, fields which are not always to be
+used should be defined as 'inactive':
+
+   has_field 'foo' => ( type => 'Text', inactive => 1 );
+
+Then the field name can be specified in the 'active' array, either on 'new',
+or on 'process':
+
+   my $form = MyApp::Form->new( active => ['foo'] );
+   ...
+   $form->process( active => ['foo'] );
+
+Fields specified as active on new will have the 'inactive' flag cleared, and so:
+those fields will be active for the life of the form object. Fields specified as
+active on 'process' will have the field's '_active' flag set just for the life of the
+request.
 
 =head3 field_name_space
 
@@ -597,6 +618,18 @@ sub build_result {
 has 'widget_name_space' => ( is => 'ro', isa => 'ArrayRef[Str]', default => sub {[]} );
 has 'widget_form'       => ( is => 'ro', isa => 'Str', default => 'Simple' );
 has 'widget_wrapper'    => ( is => 'ro', isa => 'Str', default => 'Simple' );
+has 'active' => (
+    is => 'rw',
+    traits => ['Array'],
+    isa => 'ArrayRef[Str]',
+    default => sub {[]},
+    handles => {
+        add_active => 'push',
+        has_active => 'count',
+        clear_active => 'clear',
+    } 
+);
+   
 
 # object with which to initialize
 has 'init_object'         => ( is => 'rw', clearer => 'clear_init_object' );
@@ -688,6 +721,7 @@ sub BUILD {
     $self->apply_widget_role( $self, $self->widget_form, 'Form' )
         if ( $self->widget_form && !$self->can('render') );
     $self->_build_fields;    # create the form fields
+    $self->build_active if $self->has_active; # set optional fields active
     return if defined $self->item_id && !$self->item;
     # load values from object (if any)
     if ( $self->item || $self->init_object ) {
@@ -777,8 +811,9 @@ sub validate_form {
     $self->_set_dependency;    # set required dependencies
     $self->_fields_validate;
     $self->_apply_actions;
-    $self->validate();         # empty method for users
+    $self->validate;           # empty method for users
     $self->validate_model;     # model specific validation
+    $self->fields_set_value;
     $self->_clear_dependency;
     $self->get_error_fields;
     $self->ran_validation(1);
@@ -813,14 +848,16 @@ sub setup_form {
     if ( $self->item_id && !$self->item ) {
         $self->item( $self->build_item );
     }
+    $self->clear_result;
+    $self->set_active;
     # initialization of Repeatable fields and Select options
     # will be done in _result_from_object when there's an initial object
     # in _result_from_input when there are params
     # and by _result_from_fields for empty forms
-    $self->clear_result;
+
     if ( !$self->did_init_obj ) {
         if ( $self->init_object || $self->item ) {
-            my $obj = ($self->item && $self->item_id) ? $self->item : $self->init_object; 
+            my $obj = $self->item ? $self->item : $self->init_object; 
             $self->_result_from_object( $self->result, $obj ); 
         }
         elsif ( !$self->has_params ) {
@@ -828,9 +865,46 @@ sub setup_form {
             $self->_result_from_fields( $self->result );
         }
     }
+    # There's some weirdness here because of trying to support supplying
+    # the db object in the ->new. May change to not support that? 
     my %params = ( %{ $self->params } );
-    $self->_result_from_input( $self->result, \%params, 1 ) if ( $self->has_params );
+    if ( $self->has_params ) {
+        $self->clear_result;
+        $self->_result_from_input( $self->result, \%params, 1 );
+    }
+
 }
+
+# if active => [...] is set at process time, set 'active' flag
+sub set_active {
+    my $self = shift;
+    return unless $self->has_active;
+    foreach my $fname (@{$self->active}) {
+        my $field = $self->field($fname);
+        if ( $field ) {
+            $field->_active(1);
+        }
+        else {
+            warn "field $fname not found to set active";
+        }
+    }
+    $self->clear_active;
+}
+
+# if active => [...] is set at build time, remove 'inactive' flags
+sub build_active {
+    my $self = shift;
+    foreach my $fname (@{$self->active}) {
+        my $field = $self->field($fname);
+        if( $field ) {
+            $field->clear_inactive;
+        }
+        else {
+            warn "field $fname not found to set active";
+        }
+    }
+    $self->clear_active;
+} 
 
 sub fif { shift->fields_fif(@_) }
 
@@ -895,6 +969,13 @@ sub _munge_params {
     $self->{params} = $new_params;
 }
 
+after 'get_error_fields' => sub {
+   my $self = shift;
+   foreach my $err_res (@{$self->result->error_results}) {
+       $self->result->push_errors($err_res->all_errors);
+   }
+};
+
 =head1 SUPPORT
 
 IRC:
@@ -921,11 +1002,17 @@ L<HTML::FormHandler::Manual::Templates>
 
 L<HTML::FormHandler::Manual::Cookbook>
 
+L<HTML::FormHandler::Manual::Rendering>
+
+L<HTML::FormHandler::Manual::Reference>
+
 L<HTML::FormHandler::Field>
 
 L<HTML::FormHandler::Model::DBIC>
 
 L<HTML::FormHandler::Render::Simple>
+
+L<HTML::FormHandler::Render::Table>
 
 L<HTML::FormHandler::Moose>
 
@@ -945,6 +1032,8 @@ cubuanic: Oleg Kostyuk E<lt>cub.uanic@gmail.comE<gt>
 rafl: Florian Ragwitz E<lt>rafl@debian.orgE<gt>
 
 mazpe: Lester Ariel Mesa
+
+dew: Dan Thomas
 
 Initially based on the source code of L<Form::Processor> by Bill Moseley
 

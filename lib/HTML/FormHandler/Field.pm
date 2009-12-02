@@ -3,6 +3,7 @@ package HTML::FormHandler::Field;
 use HTML::FormHandler::Moose;
 use HTML::FormHandler::I18N;    # only needed if running without a form object.
 use HTML::FormHandler::Field::Result;
+use HTML::Entities;
 
 with 'MooseX::Traits';
 with 'HTML::FormHandler::Validate';
@@ -139,7 +140,9 @@ The full_name plus the form name if 'html_prefix' is set.
 =item inactive
 
 Set this attribute if this field is inactive. This provides a way to define fields
-in the form and selectively set them to inactive.
+in the form and selectively set them to inactive. There is also an '_active' attribute,
+for internal use to indicate that the field has been activated by the form's 'active'
+attribute.
 
 =item input
 
@@ -276,14 +279,14 @@ use the 'validate_addresses_city' method for validation.
    has_field 'title' => ( isa => 'Str', set_validate => 'check_title' );
    has_field 'subtitle' => ( isa => 'Str', set_validate => 'check_title' );
 
-=item set_init
+=item set_default
 
-The name of the method in the form that provides a field's initial value.
-Default is C<< 'init_value_' . $field->name >>. Periods replaced by underscores.
+The name of the method in the form that provides a field's default value.
+Default is C<< 'default_' . $field->name >>. Periods replaced by underscores.
 
 =item default
 
-Provide an initial value just like the 'set_init' method, except in the field
+Provide an initial value just like the 'set_default' method, except in the field
 declaration:
 
   has_field 'bax' => ( default => 'Default bax' );
@@ -340,7 +343,7 @@ Use the 'apply' keyword to specify an ArrayRef of constraints and coercions to
 be executed on the field at validate_field time.
 
    has_field 'test' => (
-      apply => [ 'MooseType', { check => sub {...}, message => { } }
+      apply => [ 'MooseType', { check => sub {...}, message => { } } ],
    );
 
 In general the action can be of three types: a Moose type (which is
@@ -480,7 +483,8 @@ Trimming is performed before any other defined actions.
 
 A 'deflation' is a coderef that will convert from an inflated value back to a 
 flat data representation suitable for displaying in an HTML field.
-A deflation is automatically used for data that is taken from the database.
+If deflation is defined for a field it is automatically used for data that is 
+taken from the database.
 For the fill-in-form value (fif) usually the fif string is taken straight from 
 the input string if it exists, so if you want to use a deflated value instead, set
 the 'fif_from_value' flag on the field. Normally you'd only need to do that if
@@ -490,7 +494,7 @@ the year and you want to re-display it as '2009'.
    has_field 'my_date_time' => (
       type => 'Compound',
       apply => [ { transform => sub{ DateTime->new( $_[0] ) } } ],
-      deflation => sub { { year => $_->year, month => $_->month, day => $_->day } },
+      deflation => sub { { year => $_[0]->year, month => $_[0]->month, day => $_[0]->day } },
       fif_from_value => 1,
    );
    has_field 'my_date_time.year' => ( fif_from_value => 1 );
@@ -583,6 +587,12 @@ sub build_result {
 sub input {
     my $self = shift;
     my $result = $self->result;
+    # garbage collection should not happen
+    # but just in case resetting for safety
+    unless ( $result ) {
+        $self->clear_result;
+        $result = $self->result; 
+    }
     return $result->_set_input(@_) if @_;
     return $result->input;
 }
@@ -590,13 +600,23 @@ sub input {
 sub value {
     my $self = shift;
     my $result = $self->result;
+    # garbage collection should not happen
+    # but just in case resetting for safety
+    unless ( $result ) {
+        $self->clear_result;
+        $result = $self->result;
+    }
     return $result->_set_value(@_) if @_;
     return $result->value;
 }
 # for compatibility. deprecate and remove at some point
 sub clear_input { shift->_clear_input }
 sub clear_value { shift->_clear_value }
-sub clear_data  { shift->clear_result }
+sub clear_data  { 
+    my $self = shift;
+    $self->clear_result;
+    $self->clear_active;
+}
 
 sub is_repeatable { }
 has 'reload_after_update' => ( is => 'rw', isa => 'Bool' );
@@ -606,7 +626,7 @@ has 'fif_from_value' => ( isa => 'Str', is => 'ro' );
 sub fif {
     my ( $self, $result ) = @_;
 
-    return if $self->inactive;
+    return if ( $self->inactive && !$self->_active );
     return '' if $self->password;
     return unless $result || $self->has_result;
     my $lresult = $result || $self->result;
@@ -661,8 +681,15 @@ has 'label' => (
     isa     => 'Str',
     is      => 'rw',
     lazy    => 1,
-    default => sub { ucfirst( shift->name ) },
+    builder => 'build_label',
 );
+sub build_label {
+    my $self = shift;
+    my $label = $self->name;
+    $label =~ s/_/ /g;
+    $label = ucfirst($label);
+    return $label;
+}
 has 'title'     => ( isa => 'Str',               is => 'rw' );
 has 'style'     => ( isa => 'Str',               is => 'rw' );
 has 'css_class' => ( isa => 'Str',               is => 'rw' );
@@ -702,7 +729,10 @@ has 'widget_name_space' => (
     }, 
 );
 has 'order'             => ( isa => 'Int',  is => 'rw', default => 0 );
+# 'inactive' is set in the field declaration, and is static. Default status.
 has 'inactive'          => ( isa => 'Bool', is => 'rw', clearer => 'clear_inactive' );
+# 'active' is cleared whenever the form is cleared. Ephemeral activation.
+has '_active'         => ( isa => 'Bool', is => 'rw', clearer => 'clear_active' );
 has 'id'                => ( isa => 'Str',  is => 'rw', lazy => 1, builder => 'build_id' );
 sub build_id { shift->html_name }
 has 'javascript' => ( isa => 'Str',  is => 'ro' );
@@ -735,27 +765,34 @@ sub _validate {
     return unless (my $meth = $self->_can_validate);
     $self->form->$meth($self);
 }
-has 'set_init' => ( isa => 'Str', is => 'ro',);
-sub _can_init_value {
+has 'set_default' => ( isa => 'Str', is => 'ro', writer => '_set_default');
+sub _can_default {
     my $self = shift;
-    my $set_init = $self->_set_init_meth; 
+    my $set_default = $self->_set_default_meth; 
     return
         unless $self->form &&
-            $set_init &&
-            $self->form->can( $set_init );
-    return $set_init;
+            $set_default &&
+            $self->form->can( $set_default );
+    return $set_default;
 }
-sub _set_init_meth {
+sub _comp_default_meth {
     my $self = shift;
-    return $self->set_init if $self->set_init;
     my $name = $self->full_name;
     $name =~ s/\./_/g;
     $name =~ s/_\d_/_/g;
     return 'init_value_' . $name;
 }
-sub get_init_value {
+sub _set_default_meth {
     my $self = shift;
-    if ( my $meth = $self->_can_init_value ) {
+    return $self->set_default if $self->set_default;
+    my $name = $self->full_name;
+    $name =~ s/\./_/g;
+    $name =~ s/_\d_/_/g;
+    return 'default_' . $name;
+}
+sub get_default_value {
+    my $self = shift;
+    if ( my $meth = $self->_can_default ) {
         return $self->form->$meth( $self, $self->form->item );
     }
     elsif ( $self->default ) {
@@ -784,10 +821,24 @@ sub default_trim {
     return ref $value eq 'ARRAY' ? \@values : $values[0];
 }
 
+sub BUILDARGS {
+    my $class = shift;
+
+    # for compatibility, change 'set_init' to 'set_default'
+    my @new;
+    push @new, ('set_default', {@_}->{set_init} )
+        if( exists {@_}->{set_init} );
+    return $class->SUPER::BUILDARGS(@_, @new);
+}
+
 sub BUILD {
     my ( $self, $params ) = @_;
 
-    $self->apply_rendering_widgets;
+    $self->_set_default( $self->_comp_default_meth )
+        if( $self->form && $self->form->can( $self->_comp_default_meth ) );
+    # widgets will already have been applied by BuildFields, but this allows
+    # testing individual fields
+    $self->apply_rendering_widgets unless ($self->can('render') );
     $self->add_action( $self->trim ) if $self->trim;
     $self->_build_apply_list;
     $self->add_action( @{ $params->{apply} } ) if $params->{apply};
@@ -798,7 +849,7 @@ sub BUILD {
 sub _result_from_fields {
     my ( $self, $result ) = @_;
 
-    if ( my @values = $self->get_init_value ) {
+    if ( my @values = $self->get_default_value ) {
         my $value = @values > 1 ? \@values : shift @values;
         $self->init_value($value)   if $value;
         $result->_set_value($value) if $value;
@@ -965,10 +1016,6 @@ sub apply_rendering_widgets {
 
     if( $self->form ) {
         $self->add_widget_name_space( @{$self->form->widget_name_space} );
-        foreach my $key ( keys %{$self->form->widget_tags} ) {
-            $self->set_tag( $key, $self->form->widget_tags->{$key} )
-                 unless $self->tag_exists($key);
-        }
     }
     if ( $self->widget ) {
         $self->apply_widget_role( $self, $self->widget, 'Field' );
