@@ -1,5 +1,4 @@
 Changes
-chbox.html
 inc/Module/AutoInstall.pm
 inc/Module/Install.pm
 inc/Module/Install/AuthorTests.pm
@@ -55,6 +54,7 @@ lib/HTML/FormHandler/Field/Weekday.pm
 lib/HTML/FormHandler/Field/Year.pm
 lib/HTML/FormHandler/Fields.pm
 lib/HTML/FormHandler/I18N.pm
+lib/HTML/FormHandler/I18N/de_de.pm
 lib/HTML/FormHandler/I18N/en_us.pm
 lib/HTML/FormHandler/InitResult.pm
 lib/HTML/FormHandler/Manual.pod
@@ -136,6 +136,7 @@ t/lib/Perl/Critic/Policy/FormHandler/Deprecations.pm
 t/lib/Widget/Field/Omega.pm
 t/lib/Widget/Field/TestWidget.pm
 t/list.t
+t/locale.t
 t/password.t
 t/render.t
 t/render_escaping.t

@@ -282,6 +282,7 @@ sub new_field_with_traits {
         $widget = $class->meta->get_attribute('widget')->default if $attr;
     }
     my $widget_wrapper = $field_attr->{widget_wrapper};
+    $widget_wrapper ||= $field_attr->{form}->widget_wrapper if $field_attr->{form};
     unless( $widget_wrapper ) {
         my $attr = $class->meta->get_attribute('widget_wrapper');
         $widget_wrapper = $class->meta->get_attribute('widget')->default if $attr;
