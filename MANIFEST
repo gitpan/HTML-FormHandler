@@ -136,7 +136,6 @@ t/lib/Perl/Critic/Policy/FormHandler/Deprecations.pm
 t/lib/Widget/Field/Omega.pm
 t/lib/Widget/Field/TestWidget.pm
 t/list.t
-t/locale.t
 t/password.t
 t/render.t
 t/render_escaping.t
