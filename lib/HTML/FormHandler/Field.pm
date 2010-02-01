@@ -1,7 +1,6 @@
 package HTML::FormHandler::Field;
 
 use HTML::FormHandler::Moose;
-use HTML::FormHandler::I18N;    # only needed if running without a form object.
 use HTML::FormHandler::Field::Result;
 use HTML::Entities;
 
@@ -9,6 +8,7 @@ with 'MooseX::Traits';
 with 'HTML::FormHandler::Validate';
 with 'HTML::FormHandler::Validate::Actions';
 with 'HTML::FormHandler::Widget::ApplyRole';
+with 'HTML::FormHandler::TraitFor::I18N';
 
 our $VERSION = '0.02';
 
@@ -28,11 +28,12 @@ using new (usually for test purposes).
 In your custom field class:
 
     package MyApp::Field::MyText;
+    use HTML::FormHandler::Moose;
     extends 'HTML::FormHandler::Field::Text';
 
     has 'my_attribute' => ( isa => 'Str', is => 'rw' );
 
-    apply [ { transform => sub {...}, message => '...' },
+    apply [ { transform => sub {...} },
             { check => ['fighter', 'bard', 'mage' ], message => '....' }
           ];
     1;
@@ -220,12 +221,13 @@ Compound fields will have an array of errors from the subfields.
    style       - Place to put field style string
    css_class   - For a css class name (string; could be several classes,
                  separated by spaces or commas)
-   id          - Useful for javascript (default is form_name + field_name)
+   id          - Useful for javascript (default is html_name. to prefix with
+                 form name, use 'html_prefix' in your form)
    disabled    - for the HTML flag
    readonly    - for the HTML flag
    javascript  - for a Javascript string
    order       - Used for sorting errors and fields. Built automatically,
-                 but may also be explicity set
+                 but may also be explicitly set
 
 =head2 widget
 
@@ -241,20 +243,33 @@ of Render::Simple or in your form class.
 If you are using a template based rendering system you will want
 to create a widget template.
 (see L<HTML::FormHandler::Manual::Templates>)
+If you are using the widget roles, you can specify the widget
+with the short class name instead.
 
 Widget types for the provided field classes:
 
-    Widget      : Field classes
-    ------------:-----------------------------------
-    text        : Text, Integer
-    checkbox    : Checkbox, Boolean
-    radio_group : Select, Multiple, IntRange (etc)
-    select      : Select, Multiple, IntRange (etc)
-    textarea    : TextArea, HtmlArea
-    compound    : Compound, Repeatable, DateTime
-    password    : Password
-    hidden      : Hidden
-    submit      : Submit
+    Widget         : Field classes
+    ---------------:-----------------------------------
+    text (Text)            : Text, Integer
+    checkbox (Checkbox)    : Checkbox, Boolean
+    radio_group 
+       (RadioGroup)        : Select, Multiple, IntRange (etc)
+    select (Select)        : Select, Multiple, IntRange (etc)
+    checkbox_group 
+       (CheckboxGroup)     : Multiple select
+    textarea (Textarea)    : TextArea, HtmlArea
+    compound (Compound)    : Compound, Repeatable, DateTime
+    password (Password)    : Password
+    hidden (Hidden)        : Hidden
+    submit (Submit)        : Submit
+    reset (Reset)          : Reset
+    no_render (NoRender)   :
+    upload (Upload)        : Upload
+
+Widget roles are automatically applied to field classes
+unless they already have a 'render' method. Render::Simple
+will fall back to doing C<< $field->render >> if the corresponding
+widget method does not exist.
 
 =head2 Flags
 
@@ -474,7 +489,12 @@ this contains a transform to strip beginning and trailing spaces.
 Set this attribute to null to skip trimming, or supply a different
 transform.
 
-  trim => { transform => sub { } }
+  trim => { transform => sub { 
+      my $string = shift; 
+      $string =~ s/^\s+//;
+      $string =~ s/\s+$//;
+      return $string;
+  } }
   trim => { type => MyTypeConstraint }
 
 Trimming is performed before any other defined actions.
@@ -693,7 +713,12 @@ sub build_label {
 has 'title'     => ( isa => 'Str',               is => 'rw' );
 has 'style'     => ( isa => 'Str',               is => 'rw' );
 has 'css_class' => ( isa => 'Str',               is => 'rw' );
-has 'form'      => ( isa => 'HTML::FormHandler', is => 'rw', weak_ref => 1 );
+has 'form'      => ( 
+    isa => 'HTML::FormHandler',
+    is => 'rw',
+    weak_ref => 1,
+    predicate => 'has_form',
+);
 has 'html_name' => (
     isa     => 'Str',
     is      => 'rw',
@@ -735,13 +760,12 @@ has 'inactive'          => ( isa => 'Bool', is => 'rw', clearer => 'clear_inacti
 has '_active'         => ( isa => 'Bool', is => 'rw', clearer => 'clear_active' );
 has 'id'                => ( isa => 'Str',  is => 'rw', lazy => 1, builder => 'build_id' );
 sub build_id { shift->html_name }
-has 'javascript' => ( isa => 'Str',  is => 'ro' );
-has 'password'   => ( isa => 'Bool', is => 'ro' );
-has 'writeonly'  => ( isa => 'Bool', is => 'ro' );
+has 'javascript' => ( isa => 'Str',  is => 'rw' );
+has 'password'   => ( isa => 'Bool', is => 'rw' );
+has 'writeonly'  => ( isa => 'Bool', is => 'rw' );
 has 'disabled'   => ( isa => 'Bool', is => 'rw' );
-has 'readonly'   => ( isa => 'Bool', is => 'ro' );
+has 'readonly'   => ( isa => 'Bool', is => 'rw' );
 has 'noupdate'   => ( isa => 'Bool', is => 'rw' );
-sub has_static_value { }
 has 'set_validate' => ( isa => 'Str', is => 'ro',);
 sub _can_validate {
     my $self = shift;
@@ -924,7 +948,7 @@ sub _apply_deflation {
         $value = $self->deflation->($value);
     }
     elsif ( $self->can('deflate') ) {
-        $value = $self->deflate;
+        $value = $self->deflate($value);
     }
     return $value;
 }
@@ -1032,10 +1056,6 @@ This library is free software, you can redistribute it and/or modify it under
 the same terms as Perl itself.
 
 =cut
-
-sub _localize {
-    return shift->HTML::FormHandler::I18N::_localize(@_);
-}
 
 __PACKAGE__->meta->make_immutable;
 use namespace::autoclean;

@@ -19,10 +19,12 @@ name: HTML-FormHandler
 no_index:
   directory:
     - inc
+    - share
     - t
 requires:
   Carp: 0
   DateTime: 0
+  File::ShareDir: 0
   File::Spec: 0
   HTML::Entities: 0
   Locale::Maketext: 1.09
@@ -38,4 +40,4 @@ requires:
 resources:
   license: http://dev.perl.org/licenses/
   repository: http://github.com/gshank/html-formhandler/tree/master
-version: 0.29002
+version: 0.30
