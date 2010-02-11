@@ -139,9 +139,11 @@ t/fields.t
 t/filters.t
 t/form_handler.t
 t/form_options.t
+t/formhandlerx.t
 t/has_field.t
 t/has_many.t
 t/inactive_fields.t
+t/input_param.t
 t/lib/BookDB/Form/Upload.pm
 t/lib/Field/Address.pm
 t/lib/Field/AltText.pm
