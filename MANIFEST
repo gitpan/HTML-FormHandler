@@ -16,6 +16,7 @@ lib/HTML/FormHandler.pm
 lib/HTML/FormHandler/BuildFields.pm
 lib/HTML/FormHandler/Field.pm
 lib/HTML/FormHandler/Field/Boolean.pm
+lib/HTML/FormHandler/Field/Captcha.pm
 lib/HTML/FormHandler/Field/Checkbox.pm
 lib/HTML/FormHandler/Field/Compound.pm
 lib/HTML/FormHandler/Field/Date.pm
@@ -82,6 +83,7 @@ lib/HTML/FormHandler/Render/Table.pm
 lib/HTML/FormHandler/Render/WithTT.pm
 lib/HTML/FormHandler/Result.pm
 lib/HTML/FormHandler/Result/Role.pm
+lib/HTML/FormHandler/TraitFor/Captcha.pm
 lib/HTML/FormHandler/TraitFor/I18N.pm
 lib/HTML/FormHandler/Types.pm
 lib/HTML/FormHandler/Validate.pm
@@ -178,6 +180,7 @@ t/xt/02pod.t
 t/xt/add_field.t
 t/xt/captcha.t
 t/xt/chbox_group.t
+t/xt/custom_fields.t
 t/xt/deprecations.t
 t/xt/email.t
 t/xt/field_list.t

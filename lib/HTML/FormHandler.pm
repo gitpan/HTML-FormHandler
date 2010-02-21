@@ -15,7 +15,7 @@ use HTML::FormHandler::Result;
 
 use 5.008;
 
-our $VERSION = '0.30002';
+our $VERSION = '0.30003';
 
 =head1 NAME
 
@@ -992,6 +992,8 @@ sub apply_field_traits {
     Moose::Util::apply_all_roles( $fmeta, @{$self->field_traits});
     $fmeta->make_immutable;
 }
+
+sub get_default_value { }
 
 =head1 SUPPORT
 
