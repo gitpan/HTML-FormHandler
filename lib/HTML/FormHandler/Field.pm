@@ -2,7 +2,7 @@ package HTML::FormHandler::Field;
 
 use HTML::FormHandler::Moose;
 use HTML::FormHandler::Field::Result;
-use HTML::Entities;
+use Try::Tiny;
 
 with 'MooseX::Traits';
 with 'HTML::FormHandler::Validate';
@@ -33,7 +33,7 @@ In your custom field class:
 
     has 'my_attribute' => ( isa => 'Str', is => 'rw' );
 
-    apply [ { transform => sub {...} },
+    apply [ { transform => sub { ... } },
             { check => ['fighter', 'bard', 'mage' ], message => '....' }
           ];
     1;
@@ -124,7 +124,7 @@ The name of the field with all parents:
 
    'event.start_date.month'
 
-=item full_accesor
+=item full_accessor
 
 The field accessor with all parents
 
@@ -363,7 +363,10 @@ Use the 'apply' keyword to specify an ArrayRef of constraints and coercions to
 be executed on the field at validate_field time.
 
    has_field 'test' => (
-      apply => [ 'MooseType', { check => sub {...}, message => { } } ],
+      apply => [ 'MooseType', 
+                 { check => sub {...}, message => { } },
+                 { transform => sub { ... lc(shift) ... } } 
+               ],
    );
 
 In general the action can be of three types: a Moose type (which is
@@ -476,7 +479,7 @@ A 'check' regular expression:
 A 'check' array of valid values:
 
   has_field 'more_text' => (
-      aply => [ { check => ['aaa', 'bbb'], message => 'Must be aaa or bbb' } ]
+      apply => [ { check => ['aaa', 'bbb'], message => 'Must be aaa or bbb' } ]
   );
 
 A simple transformation uses the 'transform' keyword and a coderef.
@@ -510,11 +513,6 @@ A 'deflation' is a coderef that will convert from an inflated value back to a
 flat data representation suitable for displaying in an HTML field.
 If deflation is defined for a field it is automatically used for data that is 
 taken from the database.
-For the fill-in-form value (fif) usually the fif string is taken straight from 
-the input string if it exists, so if you want to use a deflated value instead, set
-the 'fif_from_value' flag on the field. Normally you'd only need to do that if
-you want to 'canonicalize' the entered data, such as if a user enters '09' for
-the year and you want to re-display it as '2009'.
 
    has_field 'my_date_time' => (
       type => 'Compound',
@@ -522,14 +520,19 @@ the year and you want to re-display it as '2009'.
       deflation => sub { { year => $_[0]->year, month => $_[0]->month, day => $_[0]->day } },
       fif_from_value => 1,
    );
-   has_field 'my_date_time.year' => ( fif_from_value => 1 );
+   has_field 'my_date_time.year';
    has_field 'my_date_time.month';
-   has_field 'my_date_time.day' => ( fif_from_value => 1 );
+   has_field 'my_date_time.day';
 
 You can also use a 'deflate' method in a custom field class. See the Date field
 for an example. If the deflation requires data that may vary (such as a format)
 string and thus needs access to 'self', you would need to use the deflate method
 since the deflation coderef is only passed the current value of the field
+
+Normally if you have a deflation, you will need a matching inflation, which can be
+supplied via a 'transform' action. When deflating/inflating values, the 'value' hash
+only contains reliably inflated values after validation has been performed, since
+inflation is performed at validation time.
 
 =head1 Processing and validating the field
 
@@ -642,6 +645,14 @@ sub clear_data  {
     $self->clear_result;
     $self->clear_active;
 }
+# this is a kludge to allow testing field deflation
+sub _deflate_and_set_value {
+    my ( $self, $value ) = @_;
+    if( $self->_can_deflate ) {
+        $value = $self->_apply_deflation($value);
+    }
+    $self->_set_value($value);
+}
 
 sub is_repeatable { }
 has 'reload_after_update' => ( is => 'rw', isa => 'Bool' );
@@ -660,25 +671,13 @@ sub fif {
     {
         return defined $lresult->input ? $lresult->input : '';
     }
-    my $parent = $self->parent;
-    if ( defined $parent &&
-        $parent->isa('HTML::FormHandler::Field') &&
-        ( $parent->has_deflation || $parent->can('deflate') ) )
-    {
-        my $parent_fif = $result ? $parent->fif( $result->parent ) : $parent->fif;
-        if ( ref $parent_fif eq 'HASH' &&
-            exists $parent_fif->{ $self->name } )
-        {
-            return $self->_apply_deflation( $parent_fif->{ $self->name } );
-        }
-    }
     if ( defined $lresult->value ) {
-        return $self->_apply_deflation( $lresult->value );
+        return $lresult->value;
     }
     elsif ( defined $self->value ) {
         # this is because checkboxes and submit buttons have their own 'value'
         # needs to be fixed in some better way
-        return $self->_apply_deflation( $self->value );
+        return $self->value;
     }
     return '';
 }
@@ -843,11 +842,42 @@ sub default_trim {
     return unless defined $value;
     my @values = ref $value eq 'ARRAY' ? @$value : ($value);
     for (@values) {
-        next if ref $_;
+        next if ref $_ or !defined;
         s/^\s+//;
         s/\s+$//;
     }
     return ref $value eq 'ARRAY' ? \@values : $values[0];
+}
+has 'render_filter' => (
+     traits => ['Code'],
+     is     => 'ro',
+     isa    => 'CodeRef',
+     builder => 'build_render_filter',
+     handles => { html_filter => 'execute' },
+);
+
+sub build_render_filter {
+    my $self = shift;
+    if( $self->form && $self->form->can('render_filter') ) {
+        return sub {
+            my $name = shift;
+            return $self->form->render_filter($name);
+        }
+    }
+    else {
+        return sub {
+            my $name = shift;
+            return $self->default_render_filter($name);
+        }  
+    }
+}
+sub default_render_filter {
+    my ( $self, $string ) = @_;
+    $string =~ s/&/&amp;/g;
+    $string =~ s/</&lt;/g;
+    $string =~ s/>/&gt;/g;
+    $string =~ s/"/&quot;/g;
+    return $string;
 }
 
 has 'input_param' => ( is => 'rw', isa => 'Str' );
@@ -940,11 +970,18 @@ sub full_accessor {
 sub add_error {
     my ( $self, @message ) = @_;
 
-    my $lh;
     unless ( defined $message[0] ) {
         @message = ('field is invalid');
     }
-    $self->push_errors($self->_localize(@message));
+    my $out;
+    try { 
+        $out = $self->_localize(@message); 
+    }
+    catch {
+        die "Error occurred localizing error message for " . $self->label . ".  $_";
+    };
+
+    $self->push_errors($out);
     return;
 }
 
@@ -958,6 +995,10 @@ sub _apply_deflation {
         $value = $self->deflate($value);
     }
     return $value;
+}
+sub _can_deflate {
+    my $self = shift;
+    return $self->has_deflation || $self->can('deflate');
 }
 
 # use Class::MOP to clone

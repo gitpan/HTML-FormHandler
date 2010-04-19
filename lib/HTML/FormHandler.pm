@@ -15,7 +15,7 @@ use HTML::FormHandler::Result;
 
 use 5.008;
 
-our $VERSION = '0.30003';
+our $VERSION = '0.31';
 
 =head1 NAME
 
@@ -262,7 +262,7 @@ Params can either be in the form of CGI/HTTP style params:
       'addresses.0.country' => "UT",
       'addresses.0.address_id' => "1",
       'addresses.1.street' => "333 Valencia Street",
-      'addresses.1.city' => "San Franciso",
+      'addresses.1.city' => "San Francisco",
       'addresses.1.country' => "UT",
       'addresses.1.address_id' => "2",
    }
@@ -636,8 +636,9 @@ sub build_result {
     }
     return $result;
 }
-has 'field_traits' => ( is => 'ro', traits => ['Array'], isa => 'ArrayRef', 
-     default => sub {[]}, handles => { 'has_field_traits' => 'count' } );
+
+has 'field_traits' => ( is => 'ro', traits => ['Array'], isa => 'ArrayRef',
+    default => sub {[]}, handles => { 'has_field_traits' => 'count' } );
 has 'widget_name_space' => ( is => 'ro', isa => 'ArrayRef[Str]', default => sub {[]} );
 has 'widget_form'       => ( is => 'ro', isa => 'Str', default => 'Simple' );
 has 'widget_wrapper'    => ( is => 'ro', isa => 'Str', default => 'Simple' );
@@ -737,7 +738,7 @@ sub BUILD {
     $self->apply_field_traits if $self->has_field_traits;
     $self->apply_widget_role( $self, $self->widget_form, 'Form' )
         if ( $self->widget_form && !$self->can('render') );
-    $self->_build_fields;    # create the form fields
+    $self->_build_fields;    # create the form fields (BuildFields.pm)
     $self->build_active if $self->has_active; # set optional fields active
     return if defined $self->item_id && !$self->item;
     # load values from object (if any)
@@ -994,6 +995,7 @@ sub apply_field_traits {
 }
 
 sub get_default_value { }
+sub _can_deflate { }
 
 =head1 SUPPORT
 
@@ -1053,6 +1055,10 @@ rafl: Florian Ragwitz E<lt>rafl@debian.orgE<gt>
 mazpe: Lester Ariel Mesa
 
 dew: Dan Thomas
+
+koki: Klaus Ita
+
+jnapiorkowski: John Napiorkowski
 
 Initially based on the source code of L<Form::Processor> by Bill Moseley
 

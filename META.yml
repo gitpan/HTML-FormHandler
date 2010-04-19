@@ -26,7 +26,6 @@ requires:
   DateTime: 0
   File::ShareDir: 0
   File::Spec: 0
-  HTML::Entities: 0
   Locale::Maketext: 1.09
   Moose: 0.90
   MooseX::Getopt: 0.16
@@ -40,4 +39,4 @@ requires:
 resources:
   license: http://dev.perl.org/licenses/
   repository: http://github.com/gshank/html-formhandler/tree/master
-version: 0.30003
+version: 0.31

@@ -32,6 +32,12 @@ sub has_field_list {
     return;
 }
 
+
+# This is the only entry point for this file.  It processes the
+# various methods of field definition (has_field plus the attrs above),
+# creates objects for fields and writes them into the 'fields' attr
+# on the base object.
+#
 # calls routines to process various field lists
 # orders the fields after processing in order to skip
 # fields which have had the 'order' attribute set
@@ -201,10 +207,11 @@ sub _make_field {
             my $loaded;
             foreach my $ns (@{$self->field_name_space}) {
                 $class = $ns . "::" . $type;
-                if( Class::MOP::load_class($class) ) {
+                try { 
+                    Class::MOP::load_class($class);
                     $loaded++;
-                    last;
-                }
+                };
+                last if $loaded;
             }
             die "Could not load field class '$type' for field '$name'"
               unless $loaded;
@@ -263,6 +270,11 @@ sub _make_field {
 }
 
 # update, replace, or create field
+# Create makes the field object and passes in the properties as constructor args.
+# Update changes properties on a previously created object.
+# Replace overwrites a field with a different configuration.
+# (The update/replace business is much the same as you'd see with inheritance.)
+# This function populates/updates the base object's 'field' array.
 sub _update_or_create {
     my ( $self, $parent, $field_attr, $class, $do_update ) = @_;
 
@@ -301,8 +313,10 @@ sub new_field_with_traits {
     my $widget = $field_attr->{widget};
     my $field;
     unless( $widget ) {
-        my $attr = $class->meta->get_attribute('widget');
-        $widget = $class->meta->get_attribute('widget')->default if $attr;
+        my $attr = $class->meta->find_attribute_by_name( 'widget' );
+        if ( $attr ) {
+            $widget = $attr->default;
+        }
     }
     my $widget_wrapper = $field_attr->{widget_wrapper};
     $widget_wrapper ||= $field_attr->{form}->widget_wrapper if $field_attr->{form};

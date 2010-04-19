@@ -97,6 +97,8 @@ lib/HTML/FormHandler/Widget/Field/NoRender.pm
 lib/HTML/FormHandler/Widget/Field/Password.pm
 lib/HTML/FormHandler/Widget/Field/RadioGroup.pm
 lib/HTML/FormHandler/Widget/Field/Reset.pm
+lib/HTML/FormHandler/Widget/Field/Role/HTMLAttributes.pm
+lib/HTML/FormHandler/Widget/Field/Role/SelectedOption.pm
 lib/HTML/FormHandler/Widget/Field/Select.pm
 lib/HTML/FormHandler/Widget/Field/Submit.pm
 lib/HTML/FormHandler/Widget/Field/Text.pm
@@ -132,9 +134,11 @@ t/compound_field.t
 t/constraints.t
 t/dates.t
 t/defaults.t
+t/deflate.t
 t/dependency.t
 t/dynamic.t
 t/errors.t
+t/field_item.t
 t/field_traits.t
 t/field_types.t
 t/fields.t
@@ -143,6 +147,7 @@ t/form_handler.t
 t/form_options.t
 t/formhandlerx.t
 t/has_field.t
+t/has_field_arrayref.t
 t/has_many.t
 t/inactive_fields.t
 t/input_param.t
@@ -159,6 +164,7 @@ t/lib/Form/Person.pm
 t/lib/Form/PersonRole.pm
 t/lib/Form/Test.pm
 t/lib/Form/Two.pm
+t/lib/MyApp/I18N/abc_de.pm
 t/lib/Perl/Critic/Policy/FormHandler/Deprecations.pm
 t/lib/Widget/Field/Omega.pm
 t/lib/Widget/Field/TestWidget.pm
@@ -167,6 +173,7 @@ t/locale.t
 t/password.t
 t/render.t
 t/render_escaping.t
+t/render_filter.t
 t/render_result.t
 t/render_table.t
 t/render_widgets.t
@@ -176,10 +183,12 @@ t/result_compound.t
 t/result_errors.t
 t/structured.t
 t/types.t
+t/validate_coderef.t
 t/xt/02pod.t
 t/xt/add_field.t
 t/xt/captcha.t
 t/xt/chbox_group.t
+t/xt/check_selected_option.t
 t/xt/custom_fields.t
 t/xt/deprecations.t
 t/xt/email.t

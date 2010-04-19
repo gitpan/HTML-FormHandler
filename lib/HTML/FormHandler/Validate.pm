@@ -16,10 +16,12 @@ use Carp;
 
 has 'required' => ( isa => 'Bool', is => 'rw', default => '0' );
 has 'required_message' => (
-    isa     => 'Str',
+    isa     => 'ArrayRef|Str',
     is      => 'rw',
     lazy    => 1,
-    default => sub { shift->label . ' field is required' }
+    default => sub { 
+        return [ '[_1] field is required', shift->label ];
+    }
 );
 has 'unique'            => ( isa => 'Bool', is => 'rw', predicate => 'has_unique' );
 has 'unique_message'    => ( isa => 'Str',  is => 'rw' );
@@ -65,7 +67,15 @@ sub validate_field {
     $field->clear_errors;    # this is only here for testing convenience
                              # See if anything was submitted
     if ( $field->required && ( !$field->has_input || !$field->input_defined ) ) {
-        $field->add_error( $field->required_message ) if ( $field->required );
+        if ($field->required) {
+            my $msg = $field->required_message;
+            if ( ref $msg eq 'ARRAY' ) {
+                $field->add_error( @$msg );
+            }
+            else {
+                $field->add_error( $msg );
+            }
+        }
         if( $field->has_input ) {
            $field->not_nullable ? $field->_set_value($field->input) : $field->_set_value(undef);
         }

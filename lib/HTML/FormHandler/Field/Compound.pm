@@ -13,8 +13,8 @@ HTML::FormHandler::Field::Compound - field consisting of subfields
 =head1 SYNOPSIS
 
 This field class is designed as the base (parent) class for fields with
-multiple subfields. Examples are L<HTML::FormHandler::DateTime>
-and L<HTML::FormHandler::Duration>.
+multiple subfields. Examples are L<HTML::FormHandler::Field::DateTime>
+and L<HTML::FormHandler::Field::Duration>.
 
 A compound parent class requires the use of sub-fields prepended
 with the parent class name plus a dot
@@ -60,6 +60,7 @@ Widget type is 'compound'
 
 has '+widget' => ( default => 'compound' );
 has 'is_compound' => ( is => 'ro', isa => 'Bool', default => 1 );
+has 'item' => ( is => 'rw', clearer => 'clear_item' );
 
 has '+field_name_space' => (
     default => sub {
@@ -95,6 +96,19 @@ sub test_validate_field {
         }
     }
 }
+
+around '_result_from_object' => sub {
+    my $orig = shift;
+    my $self = shift;
+    my ( $self_result, $item ) = @_;
+    $self->item($item) if $item;
+    $self->$orig(@_);
+};
+
+after 'clear_data' => sub {
+    my $self = shift;
+    $self->clear_item;
+};
 
 around '_result_from_input' => sub {
     my $orig = shift;

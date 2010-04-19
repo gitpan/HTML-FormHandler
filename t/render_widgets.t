@@ -25,7 +25,17 @@ use HTML::FormHandler::Field::Text;
     has_field 'opt_in'     => (
         type    => 'Select',
         widget  => 'radio_group',
-        options => [ { value => 0, label => 'No' }, { value => 1, label => 'Yes' } ]
+        options => [
+            {
+                value => 0,
+                label => 'No',
+                # this can depend on something else,
+                # with fixed value will cause field be
+                # always checked even after process
+                checked => 1,
+            },
+            { value => 1, label => 'Yes' },
+        ]
     );
     has_field 'active'     => ( type => 'Checkbox' );
     has_field 'comments'   => ( type => 'TextArea' );
@@ -63,6 +73,7 @@ use HTML::FormHandler::Field::Text;
         }
     );
     has_field 'no_render' => ( widget => 'no_render' );
+    has_field 'plain' => ( widget_wrapper => 'None' );
 
     sub options_fruit {
         return (
@@ -85,6 +96,13 @@ use HTML::FormHandler::Field::Text;
 my $form = Test::Form->new;
 ok( $form, 'create form' );
 
+my $output10 = $form->field('opt_in')->render;
+is(
+    $output10, '
+<div><label class="label" for="opt_in">Opt in: </label> <br /><input type="radio" value="0" name="opt_in" id="opt_in.0" checked="checked" />No<br /><input type="radio" value="1" name="opt_in" id="opt_in.1" />Yes<br /></div>
+', 'output from radio group'
+);
+
 my $params = {
     test_field         => 'something',
     number             => 0,
@@ -99,6 +117,7 @@ my $params = {
     'start_date.year'  => '2006',
     two_errors         => 'aaa',
     opt_in             => 0,
+    plain              => 'No divs!!',
 };
 
 $form->process($params);
@@ -196,7 +215,7 @@ is(
 ', 'output from Submit'
 );
 
-my $output10 = $form->field('opt_in')->render;
+$output10 = $form->field('opt_in')->render;
 is(
     $output10, '
 <div><label class="label" for="opt_in">Opt in: </label> <br /><input type="radio" value="0" name="opt_in" id="opt_in.0" checked="checked" />No<br /><input type="radio" value="1" name="opt_in" id="opt_in.1" />Yes<br /></div>
@@ -213,6 +232,9 @@ my $output = $form->render;
 ok( $output, 'get rendered output from form' );
 
 is( $form->field('no_render')->render, '', 'no_render' );
+
+is( $form->field('plain')->render, '<input type="text" name="plain" id="plain" value="No divs!!" />', 'renders without wrapper');
+
 
 {
 

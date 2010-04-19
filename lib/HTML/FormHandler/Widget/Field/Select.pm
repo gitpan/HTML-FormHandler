@@ -1,7 +1,9 @@
 package HTML::FormHandler::Widget::Field::Select;
 
 use Moose::Role;
-use HTML::Entities;
+
+with 'HTML::FormHandler::Widget::Field::Role::SelectedOption';
+with 'HTML::FormHandler::Widget::Field::Role::HTMLAttributes';
 
 sub render {
     my ( $self, $result ) = @_;
@@ -11,6 +13,7 @@ sub render {
     $output .= ' id="' . $self->id . '"';
     $output .= ' multiple="multiple"' if $self->multiple == 1;
     $output .= ' size="' . $self->size . '"' if $self->size;
+    $output .= $self->_add_html_attributes;
     $output .= '>';
     my $index = 0;
     if( $self->empty_select ) {
@@ -19,7 +22,7 @@ sub render {
     foreach my $option ( @{ $self->{options} } ) {
         $output .= '<option value="' . $option->{value} . '" ';
         $output .= 'id="' . $self->id . ".$index\" ";
-        if ( my $ffif = encode_entities($result->fif) ) {
+        if ( my $ffif = $self->html_filter($result->fif) ) {
             if ( $self->multiple == 1 ) {
                 my @fif;
                 if ( ref $ffif ) {
@@ -30,14 +33,16 @@ sub render {
                 }
                 foreach my $optval (@fif) {
                     $output .= 'selected="selected"'
-                        if $optval eq $option->{value};
+                        if $self->check_selected_option($option, $optval);
                 }
             }
             else {
                 $output .= 'selected="selected"'
-                    if $option->{value} eq $ffif;
+                    if $self->check_selected_option($option, $ffif);
             }
         }
+        $output .= 'selected="selected"'
+            if $self->check_selected_option($option);
         $output .= '>' . $option->{label} . '</option>';
         $index++;
     }
