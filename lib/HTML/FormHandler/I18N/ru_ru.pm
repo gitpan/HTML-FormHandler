@@ -68,24 +68,26 @@ our %Lexicon = (
     'Email is not valid'                                        => 'Адрес электронной почты не корректен',
     'Zip is not valid'                                          => 'Почтовый индекс не корректен',
     'Not a valid IP address'                                    => 'IP адрес не корректен',
-    'Cannot contain spaces'                                     => 'Не может содердать пробелы',
+    'Cannot contain spaces'                                     => 'Не может содержать пробелы',
     'Must be made up of letters, digits, and underscores'       => 'Должно состоять из букв, цифр и подчёркиваний',
     'Must not be all digits'                                    => 'Должно состоять не только из цифр',
     'Field contains non-printable characters'                   => 'Поле содержит непечатаемые символы',
     'Field must contain a single word'                          => 'Поле должно содержать одно слово',
 
     # H::F::Validate::Actions
-    'Wrong value' => 'Неверное значение',
-    ### not translatable: '"$value" does not match' => '',
-    ### not translatable: '"$value" not allowed' => '',
+    'Wrong value'         => 'Неверное значение',
+    '[_1] does not match' => 'не совпадает с [_1]',
+    '[_1] not allowed'    => '[_1] не разрешено',
 
     # H::F::Validate
     'value must be between [_1] and [_2]'         => 'значение должно быть между [_1] и [_2]',
     'value must be greater than or equal to [_1]' => 'значение должно быть больше или равно [_1]',
     'value must be less than or equal to [_1]'    => 'значение должно быть меньше или равно [_1]',
+    '[_1] field is required'                      => 'поле [_1] является обязательным',
 
     # Other
     'Your datetime does not match your pattern.' => 'Введённые дата/время не совпадают с вашим шаблоном.',
+    'error occurred'                             => 'произошла ошибка',
 );
 
 1;

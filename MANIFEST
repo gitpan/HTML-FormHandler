@@ -59,6 +59,7 @@ lib/HTML/FormHandler/Fields.pm
 lib/HTML/FormHandler/I18N.pm
 lib/HTML/FormHandler/I18N/de_de.pm
 lib/HTML/FormHandler/I18N/en_us.pm
+lib/HTML/FormHandler/I18N/hu_hu.pm
 lib/HTML/FormHandler/I18N/ru_ru.pm
 lib/HTML/FormHandler/I18N/tr_tr.pm
 lib/HTML/FormHandler/I18N/ua_ua.pm
