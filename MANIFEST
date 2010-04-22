@@ -170,7 +170,6 @@ t/lib/Perl/Critic/Policy/FormHandler/Deprecations.pm
 t/lib/Widget/Field/Omega.pm
 t/lib/Widget/Field/TestWidget.pm
 t/list.t
-t/locale.t
 t/password.t
 t/render.t
 t/render_escaping.t
@@ -196,6 +195,7 @@ t/xt/email.t
 t/xt/field_list.t
 t/xt/init.t
 t/xt/load_field.t
+t/xt/locale.t
 t/xt/model_cdbi.t
 t/xt/multiple_forms.t
 t/xt/order.t
