@@ -214,7 +214,7 @@ sub render_field_struct {
     }
     elsif ( $l_type eq 'legend' ) {
         $output .= '<fieldset class="' . $field->html_name . '">';
-        $output .= '<legend>' . $field->html_filter($field->label) . '</legend>';
+        $output .= '<legend>' . $field->html_filter($field->loc_label) . '</legend>';
     }
     $output .= $rendered_field;
     foreach my $error ($field->all_errors){
@@ -368,7 +368,7 @@ sub render_upload {
 sub _label {
     my ( $self, $field ) = @_;
     return '<label class="label" for="' . $field->id . '">' . 
-        $field->html_filter($field->label)
+        $field->html_filter($field->loc_label)
         . ': </label>';
 }
 
@@ -389,7 +389,7 @@ sub render_submit {
     $output .= $field->html_name . '"';
     $output .= ' id="' . $field->id . '"';
     $output .= $self->_add_html_attributes( $field );
-    $output .= ' value="' . $field->html_filter($field->value) . '" />';
+    $output .= ' value="' . $field->html_filter($field->_localize($field->value)) . '" />';
     return $output;
 }
 

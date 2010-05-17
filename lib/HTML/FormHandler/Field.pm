@@ -569,6 +569,8 @@ has 'input_without_param' => (
 has 'not_nullable' => ( is => 'ro', isa => 'Bool' );
 has 'init_value' => ( is => 'rw', clearer => 'clear_init_value' );
 has 'default' => ( is => 'rw' );
+has 'default_over_obj' => ( is => 'rw', builder => 'build_default_over_obj' );
+sub build_default_over_obj { }
 has 'result' => (
     isa       => 'HTML::FormHandler::Field::Result',
     is        => 'ro',
@@ -712,7 +714,11 @@ sub build_label {
     my $label = $self->name;
     $label =~ s/_/ /g;
     $label = ucfirst($label);
-    return $self->_localize($label);
+    return $label;
+}
+sub loc_label {
+    my $self = shift;
+    return $self->_localize($self->label);
 }
 has 'title'     => ( isa => 'Str',               is => 'rw' );
 has 'style'     => ( isa => 'Str',               is => 'rw' );
@@ -897,6 +903,7 @@ sub BUILD {
 
     $self->_set_default( $self->_comp_default_meth )
         if( $self->form && $self->form->can( $self->_comp_default_meth ) );
+    $self->add_widget_name_space( @{$self->form->widget_name_space} ) if $self->form;
     # widgets will already have been applied by BuildFields, but this allows
     # testing individual fields
     $self->apply_rendering_widgets unless ($self->can('render') );
@@ -911,6 +918,9 @@ sub _result_from_fields {
     my ( $self, $result ) = @_;
 
     if ( my @values = $self->get_default_value ) {
+        if ( $self->_can_deflate ) {
+            @values = $self->_apply_deflation(@values);
+        }
         my $value = @values > 1 ? \@values : shift @values;
         $self->init_value($value)   if defined $value;
         $result->_set_value($value) if defined $value;
@@ -1076,9 +1086,6 @@ sub dump {
 sub apply_rendering_widgets {
     my $self = shift;
 
-    if( $self->form ) {
-        $self->add_widget_name_space( @{$self->form->widget_name_space} );
-    }
     if ( $self->widget ) {
         $self->apply_widget_role( $self, $self->widget, 'Field' );
     }
