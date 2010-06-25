@@ -56,11 +56,37 @@ has 'form' => (
     #  handles => ['render' ]
 );
 
+has 'form_errors' => (
+    traits     => ['Array'],
+    is         => 'rw',
+    isa        => 'ArrayRef[Str]',
+    default    => sub { [] },
+    handles   => {
+        all_form_errors  => 'elements',
+        push_form_errors => 'push',
+        num_form_errors => 'count',
+        has_form_errors => 'count',
+        clear_form_errors => 'clear',
+    }
+);
+
+sub validated { !$_[0]->has_error_results && $_[0]->has_input && !$_[0]->has_form_errors }
+
 has 'ran_validation' => ( is => 'rw', isa => 'Bool', default => 0 );
 
 sub fif {
     my $self = shift;
     $self->form->fields_fif($self);
+}
+
+sub peek {
+    my $self = shift;
+    my $string = "Form Result " . $self->name . "\n";
+    my $indent = '  ';
+    foreach my $res ( $self->results ) {
+        $string .= $res->peek( $indent );
+    }
+    return $string;
 }
 
 =head1 AUTHORS

@@ -45,14 +45,15 @@ has '+input_without_param' => ( default => 0 );
 
 sub value {
     my $field = shift;
-    return $field->SUPER::value(@_) if @_;
-    my $v = $field->SUPER::value;
+    return $field->next::method(@_) if @_;
+    my $v = $field->next::method();
     return defined $v ? $v : 0;
 }
 
 sub validate {
     my $self = shift;
-    $self->add_error( $self->required_message ) if ( $self->required && !$self->value );
+    $self->add_error($self->required_message) if( $self->required && !$self->value );
+    return;
 }
 
 =head1 AUTHORS

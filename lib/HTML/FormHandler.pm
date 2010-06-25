@@ -12,11 +12,12 @@ with 'MooseX::Traits';
 use Carp;
 use Class::MOP;
 use HTML::FormHandler::Result;
+use Try::Tiny;
 
 use 5.008;
 
 # always use 5 digits after decimal because of toolchain issues
-our $VERSION = '0.31003';
+our $VERSION = '0.32000';
 
 =head1 NAME
 
@@ -223,6 +224,10 @@ care whether most parameters are set on new or process or update,
 but a 'field_list' argument must be passed in on 'new' since the
 fields are built at construction time.
 
+If you want to update field attributes on the 'process' call, you can
+use an 'update_field_list' hashref attribute, or subclass
+update_fields in your form.
+
 =head2 Processing the form
 
 =head3 process
@@ -368,6 +373,28 @@ add fields to the form depending on some other state.
       return \@field_list;
    }
 
+=head3 update_field_list
+
+Used to dynamically set particular field attributes on the 'process' (or
+'run') call.
+
+    $form->process( update_field_list => { 
+       foo_date => { format => '%m/%e/%Y', date_start => '10-01-01' } }, 
+       params => $params );
+
+The 'update_field_list' is processed by the 'update_fields' form method,
+which can also be used in a form to do specific field updates:
+
+    sub update_fields {
+        my $self = shift;
+        $self->field('foo')->temp( 'foo_temp' );
+        $self->field('bar')->default( 'foo_value' );
+    }
+
+(Note that you can't set a field's 'value' directly here, since it will
+be overwritten by the validation process. Set the value in a field
+validation method.)
+
 =head3 active
 
 If a form has a variable number of fields, fields which are not always to be
@@ -478,6 +505,10 @@ This is the best place to do validation checks that depend on the values of
 more than one field.
 
 =head2 Accessing errors
+
+Set an error in a field with C<< $field->add_error('some error string'); >>.
+Set a form error not tied to a specific field with
+C<< $self->add_form_error('another error string'); >>.
 
   has_errors - returns true or false
   error_fields - returns list of fields with errors
@@ -625,7 +656,9 @@ has 'result' => (
         'input',      '_set_input', '_clear_input', 'has_input',
         'value',      '_set_value', '_clear_value', 'has_value',
         'add_result', 'results',    'validated',    'ran_validation',
-        'is_valid'
+        'is_valid',
+        'form_errors', 'all_form_errors', 'push_form_errors', 'clear_form_errors',
+        'has_form_errors', 'num_form_errors',
     ],
 );
 
@@ -658,6 +691,15 @@ has 'active' => (
 
 # object with which to initialize
 has 'init_object'         => ( is => 'rw', clearer => 'clear_init_object' );
+has 'update_field_list'   => ( is => 'rw', 
+    isa => 'HashRef', 
+    default => sub {{}},
+    traits => ['Hash'],
+    handles => {
+        clear_update_field_list => 'clear',
+        has_update_field_list => 'count',
+    },
+); 
 has 'reload_after_update' => ( is => 'rw', isa     => 'Bool' );
 # flags
 has [ 'verbose', 'processed', 'did_init_obj' ] => ( isa => 'Bool', is => 'rw' );
@@ -679,6 +721,7 @@ has 'widget_tags'         => (
     },
 );
 has 'action' => ( is => 'rw' );
+has 'posted' => ( is => 'rw', isa => 'Bool', clearer => 'clear_posted' );
 has 'params' => (
     traits     => ['Hash'],
     isa        => 'HashRef',
@@ -807,7 +850,9 @@ sub error_field_names {
 sub errors {
     my $self         = shift;
     my @error_fields = $self->error_fields;
-    return map { $_->all_errors } @error_fields;
+    my @errors = $self->all_form_errors;
+    push @errors,  map { $_->all_errors } @error_fields;
+    return @errors;
 }
 
 sub uuid {
@@ -835,8 +880,14 @@ sub validate_form {
 
 sub validate { 1 }
 
-sub has_errors { shift->has_error_fields }
-sub num_errors { shift->num_error_fields }
+sub has_errors { 
+    my $self = shift;
+    return $self->has_error_fields || $self->has_form_errors;
+}
+sub num_errors { 
+    my $self = shift;
+    return $self->num_error_fields + $self->num_form_errors;
+}
 
 sub after_update_model {
     my $self = shift;
@@ -857,11 +908,16 @@ sub setup_form {
             $self->$key($value);
         }
     }
+    if( $self->posted ) {
+        $self->set_param('__posted' => 1);
+        $self->clear_posted;
+    }
     if ( $self->item_id && !$self->item ) {
         $self->item( $self->build_item );
     }
     $self->clear_result;
     $self->set_active;
+    $self->update_fields;
     # initialization of Repeatable fields and Select options
     # will be done in _result_from_object when there's an initial object
     # in _result_from_input when there are params
@@ -943,13 +999,7 @@ sub _set_dependency {
             # This is to allow requiring a field when a boolean is true.
             my $field = $self->field($name);
             next if $self->field($name)->type eq 'Boolean' && $value == 0;
-            if ( ref $value ) {
-                # at least one value is non-blank
-                next unless grep { /\S/ } @$value;
-            }
-            else {
-                next unless $value =~ /\S/;
-            }
+            next unless has_some_value($value);
             # one field was found non-blank, so set all to required
             for (@$group) {
                 my $field = $self->field($_);
@@ -967,6 +1017,16 @@ sub _clear_dependency {
 
     $_->required(0) for @{$self->_required};
     $self->clear_required;
+}
+
+sub peek {
+    my $self = shift;
+    my $string = "Form " . $self->name . "\n";
+    my $indent = '  ';
+    foreach my $field ( $self->sorted_fields ) {
+        $string .= $field->peek( $indent );
+    }
+    return $string;
 }
 
 sub _munge_params {
@@ -987,6 +1047,23 @@ after 'get_error_fields' => sub {
    }
 };
 
+sub add_form_error {
+    my ( $self, @message ) = @_;
+
+    unless ( defined $message[0] ) {
+        @message = ('form is invalid');
+    }
+    my $out;
+    try { 
+        $out = $self->_localize(@message); 
+    }
+    catch {
+        die "Error occurred localizing error message for " . $self->name . ".  $_";
+    };
+    $self->push_form_errors($out);
+    return;
+}
+
 sub apply_field_traits {
     my $self = shift; 
     my $fmeta = HTML::FormHandler::Field->meta;
@@ -997,6 +1074,24 @@ sub apply_field_traits {
 
 sub get_default_value { }
 sub _can_deflate { }
+
+sub update_fields {
+    my $self = shift;
+    return unless $self->has_update_field_list;
+    my $fields = $self->update_field_list;
+    foreach my $key ( keys %$fields ) {
+        my $field = $self->field($key);
+        unless( $field ) {
+            die "Field $key is not found and cannot be updated by update_fields";
+        }
+        while ( my ( $attr_name, $attr_value ) = each %{$fields->{$key}} ) {
+            confess "invalid attribute '$attr_name' passed to update_field_list"
+                unless $field->can($attr_name);
+            $field->$attr_name($attr_value);
+        }
+    }
+    $self->clear_update_field_list;
+}
 
 =head1 SUPPORT
 

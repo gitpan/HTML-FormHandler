@@ -18,6 +18,7 @@ use HTML::FormHandler::Field::Text;
         size  => 20,
         label => 'TEST',
         id    => 'f99',
+        input_class => 'test123',
     );
     has_field 'number';
     has_field 'fruit'      => ( type => 'Select' );
@@ -84,6 +85,7 @@ use HTML::FormHandler::Field::Text;
     );
     has_field 'no_render' => ( widget => 'no_render' );
     has_field 'plain' => ( widget_wrapper => 'None' );
+    has_field 'boxed' => ( widget_wrapper => 'Fieldset' );
 
     sub options_fruit {
         return (
@@ -136,6 +138,7 @@ my $params = {
     opt_in             => 'no & never',
     plain              => 'No divs!!',
     comedians         => [ 'chaplin', 'laurel & hardy' ],
+    boxed              => 'Testing single fieldset',
 };
 
 $form->process($params);
@@ -152,7 +155,7 @@ my $output1 = $form->field('test_field')->render;
 is(
     $output1,
     '
-<div><label class="label" for="f99">TEST: </label><input type="text" name="test_field" id="f99" size="20" value="something" /></div>
+<div><label class="label" for="f99">TEST: </label><input type="text" name="test_field" id="f99" size="20" value="something" class="test123" /></div>
 ',
     'output from text field'
 );
@@ -269,6 +272,8 @@ is( $form->field('no_render')->render, '', 'no_render' );
 
 is( $form->field('plain')->render, '<input type="text" name="plain" id="plain" value="No divs!!" />', 'renders without wrapper');
 
+is( $form->field('boxed')->render, '<fieldset class="boxed"><legend>Boxed</legend><input type="text" name="boxed" id="boxed" value="Testing single fieldset" /></fieldset>
+', 'fieldset wrapper renders' );
 
 {
 

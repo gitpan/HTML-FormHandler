@@ -15,8 +15,16 @@ This is a field that includes a list of possible valid options.
 This can be used for select and multiple-select fields.
 Widget type is 'select'.
 
+Because select lists and checkbox_groups do not return an HTTP
+parameter when the entire list is unselected, the Select field
+must assume that the lack of a param means unselection. So to
+avoid setting a Select field, it must be set to inactive, not
+merely not included in the HTML for a form.
+
 This field type can also be used for fields that use the
-'radio_group' widget.
+'radio_group' widget, and the 'checkbox_group' widget (for
+selects with multiple flag turned on, or that use the Multiple
+field).
 
 The 'options' array can come from four different places.
 The options attribute itself, either declaratively or using a
@@ -141,6 +149,11 @@ object class for the label for select lists.
 
 Defaults to "name"
 
+=head2 localize_labels
+
+For the renderers: whether or not to call the localize method on the select
+labels. Default is off.
+
 =head2 active_column
 
 Sets or returns the name of a boolean column that is used as a flag to indicate that
@@ -214,6 +227,7 @@ sub BUILD {
     my $self = shift;
 
     $self->options_from('build') if $self->options && $self->has_options;
+    $self->input_without_param; # vivify
 }
 
 has 'set_options' => ( isa => 'Str', is => 'ro');
@@ -250,11 +264,23 @@ sub _form_options {
 has 'multiple'         => ( isa => 'Bool', is => 'rw', default => '0' );
 has 'size'             => ( isa => 'Int|Undef', is => 'rw' );
 has 'label_column'     => ( isa => 'Str',       is => 'rw', default => 'name' );
+has 'localize_labels'  => ( isa => 'Bool', is => 'rw' );
 has 'active_column'    => ( isa => 'Str',       is => 'rw', default => 'active' );
 has 'auto_widget_size' => ( isa => 'Int',       is => 'rw', default => '0' );
 has 'sort_column'      => ( isa => 'Str',       is => 'rw' );
 has '+widget'          => ( default => 'select' );
 has 'empty_select'     => ( isa => 'Str',       is => 'rw' );
+has '+input_without_param' => ( lazy => 1, builder => 'build_input_without_param' );
+sub build_input_without_param {
+    my $self = shift;
+    if( $self->multiple ) {
+        $self->not_nullable(1);
+        return [];
+    }
+    else {
+        return '';
+    }
+}
 
 sub select_widget {
     my $field = shift;
@@ -309,7 +335,7 @@ sub _inner_validate_field {
 sub _result_from_object {
     my ( $self, $result, $item ) = @_;
 
-    $result = $self->SUPER::_result_from_object( $result, $item );
+    $result = $self->next::method( $result, $item );
     $self->_load_options;
     return $result;
 }
@@ -317,7 +343,7 @@ sub _result_from_object {
 sub _result_from_fields {
     my ( $self, $result ) = @_;
 
-    $result = $self->SUPER::_result_from_fields($result);
+    $result = $self->next::method($result);
     $self->_load_options;
     return $result;
 }
@@ -325,7 +351,7 @@ sub _result_from_fields {
 sub _result_from_input {
     my ( $self, $result, $input, $exists ) = @_;
 
-    $result = $self->SUPER::_result_from_input( $result, $input, $exists );
+    $result = $self->next::method( $result, $input, $exists );
     $self->_load_options;
     return $result;
 }
@@ -372,6 +398,14 @@ sub _load_options {
 }
 
 sub sort_options { shift; return shift; }
+
+before 'value' => sub {
+    my $self = shift;
+    my $value = $self->result->value;
+    if( $self->multiple && (!defined $value || $value eq '') ) {
+        $self->_set_value([]);
+    }
+};
 
 =head1 AUTHORS
 

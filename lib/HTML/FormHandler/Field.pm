@@ -163,7 +163,9 @@ hash. Validation and constraints act on 'value'.
 =item fif
 
 Values used to fill in the form. Read only. Use a deflation to get
-from 'value' to 'fif' if the an inflator was used.
+from 'value' to 'fif' if an inflator was used. (Deflations can be
+done in two different places. Set 'deflate_to' => 'fif' to deflate
+in fillinform'.)
 
    [% form.field('title').fif %]
 
@@ -225,7 +227,9 @@ Compound fields will have an array of errors from the subfields.
    title       - Place to put title for field.
    style       - Place to put field style string
    css_class   - For a css class name (string; could be several classes,
-                 separated by spaces or commas)
+                 separated by spaces or commas). Used in wrapper for input field.
+   input_class - class attribute on the 'input' field. applied with
+                 '_apply_html_attribute' along with disabled/readonly/javascript
    id          - Useful for javascript (default is html_name. to prefix with
                  form name, use 'html_prefix' in your form)
    disabled    - for the HTML flag
@@ -310,6 +314,32 @@ Provide an initial value just like the 'set_default' method, except in the field
 declaration:
 
   has_field 'bax' => ( default => 'Default bax' );
+
+FormHandler has flipped back and forth a couple of times about whether a default
+specified in the has_field definition should override values provided in an
+initial item or init_object. Sometimes people want one behavior, and sometimes
+the other. Now 'default' does *not* override.
+
+If you pass in a model object with C<< item => $row >> or an initial object
+with C<< init_object => {....} >> the values in that object will be used instead
+of values provided in the field definition with 'default' or 'default_fieldname'.
+
+If you *want* values that override the item/init_object, you can use the field
+attribute 'default_over_obj'. 
+
+However you might want to consider putting your defaults into your row or init_object
+instead. 
+
+=item default_over_obj
+
+Allows setting defaults which will override values provided with an item/init_object.
+
+   has_field 'quux' => ( default_over_obj => 'default quux' );
+
+At this time there is no equivalent of 'set_default', but the type of the attribute
+is not defined so you can provide default values in a variety of other ways, 
+including providing a trait which does 'build_default_over_obj'. For examples,
+see tests in the distribution.
 
 =back
 
@@ -530,9 +560,14 @@ string and thus needs access to 'self', you would need to use the deflate method
 since the deflation coderef is only passed the current value of the field
 
 Normally if you have a deflation, you will need a matching inflation, which can be
-supplied via a 'transform' action. When deflating/inflating values, the 'value' hash
-only contains reliably inflated values after validation has been performed, since
+supplied via a 'transform' action. When using a 'transform', the 'value' hash only
+contains reliably inflated values after validation has been performed, since
 inflation is performed at validation time.
+
+Deflation can be done at two different places: transforming the value that's saved
+from the initial_object/item, or when retrieving the 'fif' (fill-in-form) value that's
+displayed in the HTML form. The default is C<< deflate_to => 'value' >>. To deflate
+when getting the 'fif' value set 'deflate_to' to 'fif'. (See t/deflate.t for examples.)
 
 =head1 Processing and validating the field
 
@@ -566,7 +601,7 @@ has 'input_without_param' => (
     is        => 'rw',
     predicate => 'has_input_without_param'
 );
-has 'not_nullable' => ( is => 'ro', isa => 'Bool' );
+has 'not_nullable' => ( is => 'rw', isa => 'Bool' );
 has 'init_value' => ( is => 'rw', clearer => 'clear_init_value' );
 has 'default' => ( is => 'rw' );
 has 'default_over_obj' => ( is => 'rw', builder => 'build_default_over_obj' );
@@ -674,7 +709,12 @@ sub fif {
         return defined $lresult->input ? $lresult->input : '';
     }
     if ( defined $lresult->value ) {
-        return $lresult->value;
+        if( $self->deflate_to eq 'fif' && $self->_can_deflate ) {
+            return $self->_apply_deflation($lresult->value);
+        }
+        else {
+            return $lresult->value;
+        }
     }
     elsif ( defined $self->value ) {
         # this is because checkboxes and submit buttons have their own 'value'
@@ -723,6 +763,7 @@ sub loc_label {
 has 'title'     => ( isa => 'Str',               is => 'rw' );
 has 'style'     => ( isa => 'Str',               is => 'rw' );
 has 'css_class' => ( isa => 'Str',               is => 'rw' );
+has 'input_class' => ( isa => 'Str',             is => 'rw' );
 has 'form'      => ( 
     isa => 'HTML::FormHandler',
     is => 'rw',
@@ -838,6 +879,8 @@ has 'deflation' => (
     is        => 'rw',
     predicate => 'has_deflation',
 );
+# deflate_to either 'value' or 'fif'
+has 'deflate_to' => ( is => 'rw', default => 'value' );
 has 'trim' => (
     is      => 'rw',
     default => sub { { transform => \&default_trim } }
@@ -918,7 +961,7 @@ sub _result_from_fields {
     my ( $self, $result ) = @_;
 
     if ( my @values = $self->get_default_value ) {
-        if ( $self->_can_deflate ) {
+        if ( $self->_can_deflate && $self->deflate_to eq 'value' ) {
             @values = $self->_apply_deflation(@values);
         }
         my $value = @values > 1 ? \@values : shift @values;
@@ -983,6 +1026,7 @@ sub add_error {
     unless ( defined $message[0] ) {
         @message = ('field is invalid');
     }
+    @message = @{$message[0]} if ref $message[0] eq 'ARRAY';
     my $out;
     try { 
         $out = $self->_localize(@message); 
@@ -1033,26 +1077,6 @@ sub value_changed {
 
 sub required_text { shift->required ? 'required' : 'optional' }
 
-sub has_some_value {
-    my $x = shift;
-
-    return unless defined $x;
-    return $x =~ /\S/ if !ref $x;
-    if ( ref $x eq 'ARRAY' ) {
-        for my $elem (@$x) {
-            return 1 if has_some_value($elem);
-        }
-        return 0;
-    }
-    if ( ref $x eq 'HASH' ) {
-        for my $key ( keys %$x ) {
-            return 1 if has_some_value( $x->{$key} );
-        }
-        return 0;
-    }
-    return blessed($x);    # true if blessed, otherwise false
-}
-
 sub input_defined {
     my ($self) = @_;
     return unless $self->has_input;
@@ -1097,6 +1121,28 @@ sub apply_rendering_widgets {
     }
     return;
 
+}
+
+sub peek {
+    my ( $self, $indent ) = @_;
+
+    $indent ||= '';
+    my $string = $indent . 'field: "' . $self->name . '"  type: ' . $self->type . "\n";
+    if( $self->has_flag('has_contains') ) {
+        $string .= $indent . "contains: \n";
+        my $lindent = $indent . '  ';
+        foreach my $field ( $self->contains->sorted_fields ) {
+            $string .= $field->peek( $lindent );
+        }
+    }
+    if( $self->has_fields ) {
+        $string .= $indent . 'subfields of "' . $self->name . '": ' . $self->num_fields . "\n";
+        my $lindent = $indent . '  ';
+        foreach my $field ( $self->sorted_fields ) {
+            $string .= $field->peek( $lindent );
+        }
+    }
+    return $string;
 }
 
 =head1 AUTHORS

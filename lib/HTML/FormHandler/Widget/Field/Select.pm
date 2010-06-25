@@ -20,8 +20,10 @@ sub render {
     $output .= $self->_add_html_attributes;
     $output .= '>';
 
-    $t = $self->empty_select
-        and $output .= qq{<option value="">$t</option>};
+    if( $self->empty_select ) {
+        $t = $self->_localize($self->empty_select);
+        $output .= qq{<option value="">$t</option>};
+    }
 
     foreach my $option ( @{ $self->{options} } ) {
         $output .= '<option value="'
@@ -48,7 +50,8 @@ sub render {
         }
         $output .= ' selected="selected"'
             if $self->check_selected_option($option);
-        $output .= '>' . $self->html_filter($option->{label}) . '</option>';
+        my $label = $self->localize_labels ? $self->_localize($option->{label}) : $option->{label};
+        $output .= '>' . $self->html_filter($label) . '</option>';
         $index++;
     }
     $output .= '</select>';

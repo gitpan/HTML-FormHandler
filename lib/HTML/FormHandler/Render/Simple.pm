@@ -276,7 +276,7 @@ sub render_select {
     $output .= '>';
     my $index = 0;
     if( $field->empty_select ) {
-        $output .= '<option value="">' . $field->empty_select . '</option>'; 
+        $output .= '<option value="">' . $field->_localize($field->empty_select) . '</option>'; 
     }
     foreach my $option ( @{ $field->options } ) {
         $output .= '<option value="' . $field->html_filter($option->{value}) . '" ';
@@ -300,7 +300,8 @@ sub render_select {
                     if $option->{value} eq $field->fif;
             }
         }
-        $output .= '>' . $field->html_filter($option->{label}) . '</option>';
+        my $label = $field->localize_labels ? $field->_localize($option->{label}) : $option->{label};
+        $output .= '>' . $field->html_filter($label) . '</option>';
         $index++;
     }
     $output .= '</select>';
@@ -412,6 +413,9 @@ sub _add_html_attributes {
         $output .= ( $field->$attr ? qq{ $attr="} . $field->$attr . '"' : '' );
     }
     $output .= ($field->javascript ? ' ' . $field->javascript : '');
+    if( $field->input_class ) {
+        $output .= ' class="' . $field->input_class . '"';
+    }
     return $output;
 }
 

@@ -17,9 +17,6 @@ use_ok( 'HTML::FormHandler::Field::Repeatable::Instance' );
    has_field 'addresses.country';
    has_field 'addresses.sector' => ( type => 'Select' );
 
-   has_field 'apples' => ( type => 'Repeatable' );
-   has_field 'apples.id' => ( type => 'Select' );
-
    sub options_addresses_sector 
    {
       [ 1 => 'East',
@@ -28,11 +25,6 @@ use_ok( 'HTML::FormHandler::Field::Repeatable::Instance' );
       ]
    }
 
-   sub options_apples_id {
-      [ 1 => 'Red',
-        2 => 'Green',
-      ]
-   }
 }
 
 my $form = Repeatable::Form->new;
@@ -68,9 +60,6 @@ my $init_object = {
          id => 2,
       }
    ],
-   apples => [
-      {},
-   ]
 };
 
 $form = Repeatable::Form->new( init_object => $init_object );
@@ -81,7 +70,6 @@ $init_object->{my_test} = undef;
 $init_object->{addresses}->[0]->{sector} = undef;
 $init_object->{addresses}->[1]->{sector} = undef;
 $init_object->{addresses}->[2]->{sector} = undef;
-$init_object->{apples}->[0]->{id} = undef;
 is_deeply( $form->values, $init_object, 'get values back out' );
 delete $init_object->{my_test};
 is_deeply( $form->field('addresses')->value, $init_object->{addresses}, 'hasmany field value');
@@ -108,9 +96,7 @@ my $fif = {
    'addresses.2.id' => '2',
    'addresses.2.sector' => '',
    'my_test' => '',
-   'apples.0.id' => '',
 };
-
 is_deeply( $form->fif, $fif, 'get fill in form');
 $fif->{'addresses.0.city'} = 'Primary City';
 $fif->{'addresses.2.country'} = 'Grand Fenwick';
@@ -122,7 +108,6 @@ $fif->{my_test} = '';
 is_deeply( $form->fif, $fif, 'still get right fif');
 $init_object->{addresses}->[0]->{city} = 'Primary City';
 $init_object->{addresses}->[2]->{country} = 'Grand Fenwick';
-$init_object->{apples} = [ undef ];
 is_deeply( $form->values, $init_object, 'still get right values');
 
 $fif = {
@@ -165,7 +150,6 @@ my $values = {
          'sector' => undef,
       },
    ],
-   apples => []
 };
 is_deeply( $form->values, $values, 'get right values' );
 
@@ -181,5 +165,31 @@ is( $form->field('addresses')->field('0')->field('sector')->num_options, 3, 'rig
 $form->clear_init_object;
 $form->process( { my_test => 'test' } );
 is_deeply( $form->value()->{addresses}, [], 'Addresses deleted' );
+
+{
+    package Test::User::Repeatable;
+    use HTML::FormHandler::Moose;
+    extends 'HTML::FormHandler';
+
+    has_field 'user_name';
+    has_field 'occupation';
+    has_field 'employers' => ( type => 'Repeatable' );
+    has_field 'employers.employer_id' => ( type => 'PrimaryKey' );
+    has_field 'employers.name';
+    has_field 'employers.address';
+}
+$form = Test::User::Repeatable->new;
+my $unemployed_params = {
+   user_name => "No Employer",
+   occupation => "Unemployed",
+   'employers.0.employer_id' => '', # empty string
+   'employers.0.name' => '',
+   'employers.0.address' => ''
+};
+$form->process( $unemployed_params);
+ok( $form->validated, "User with empty employer validates" );
+is_deeply( $form->value, { employers => [], user_name => 'No Employer', occupation => 'Unemployed' }, 
+    'creates right value for empty repeatable' );
+is_deeply( $form->fif, $unemployed_params, 'right fif for empty repeatable' );
 
 done_testing;

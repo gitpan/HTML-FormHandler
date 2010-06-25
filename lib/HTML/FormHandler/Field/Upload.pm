@@ -13,8 +13,10 @@ HTML::FormHandler::Field::Upload - File upload field
 
 =head1 DESCRIPTION
 
-This field is designed to be used with L<Catalyst::Request::Upload>.
-Validates that the input is an uploaded file.
+This field is designed to be used with a blessed object with a 'size' method,
+such as L<Catalyst::Request::Upload>, or a filehandle.
+Validates that the file is not empty and is within the 'min_size'
+and 'max_size' limits (limits are in bytes).
 A form containing this field must have the enctype set.
 
     package My::Form::Upload;
@@ -23,7 +25,7 @@ A form containing this field must have the enctype set.
 
     has '+enctype' => ( default => 'multipart/form-data');
 
-    has_field 'file' => ( type => 'Upload' );
+    has_field 'file' => ( type => 'Upload', max_size => '2000000' );
     has_field 'submit' => ( type => 'Submit', value => 'Upload' );
 
 In your controller:
@@ -51,17 +53,44 @@ sub validate {
     my $self   = shift;
 
     my $upload = $self->value;
-    blessed($upload) and
-        $upload->size > 0 or
+    my $size = 0;
+    if( blessed $upload && $upload->can('size') ) {
+        $size = $upload->size;
+    }
+    elsif( is_real_fh( $upload ) ) {
+        $size = -s $upload;
+    }
+    else {
+        return $self->add_error('File not found for upload field');
+    }
+    $size > 0 or
         return $self->add_error('File uploaded is empty');
 
-    my $size = $upload->size;
-
-    $upload->size >= $self->min_size or
+    $size >= $self->min_size or
         return $self->add_error( 'File is too small (< [_1] bytes)', $self->min_size );
 
-    $upload->size <= $self->max_size or
+    $size <= $self->max_size or
         return $self->add_error( 'File is too big (> [_1] bytes)', $self->max_size );
+}
+
+# stolen from Plack::Util::is_real_fh
+sub is_real_fh {
+    my $fh = shift;
+
+    my $reftype = Scalar::Util::reftype($fh) or return;
+    if( $reftype eq 'IO' 
+            or $reftype eq 'GLOB' && *{$fh}{IO} ){
+        my $m_fileno = $fh->fileno;
+        return unless defined $m_fileno;
+        return unless $m_fileno >= 0;
+        my $f_fileno = fileno($fh);
+        return unless defined $f_fileno;
+        return unless $f_fileno >= 0;
+        return 1;
+    }
+    else {
+        return;
+    }
 }
 
 __PACKAGE__->meta->make_immutable;

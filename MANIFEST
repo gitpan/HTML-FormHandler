@@ -108,6 +108,7 @@ lib/HTML/FormHandler/Widget/Field/Upload.pm
 lib/HTML/FormHandler/Widget/Form/Simple.pm
 lib/HTML/FormHandler/Widget/Form/Table.pm
 lib/HTML/FormHandler/Widget/Wrapper/Base.pm
+lib/HTML/FormHandler/Widget/Wrapper/Fieldset.pm
 lib/HTML/FormHandler/Widget/Wrapper/None.pm
 lib/HTML/FormHandler/Widget/Wrapper/Simple.pm
 lib/HTML/FormHandler/Widget/Wrapper/Table.pm
@@ -183,6 +184,7 @@ t/result_compound.t
 t/result_errors.t
 t/structured.t
 t/types.t
+t/update_fields.t
 t/validate_coderef.t
 t/xt/02pod.t
 t/xt/add_field.t
@@ -191,15 +193,20 @@ t/xt/chbox_group.t
 t/xt/check_selected_option.t
 t/xt/custom_fields.t
 t/xt/deprecations.t
+t/xt/display.t
 t/xt/email.t
 t/xt/field_list.t
+t/xt/form_errors.t
 t/xt/init.t
 t/xt/load_field.t
 t/xt/locale.t
+t/xt/locale_data_localize.t
+t/xt/mb_form.t
 t/xt/model_cdbi.t
 t/xt/multiple_forms.t
 t/xt/order.t
 t/xt/params.t
+t/xt/posted.t
 t/xt/submit.t
 t/xt/upload.t
 TODO
