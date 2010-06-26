@@ -24,6 +24,8 @@ no_index:
 requires:
   Carp: 0
   DateTime: 0
+  DateTime::Format::Strptime: 0
+  Email::Valid: 0
   File::ShareDir: 0
   File::Spec: 0
   Locale::Maketext: 1.09
@@ -39,4 +41,4 @@ requires:
 resources:
   license: http://dev.perl.org/licenses/
   repository: http://github.com/gshank/html-formhandler/tree/master
-version: 0.32000
+version: 0.32001
