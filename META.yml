@@ -1,26 +1,21 @@
 ---
-abstract: 'form handler written in Moose'
+abstract: 'HTML forms using Moose'
 author:
-  - 'Gerda Shank'
+  - 'FormHandler Contributors - see HTML::FormHandler'
 build_requires:
-  ExtUtils::MakeMaker: 6.42
   Test::Differences: 0
   Test::Exception: 0
-  Test::More: 0.88
+  Test::More: 0.94
 configure_requires:
-  ExtUtils::MakeMaker: 6.42
-distribution_type: module
-generated_by: 'Module::Install version 0.91'
+  ExtUtils::MakeMaker: 6.31
+  File::ShareDir::Install: 0.03
+dynamic_config: 0
+generated_by: 'Dist::Zilla version 4.101900, CPAN::Meta::Converter version 2.101670'
 license: perl
 meta-spec:
   url: http://module-build.sourceforge.net/META-spec-v1.4.html
   version: 1.4
 name: HTML-FormHandler
-no_index:
-  directory:
-    - inc
-    - share
-    - t
 requires:
   Carp: 0
   DateTime: 0
@@ -37,8 +32,7 @@ requires:
   Try::Tiny: 0
   aliased: 0
   namespace::autoclean: 0.09
-  perl: 5.8.0
 resources:
-  license: http://dev.perl.org/licenses/
-  repository: http://github.com/gshank/html-formhandler/tree/master
-version: 0.32001
+  bugtracker: https://rt.cpan.org/Public/Dist/Display.html?Name=HTML-FormHandler
+  repository: git://github.com/gshank/html-formhandler.git
+version: 0.32002

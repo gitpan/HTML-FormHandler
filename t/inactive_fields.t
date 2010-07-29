@@ -31,10 +31,12 @@ is_deeply( $form->fif, $fif, 'fif is correct' );
 is_deeply( $form->value, $fif, 'value is correct' );
 
 $form = Test::Form->new;
-$form->process( active => ['foo'], params => $fif );
+my $active = ['foo'];
+$form->process( active => [@{$active}], params => $fif );
+is_deeply( $active, ['foo'], 'active hashref still there' );
 ok( $form->validated, 'form validated' );
 is_deeply( $form->fif, $fif, 'fif is correct' );
 is_deeply( $form->value, $fif, 'value is correct' );
- 
+
 
 done_testing;

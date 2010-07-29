@@ -1,49 +1,8 @@
 package HTML::FormHandler::Fields;
+# ABSTRACT: internal role for form and compound fields
 
 use Moose::Role;
 
-=head1 NAME
-
-HTML::FormHandler::Fields;
-
-=head1 SYNOPSIS
-
-A role to implement field attributes, accessors, etc. To be applied
-to L<HTML::FormHandler> and L<HTML::FormHandler::Field::Compound>.
-
-=head2 fields
-
-The field definitions as built from the field_list and the 'has_field'
-declarations. This provides clear_fields, add_field, remove_last_field, 
-num_fields, has_fields, and set_field_at methods.
-
-=head2 field( $full_name )
-
-Return the field objct with the full_name passed. Will return undef
-if the field is not found, or will die if passed a second parameter.
-
-=head2 field_index
-
-Convenience function for use with 'set_field_at'. Pass in 'name' of field
-(not full_name)
-
-=head2 sorted_fields
-
-Calls fields and returns them in sorted order by their "order"
-value. Non-sorted fields are retrieved with 'fields'.
-
-=head2 clear methods
-
-  clear_data
-  clear_fields
-  clear_error_fields
-
-=head2 Dump information
-
-   dump - turn verbose flag on to get this output
-   dump_validated - shorter version
-
-=cut
 
 has 'fields' => (
     traits     => ['Array'],
@@ -124,7 +83,7 @@ sub field {
 sub sorted_fields {
     my $self = shift;
 
-    my @fields = sort { $a->order <=> $b->order } 
+    my @fields = sort { $a->order <=> $b->order }
         grep { !$_->inactive || ($_->inactive && $_->_active) } $self->all_fields;
     return wantarray ? @fields : \@fields;
 }
@@ -147,7 +106,7 @@ sub _fields_validate {
 }
 
 sub fields_set_value {
-    my $self = shift; 
+    my $self = shift;
     my %value_hash;
     foreach my $field ( $self->all_fields ) {
         next if ( ($field->inactive && !$field->_active) || !$field->has_result );
@@ -232,3 +191,65 @@ sub dump_validated {
 
 use namespace::autoclean;
 1;
+
+__END__
+=pod
+
+=head1 NAME
+
+HTML::FormHandler::Fields - internal role for form and compound fields
+
+=head1 VERSION
+
+version 0.32002
+
+=head1 SYNOPSIS
+
+A role to implement field attributes, accessors, etc. To be applied
+to L<HTML::FormHandler> and L<HTML::FormHandler::Field::Compound>.
+
+=head2 fields
+
+The field definitions as built from the field_list and the 'has_field'
+declarations. This provides clear_fields, add_field, remove_last_field,
+num_fields, has_fields, and set_field_at methods.
+
+=head2 field( $full_name )
+
+Return the field objct with the full_name passed. Will return undef
+if the field is not found, or will die if passed a second parameter.
+
+=head2 field_index
+
+Convenience function for use with 'set_field_at'. Pass in 'name' of field
+(not full_name)
+
+=head2 sorted_fields
+
+Calls fields and returns them in sorted order by their "order"
+value. Non-sorted fields are retrieved with 'fields'.
+
+=head2 clear methods
+
+  clear_data
+  clear_fields
+  clear_error_fields
+
+=head2 Dump information
+
+   dump - turn verbose flag on to get this output
+   dump_validated - shorter version
+
+=head1 AUTHOR
+
+FormHandler Contributors - see HTML::FormHandler
+
+=head1 COPYRIGHT AND LICENSE
+
+This software is copyright (c) 2010 by Gerda Shank.
+
+This is free software; you can redistribute it and/or modify it under
+the same terms as the Perl 5 programming language system itself.
+
+=cut
+

@@ -1,4 +1,5 @@
 package HTML::FormHandler::Field::Weekday;
+# ABSTRACT: select list day of week strings
 
 use Moose;
 extends 'HTML::FormHandler::Field::Select';
@@ -18,25 +19,36 @@ sub build_options {
     return [ map { { value => $i++, label => $_ } } @days ];
 }
 
+
+__PACKAGE__->meta->make_immutable;
+use namespace::autoclean;
+1;
+
+__END__
+=pod
+
 =head1 NAME
 
-HTML::FormHandler::Field::Weekday - Select valid day of the week
+HTML::FormHandler::Field::Weekday - select list day of week strings
+
+=head1 VERSION
+
+version 0.32002
 
 =head1 DESCRIPTION
 
 Creates an option list for the days of the week.
 
-=head1 AUTHORS
+=head1 AUTHOR
 
-Gerda Shank
+FormHandler Contributors - see HTML::FormHandler
 
-=head1 COPYRIGHT
+=head1 COPYRIGHT AND LICENSE
 
-This library is free software, you can redistribute it and/or modify it under
-the same terms as Perl itself.
+This software is copyright (c) 2010 by Gerda Shank.
+
+This is free software; you can redistribute it and/or modify it under
+the same terms as the Perl 5 programming language system itself.
 
 =cut
 
-__PACKAGE__->meta->make_immutable;
-use namespace::autoclean;
-1;

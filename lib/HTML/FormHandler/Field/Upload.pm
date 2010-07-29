@@ -1,4 +1,5 @@
 package HTML::FormHandler::Field::Upload;
+# ABSTRACT: file upload field
 
 use Moose;
 use Moose::Util::TypeConstraints;
@@ -7,42 +8,6 @@ extends 'HTML::FormHandler::Field';
 
 our $VERSION = '0.02';
 
-=head1 NAME
-
-HTML::FormHandler::Field::Upload - File upload field
-
-=head1 DESCRIPTION
-
-This field is designed to be used with a blessed object with a 'size' method,
-such as L<Catalyst::Request::Upload>, or a filehandle.
-Validates that the file is not empty and is within the 'min_size'
-and 'max_size' limits (limits are in bytes).
-A form containing this field must have the enctype set.
-
-    package My::Form::Upload;
-    use HTML::FormHandler::Moose;
-    extends 'HTML::FormHandler';
-
-    has '+enctype' => ( default => 'multipart/form-data');
-
-    has_field 'file' => ( type => 'Upload', max_size => '2000000' );
-    has_field 'submit' => ( type => 'Submit', value => 'Upload' );
-
-In your controller:
-
-    my $form = My::Form::Upload->new; 
-    my @params = ( file => $c->req->upload('file') ) 
-             if $c->req->method eq 'POST';
-    $form->process( params => { @params } );
-    return unless ( $form->validated );
-
-=head1 DEPENDENCIES
-
-=head2 widget
-
-Widget type is 'upload'
-
-=cut
 
 has '+widget' => ( default => 'upload', );
 has min_size   => ( is      => 'rw', isa => 'Int', default => 1 );
@@ -78,7 +43,7 @@ sub is_real_fh {
     my $fh = shift;
 
     my $reftype = Scalar::Util::reftype($fh) or return;
-    if( $reftype eq 'IO' 
+    if( $reftype eq 'IO'
             or $reftype eq 'GLOB' && *{$fh}{IO} ){
         my $m_fileno = $fh->fileno;
         return unless defined $m_fileno;
@@ -94,21 +59,62 @@ sub is_real_fh {
 }
 
 __PACKAGE__->meta->make_immutable;
+use namespace::autoclean;
+1;
+
+
+__END__
+=pod
+
+=head1 NAME
+
+HTML::FormHandler::Field::Upload - file upload field
+
+=head1 VERSION
+
+version 0.32002
+
+=head1 DESCRIPTION
+
+This field is designed to be used with a blessed object with a 'size' method,
+such as L<Catalyst::Request::Upload>, or a filehandle.
+Validates that the file is not empty and is within the 'min_size'
+and 'max_size' limits (limits are in bytes).
+A form containing this field must have the enctype set.
+
+    package My::Form::Upload;
+    use HTML::FormHandler::Moose;
+    extends 'HTML::FormHandler';
+
+    has '+enctype' => ( default => 'multipart/form-data');
+
+    has_field 'file' => ( type => 'Upload', max_size => '2000000' );
+    has_field 'submit' => ( type => 'Submit', value => 'Upload' );
+
+In your controller:
+
+    my $form = My::Form::Upload->new;
+    my @params = ( file => $c->req->upload('file') )
+             if $c->req->method eq 'POST';
+    $form->process( params => { @params } );
+    return unless ( $form->validated );
+
+=head1 DEPENDENCIES
+
+=head2 widget
+
+Widget type is 'upload'
 
 =head1 AUTHOR
 
-Bernhard Graf & Oleg Kostyuk
+FormHandler Contributors - see HTML::FormHandler
 
-and FormHandler contributors
+=head1 COPYRIGHT AND LICENSE
 
-=head1 LICENSE
+This software is copyright (c) 2010 by Gerda Shank.
 
-This library is free software, you can redistribute it and/or modify it under
-the same terms as Perl itself.
+This is free software; you can redistribute it and/or modify it under
+the same terms as the Perl 5 programming language system itself.
 
 =cut
-
-__PACKAGE__->meta->make_immutable;
-use namespace::autoclean;
-1;
 

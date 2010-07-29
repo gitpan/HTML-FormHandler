@@ -1,27 +1,11 @@
 package HTML::FormHandler::Render::Table;
+# ABSTRACT: render a form with a table layout
 
 use Moose::Role;
 
 with 'HTML::FormHandler::Render::Simple' =>
     { excludes => [ 'render', 'render_field_struct', 'render_end', 'render_start' ] };
 
-=head1 NAME
-
-HTML::FormHandler::Render::Table - render a form with a table layout
-
-=head1 SYNOPSIS
-
-Include this role in a form:
-
-   package MyApp::Form::User;
-   use Moose;
-   with 'HTML::FormHandler::Render::Table';
-
-Use in a template:
-
-   [% form.render %]
-
-=cut
 
 sub render {
     my $self = shift;
@@ -36,15 +20,8 @@ sub render {
 
 sub render_start {
     my $self   = shift;
-    my $output = '<form ';
-    $output .= 'action="' . $self->action . '" '      if $self->action;
-    $output .= 'id="' . $self->name . '" '            if $self->name;
-    $output .= 'name="' . $self->name . '" '          if $self->name;
-    $output .= 'method="' . $self->http_method . '" ' if $self->http_method;
-    $output .= 'enctype="' . $self->enctype . '" '    if $self->enctype;
-    $output .= '>' . "\n";
-    $output .= "<table>\n";
-    return $output;
+
+    return $self->html_form_tag . "<table>\n";
 }
 
 sub render_end {
@@ -78,17 +55,43 @@ sub render_field_struct {
     return $output;
 }
 
-=head1 AUTHORS
-
-HFH Contributors, see L<HTML::FormHandler>
-
-=head1 COPYRIGHT
-
-This library is free software, you can redistribute it and/or modify it under
-the same terms as Perl itself.
-
-=cut
-
 use namespace::autoclean;
 1;
+
+
+__END__
+=pod
+
+=head1 NAME
+
+HTML::FormHandler::Render::Table - render a form with a table layout
+
+=head1 VERSION
+
+version 0.32002
+
+=head1 SYNOPSIS
+
+Include this role in a form:
+
+   package MyApp::Form::User;
+   use Moose;
+   with 'HTML::FormHandler::Render::Table';
+
+Use in a template:
+
+   [% form.render %]
+
+=head1 AUTHOR
+
+FormHandler Contributors - see HTML::FormHandler
+
+=head1 COPYRIGHT AND LICENSE
+
+This software is copyright (c) 2010 by Gerda Shank.
+
+This is free software; you can redistribute it and/or modify it under
+the same terms as the Perl 5 programming language system itself.
+
+=cut
 

@@ -1,4 +1,5 @@
 package HTML::FormHandler::Field;
+# ABSTRACT: base class for fields
 
 use HTML::FormHandler::Moose;
 use HTML::FormHandler::Field::Result;
@@ -12,9 +13,573 @@ with 'HTML::FormHandler::TraitFor::I18N';
 
 our $VERSION = '0.02';
 
+
+has 'name' => ( isa => 'Str', is => 'rw', required => 1 );
+has 'type' => ( isa => 'Str', is => 'rw', default => sub { ref shift } );
+has 'parent' => ( is  => 'rw',   predicate => 'has_parent' );
+sub has_fields { }
+has 'input_without_param' => (
+    is        => 'rw',
+    predicate => 'has_input_without_param'
+);
+has 'not_nullable' => ( is => 'rw', isa => 'Bool' );
+has 'init_value' => ( is => 'rw', clearer => 'clear_init_value' );
+has 'default' => ( is => 'rw' );
+has 'default_over_obj' => ( is => 'rw', builder => 'build_default_over_obj' );
+sub build_default_over_obj { }
+has 'result' => (
+    isa       => 'HTML::FormHandler::Field::Result',
+    is        => 'ro',
+    weak_ref  => 1,
+    lazy      => 1,
+    builder   => 'build_result',
+    clearer   => 'clear_result',
+    predicate => 'has_result',
+    writer    => '_set_result',
+    handles   => [
+        '_set_input',   '_clear_input', '_set_value', '_clear_value',
+        'errors',       'all_errors',   'push_errors',  'num_errors', 'has_errors',
+        'clear_errors', 'validated',
+    ],
+);
+has '_pin_result' => ( is => 'ro', reader => '_get_pin_result', writer => '_set_pin_result' );
+
+sub has_input {
+    my $self = shift;
+    return unless $self->has_result;
+    return $self->result->has_input;
+}
+
+sub has_value {
+    my $self = shift;
+    return unless $self->has_result;
+    return $self->result->has_value;
+}
+
+# this should normally only be called for field tests
+sub build_result {
+    my $self = shift;
+    my @parent = ( 'parent' => $self->parent->result )
+        if ( $self->parent && $self->parent->result );
+    my $result = HTML::FormHandler::Field::Result->new(
+        name      => $self->name,
+        field_def => $self,
+        @parent
+    );
+    $self->_set_pin_result($result);    # to prevent garbage collection of result
+    return $result;
+}
+
+sub input {
+    my $self = shift;
+    my $result = $self->result;
+    # garbage collection should not happen
+    # but just in case resetting for safety
+    unless ( $result ) {
+        $self->clear_result;
+        $result = $self->result;
+    }
+    return $result->_set_input(@_) if @_;
+    return $result->input;
+}
+
+sub value {
+    my $self = shift;
+    my $result = $self->result;
+    # garbage collection should not happen
+    # but just in case resetting for safety
+    unless ( $result ) {
+        $self->clear_result;
+        $result = $self->result;
+    }
+    return $result->_set_value(@_) if @_;
+    return $result->value;
+}
+# for compatibility. deprecate and remove at some point
+sub clear_input { shift->_clear_input }
+sub clear_value { shift->_clear_value }
+sub clear_data  {
+    my $self = shift;
+    $self->clear_result;
+    $self->clear_active;
+}
+# this is a kludge to allow testing field deflation
+sub _deflate_and_set_value {
+    my ( $self, $value ) = @_;
+    if( $self->_can_deflate ) {
+        $value = $self->_apply_deflation($value);
+    }
+    $self->_set_value($value);
+}
+
+sub is_repeatable { }
+has 'reload_after_update' => ( is => 'rw', isa => 'Bool' );
+
+has 'fif_from_value' => ( isa => 'Str', is => 'ro' );
+
+sub fif {
+    my ( $self, $result ) = @_;
+
+    return if ( $self->inactive && !$self->_active );
+    return '' if $self->password;
+    return unless $result || $self->has_result;
+    my $lresult = $result || $self->result;
+    if ( ( $self->has_result && $self->has_input && !$self->fif_from_value ) ||
+        ( $self->fif_from_value && !defined $lresult->value ) )
+    {
+        return defined $lresult->input ? $lresult->input : '';
+    }
+    if ( defined $lresult->value ) {
+        if( $self->deflate_to eq 'fif' && $self->_can_deflate ) {
+            return $self->_apply_deflation($lresult->value);
+        }
+        else {
+            return $lresult->value;
+        }
+    }
+    elsif ( defined $self->value ) {
+        # this is because checkboxes and submit buttons have their own 'value'
+        # needs to be fixed in some better way
+        return $self->value;
+    }
+    return '';
+}
+
+has 'accessor' => (
+    isa     => 'Str',
+    is      => 'rw',
+    lazy    => 1,
+    default => sub {
+        my $self     = shift;
+        my $accessor = $self->name;
+        $accessor =~ s/^(.*)\.//g if ( $accessor =~ /\./ );
+        return $accessor;
+    }
+);
+has 'temp' => ( is => 'rw' );
+
+sub has_flag {
+    my ( $self, $flag_name ) = @_;
+    return unless $self->can($flag_name);
+    return $self->$flag_name;
+}
+
+has 'label' => (
+    isa     => 'Str',
+    is      => 'rw',
+    lazy    => 1,
+    builder => 'build_label',
+);
+sub build_label {
+    my $self = shift;
+    my $label = $self->name;
+    $label =~ s/_/ /g;
+    $label = ucfirst($label);
+    return $label;
+}
+sub loc_label {
+    my $self = shift;
+    return $self->_localize($self->label);
+}
+has 'title'     => ( isa => 'Str',               is => 'rw' );
+has 'style'     => ( isa => 'Str',               is => 'rw' );
+has 'css_class' => ( isa => 'Str',               is => 'rw' );
+has 'input_class' => ( isa => 'Str',             is => 'rw' );
+has 'form'      => (
+    isa => 'HTML::FormHandler',
+    is => 'rw',
+    weak_ref => 1,
+    predicate => 'has_form',
+);
+has 'html_name' => (
+    isa     => 'Str',
+    is      => 'rw',
+    lazy    => 1,
+    builder => 'build_html_name'
+);
+
+sub build_html_name {
+    my $self = shift;
+    my $prefix = ( $self->form && $self->form->html_prefix ) ? $self->form->name . "." : '';
+    return $prefix . $self->full_name;
+}
+has 'widget'            => ( isa => 'Str',  is => 'rw' );
+has 'widget_wrapper'    => ( isa => 'Str',  is => 'rw' );
+has 'widget_tags'         => (
+    traits => ['Hash'],
+    isa => 'HashRef',
+    is => 'ro',
+    default => sub {{}},
+    handles => {
+      get_tag => 'get',
+      set_tag => 'set',
+      tag_exists => 'exists',
+    },
+);
+has 'widget_name_space' => (
+    traits => ['Array'],
+    isa => 'ArrayRef[Str]',
+    is => 'ro',
+    default => sub {[]},
+    handles => {
+        add_widget_name_space => 'push',
+    },
+);
+has 'order'             => ( isa => 'Int',  is => 'rw', default => 0 );
+# 'inactive' is set in the field declaration, and is static. Default status.
+has 'inactive'          => ( isa => 'Bool', is => 'rw', clearer => 'clear_inactive' );
+# 'active' is cleared whenever the form is cleared. Ephemeral activation.
+has '_active'         => ( isa => 'Bool', is => 'rw', clearer => 'clear_active' );
+has 'id'                => ( isa => 'Str',  is => 'rw', lazy => 1, builder => 'build_id' );
+sub build_id { shift->html_name }
+has 'javascript' => ( isa => 'Str',  is => 'rw' );
+has 'password'   => ( isa => 'Bool', is => 'rw' );
+has 'writeonly'  => ( isa => 'Bool', is => 'rw' );
+has 'disabled'   => ( isa => 'Bool', is => 'rw' );
+has 'readonly'   => ( isa => 'Bool', is => 'rw' );
+has 'noupdate'   => ( isa => 'Bool', is => 'rw' );
+has 'set_validate' => ( isa => 'Str', is => 'ro',);
+sub _can_validate {
+    my $self = shift;
+    my $set_validate = $self->_set_validate_meth;
+    return
+        unless $self->form &&
+            $set_validate &&
+            $self->form->can( $set_validate );
+    return $set_validate;
+}
+sub _set_validate_meth {
+    my $self = shift;
+    return $self->set_validate if $self->set_validate;
+    my $name = $self->full_name;
+    $name =~ s/\./_/g;
+    $name =~ s/_\d+_/_/g; # remove repeatable field instances
+    return 'validate_' . $name;
+}
+sub _validate {
+    my $self = shift;
+    return unless (my $meth = $self->_can_validate);
+    $self->form->$meth($self);
+}
+has 'set_default' => ( isa => 'Str', is => 'ro', writer => '_set_default');
+sub _can_default {
+    my $self = shift;
+    my $set_default = $self->_set_default_meth;
+    return
+        unless $self->form &&
+            $set_default &&
+            $self->form->can( $set_default );
+    return $set_default;
+}
+sub _comp_default_meth {
+    my $self = shift;
+    my $name = $self->full_name;
+    $name =~ s/\./_/g;
+    $name =~ s/_\d+_/_/g;
+    return 'init_value_' . $name;
+}
+sub _set_default_meth {
+    my $self = shift;
+    return $self->set_default if $self->set_default;
+    my $name = $self->full_name;
+    $name =~ s/\./_/g;
+    $name =~ s/_\d_/_/g;
+    return 'default_' . $name;
+}
+sub get_default_value {
+    my $self = shift;
+    if ( my $meth = $self->_can_default ) {
+        return $self->form->$meth( $self, $self->form->item );
+    }
+    elsif ( defined $self->default ) {
+        return $self->default;
+    }
+    return;
+}
+has 'deflation' => (
+    is        => 'rw',
+    predicate => 'has_deflation',
+);
+# deflate_to either 'value' or 'fif'
+has 'deflate_to' => ( is => 'rw', default => 'value' );
+has 'trim' => (
+    is      => 'rw',
+    default => sub { { transform => \&default_trim } }
+);
+
+sub default_trim {
+    my $value = shift;
+    return unless defined $value;
+    my @values = ref $value eq 'ARRAY' ? @$value : ($value);
+    for (@values) {
+        next if ref $_ or !defined;
+        s/^\s+//;
+        s/\s+$//;
+    }
+    return ref $value eq 'ARRAY' ? \@values : $values[0];
+}
+has 'render_filter' => (
+     traits => ['Code'],
+     is     => 'ro',
+     isa    => 'CodeRef',
+     builder => 'build_render_filter',
+     handles => { html_filter => 'execute' },
+);
+
+sub build_render_filter {
+    my $self = shift;
+    if( $self->form && $self->form->can('render_filter') ) {
+        return sub {
+            my $name = shift;
+            return $self->form->render_filter($name);
+        }
+    }
+    else {
+        return sub {
+            my $name = shift;
+            return $self->default_render_filter($name);
+        }
+    }
+}
+sub default_render_filter {
+    my ( $self, $string ) = @_;
+    $string =~ s/&/&amp;/g;
+    $string =~ s/</&lt;/g;
+    $string =~ s/>/&gt;/g;
+    $string =~ s/"/&quot;/g;
+    return $string;
+}
+
+has 'input_param' => ( is => 'rw', isa => 'Str' );
+
+sub BUILDARGS {
+    my $class = shift;
+
+    # for compatibility, change 'set_init' to 'set_default'
+    my @new;
+    push @new, ('set_default', {@_}->{set_init} )
+        if( exists {@_}->{set_init} );
+    return $class->SUPER::BUILDARGS(@_, @new);
+}
+
+sub BUILD {
+    my ( $self, $params ) = @_;
+
+    $self->_set_default( $self->_comp_default_meth )
+        if( $self->form && $self->form->can( $self->_comp_default_meth ) );
+    $self->add_widget_name_space( @{$self->form->widget_name_space} ) if $self->form;
+    # widgets will already have been applied by BuildFields, but this allows
+    # testing individual fields
+    $self->apply_rendering_widgets unless ($self->can('render') );
+    $self->add_action( $self->trim ) if $self->trim;
+    $self->_build_apply_list;
+    $self->add_action( @{ $params->{apply} } ) if $params->{apply};
+}
+
+# this is the recursive routine that is used
+# to initial fields if there is no initial object and no params
+sub _result_from_fields {
+    my ( $self, $result ) = @_;
+
+    if ( my @values = $self->get_default_value ) {
+        if ( $self->_can_deflate && $self->deflate_to eq 'value' ) {
+            @values = $self->_apply_deflation(@values);
+        }
+        my $value = @values > 1 ? \@values : shift @values;
+        $self->init_value($value)   if defined $value;
+        $result->_set_value($value) if defined $value;
+    }
+    $self->_set_result($result);
+    $result->_set_field_def($self);
+    return $result;
+}
+
+sub _result_from_input {
+    my ( $self, $result, $input, $exists ) = @_;
+
+    if ($exists) {
+        $result->_set_input($input);
+    }
+    elsif ( $self->has_input_without_param ) {
+        $result->_set_input( $self->input_without_param );
+    }
+    $self->_set_result($result);
+    $result->_set_field_def($self);
+    return $result;
+}
+
+sub _result_from_object {
+    my ( $self, $result, $value ) = @_;
+
+    $self->_set_result($result);
+
+    if ( $self->form ) {
+        $self->form->init_value( $self, $value );
+    }
+    else {
+        $self->init_value($value);
+        $result->_set_value($value);
+    }
+    $result->_set_value(undef) if $self->writeonly;
+    $result->_set_field_def($self);
+    return $result;
+}
+
+sub full_name {
+    my $field = shift;
+
+    my $name = $field->name;
+    my $parent = $field->parent || return $name;
+    return $parent->full_name . '.' . $name;
+}
+
+sub full_accessor {
+    my $field = shift;
+
+    my $accessor = $field->accessor;
+    my $parent = $field->parent || return $accessor;
+    return $parent->full_accessor . '.' . $accessor;
+}
+
+sub add_error {
+    my ( $self, @message ) = @_;
+
+    unless ( defined $message[0] ) {
+        @message = ('field is invalid');
+    }
+    @message = @{$message[0]} if ref $message[0] eq 'ARRAY';
+    my $out;
+    try {
+        $out = $self->_localize(@message);
+    }
+    catch {
+        die "Error occurred localizing error message for " . $self->label . ".  $_";
+    };
+
+    $self->push_errors($out);
+    return;
+}
+
+sub _apply_deflation {
+    my ( $self, $value ) = @_;
+
+    if ( $self->has_deflation ) {
+        $value = $self->deflation->($value);
+    }
+    elsif ( $self->can('deflate') ) {
+        $value = $self->deflate($value);
+    }
+    return $value;
+}
+sub _can_deflate {
+    my $self = shift;
+    return $self->has_deflation || $self->can('deflate');
+}
+
+# use Class::MOP to clone
+sub clone {
+    my ( $self, %params ) = @_;
+    $self->meta->clone_object( $self, %params );
+}
+
+sub value_changed {
+    my ($self) = @_;
+
+    my @cmp;
+    for ( 'init_value', 'value' ) {
+        my $val = $self->$_;
+        $val = '' unless defined $val;
+        push @cmp, join '|', sort
+            map { ref($_) && $_->isa('DateTime') ? $_->iso8601 : "$_" }
+            ref($val) eq 'ARRAY' ? @$val : $val;
+    }
+    return $cmp[0] ne $cmp[1];
+}
+
+sub required_text { shift->required ? 'required' : 'optional' }
+
+sub input_defined {
+    my ($self) = @_;
+    return unless $self->has_input;
+    return has_some_value( $self->input );
+}
+
+sub dump {
+    my $self = shift;
+
+    require Data::Dumper;
+    warn "HFH: -----  ", $self->name, " -----\n";
+    warn "HFH: type: ",  $self->type, "\n";
+    warn "HFH: required: ", ( $self->required || '0' ), "\n";
+    warn "HFH: label: ",  $self->label,  "\n";
+    warn "HFH: widget: ", $self->widget, "\n";
+    my $v = $self->value;
+    warn "HFH: value: ", Data::Dumper::Dumper $v if $v;
+    my $iv = $self->init_value;
+    warn "HFH: init_value: ", Data::Dumper::Dumper $iv if $iv;
+    my $i = $self->input;
+    warn "HFH: input: ", Data::Dumper::Dumper $i if $i;
+    my $fif = $self->fif;
+    warn "HFH: fif: ", Data::Dumper::Dumper $fif if $fif;
+
+    if ( $self->can('options') ) {
+        my $o = $self->options;
+        warn "HFH: options: " . Data::Dumper::Dumper $o;
+    }
+}
+
+sub apply_rendering_widgets {
+    my $self = shift;
+
+    if ( $self->widget ) {
+        $self->apply_widget_role( $self, $self->widget, 'Field' );
+    }
+    my $widget_wrapper = $self->widget_wrapper;
+    $widget_wrapper ||= $self->form->widget_wrapper if $self->form;
+    $widget_wrapper ||= 'Simple';
+    unless ( $widget_wrapper eq 'none' ) {
+        $self->apply_widget_role( $self, $widget_wrapper, 'Wrapper' );
+    }
+    return;
+
+}
+
+sub peek {
+    my ( $self, $indent ) = @_;
+
+    $indent ||= '';
+    my $string = $indent . 'field: "' . $self->name . '"  type: ' . $self->type . "\n";
+    if( $self->has_flag('has_contains') ) {
+        $string .= $indent . "contains: \n";
+        my $lindent = $indent . '  ';
+        foreach my $field ( $self->contains->sorted_fields ) {
+            $string .= $field->peek( $lindent );
+        }
+    }
+    if( $self->has_fields ) {
+        $string .= $indent . 'subfields of "' . $self->name . '": ' . $self->num_fields . "\n";
+        my $lindent = $indent . '  ';
+        foreach my $field ( $self->sorted_fields ) {
+            $string .= $field->peek( $lindent );
+        }
+    }
+    return $string;
+}
+
+__PACKAGE__->meta->make_immutable;
+use namespace::autoclean;
+1;
+
+__END__
+=pod
+
 =head1 NAME
 
-HTML::FormHandler::Field - Base class for HTML::FormHandler Fields
+HTML::FormHandler::Field - base class for fields
+
+=head1 VERSION
+
+version 0.32002
 
 =head1 SYNOPSIS
 
@@ -89,7 +654,7 @@ Inheritance hierarchy of the distribution's field classes:
    DateMDY
    DateTime
    Email
-   PrimaryKey 
+   PrimaryKey
 
 See the documentation or source for the individual fields.
 
@@ -261,10 +826,10 @@ Widget types for the provided field classes:
     ---------------:-----------------------------------
     text (Text)            : Text, Integer
     checkbox (Checkbox)    : Checkbox, Boolean
-    radio_group 
+    radio_group
        (RadioGroup)        : Select, Multiple, IntRange (etc)
     select (Select)        : Select, Multiple, IntRange (etc)
-    checkbox_group 
+    checkbox_group
        (CheckboxGroup)     : Multiple select
     textarea (Textarea)    : TextArea, HtmlArea
     compound (Compound)    : Compound, Repeatable, DateTime
@@ -325,10 +890,10 @@ with C<< init_object => {....} >> the values in that object will be used instead
 of values provided in the field definition with 'default' or 'default_fieldname'.
 
 If you *want* values that override the item/init_object, you can use the field
-attribute 'default_over_obj'. 
+attribute 'default_over_obj'.
 
 However you might want to consider putting your defaults into your row or init_object
-instead. 
+instead.
 
 =item default_over_obj
 
@@ -337,7 +902,7 @@ Allows setting defaults which will override values provided with an item/init_ob
    has_field 'quux' => ( default_over_obj => 'default quux' );
 
 At this time there is no equivalent of 'set_default', but the type of the attribute
-is not defined so you can provide default values in a variety of other ways, 
+is not defined so you can provide default values in a variety of other ways,
 including providing a trait which does 'build_default_over_obj'. For examples,
 see tests in the distribution.
 
@@ -393,9 +958,9 @@ Use the 'apply' keyword to specify an ArrayRef of constraints and coercions to
 be executed on the field at validate_field time.
 
    has_field 'test' => (
-      apply => [ 'MooseType', 
+      apply => [ 'MooseType',
                  { check => sub {...}, message => { } },
-                 { transform => sub { ... lc(shift) ... } } 
+                 { transform => sub { ... lc(shift) ... } }
                ],
    );
 
@@ -527,8 +1092,8 @@ this contains a transform to strip beginning and trailing spaces.
 Set this attribute to null to skip trimming, or supply a different
 transform.
 
-  trim => { transform => sub { 
-      my $string = shift; 
+  trim => { transform => sub {
+      my $string = shift;
       $string =~ s/^\s+//;
       $string =~ s/\s+$//;
       return $string;
@@ -539,9 +1104,9 @@ Trimming is performed before any other defined actions.
 
 =head2 deflation, deflate
 
-A 'deflation' is a coderef that will convert from an inflated value back to a 
+A 'deflation' is a coderef that will convert from an inflated value back to a
 flat data representation suitable for displaying in an HTML field.
-If deflation is defined for a field it is automatically used for data that is 
+If deflation is defined for a field it is automatically used for data that is
 taken from the database.
 
    has_field 'my_date_time' => (
@@ -591,573 +1156,16 @@ errors with C<< $field->add_error >>.
         return $field->add_error( ... ) if ( ... );
     }
 
-=cut
+=head1 AUTHOR
 
-has 'name' => ( isa => 'Str', is => 'rw', required => 1 );
-has 'type' => ( isa => 'Str', is => 'rw', default => sub { ref shift } );
-has 'parent' => ( is  => 'rw',   predicate => 'has_parent' );
-sub has_fields { }
-has 'input_without_param' => (
-    is        => 'rw',
-    predicate => 'has_input_without_param'
-);
-has 'not_nullable' => ( is => 'rw', isa => 'Bool' );
-has 'init_value' => ( is => 'rw', clearer => 'clear_init_value' );
-has 'default' => ( is => 'rw' );
-has 'default_over_obj' => ( is => 'rw', builder => 'build_default_over_obj' );
-sub build_default_over_obj { }
-has 'result' => (
-    isa       => 'HTML::FormHandler::Field::Result',
-    is        => 'ro',
-    weak_ref  => 1,
-    lazy      => 1,
-    builder   => 'build_result',
-    clearer   => 'clear_result',
-    predicate => 'has_result',
-    writer    => '_set_result',
-    handles   => [
-        '_set_input',   '_clear_input', '_set_value', '_clear_value',
-        'errors',       'all_errors',   'push_errors',  'num_errors', 'has_errors',
-        'clear_errors', 'validated',
-    ],
-);
-has '_pin_result' => ( is => 'ro', reader => '_get_pin_result', writer => '_set_pin_result' );
+FormHandler Contributors - see HTML::FormHandler
 
-sub has_input {
-    my $self = shift;
-    return unless $self->has_result;
-    return $self->result->has_input;
-}
+=head1 COPYRIGHT AND LICENSE
 
-sub has_value {
-    my $self = shift;
-    return unless $self->has_result;
-    return $self->result->has_value;
-}
+This software is copyright (c) 2010 by Gerda Shank.
 
-# this should normally only be called for field tests
-sub build_result {
-    my $self = shift;
-    my @parent = ( 'parent' => $self->parent->result )
-        if ( $self->parent && $self->parent->result );
-    my $result = HTML::FormHandler::Field::Result->new(
-        name      => $self->name,
-        field_def => $self,
-        @parent
-    );
-    $self->_set_pin_result($result);    # to prevent garbage collection of result
-    return $result;
-}
-
-sub input {
-    my $self = shift;
-    my $result = $self->result;
-    # garbage collection should not happen
-    # but just in case resetting for safety
-    unless ( $result ) {
-        $self->clear_result;
-        $result = $self->result; 
-    }
-    return $result->_set_input(@_) if @_;
-    return $result->input;
-}
-
-sub value {
-    my $self = shift;
-    my $result = $self->result;
-    # garbage collection should not happen
-    # but just in case resetting for safety
-    unless ( $result ) {
-        $self->clear_result;
-        $result = $self->result;
-    }
-    return $result->_set_value(@_) if @_;
-    return $result->value;
-}
-# for compatibility. deprecate and remove at some point
-sub clear_input { shift->_clear_input }
-sub clear_value { shift->_clear_value }
-sub clear_data  { 
-    my $self = shift;
-    $self->clear_result;
-    $self->clear_active;
-}
-# this is a kludge to allow testing field deflation
-sub _deflate_and_set_value {
-    my ( $self, $value ) = @_;
-    if( $self->_can_deflate ) {
-        $value = $self->_apply_deflation($value);
-    }
-    $self->_set_value($value);
-}
-
-sub is_repeatable { }
-has 'reload_after_update' => ( is => 'rw', isa => 'Bool' );
-
-has 'fif_from_value' => ( isa => 'Str', is => 'ro' );
-
-sub fif {
-    my ( $self, $result ) = @_;
-
-    return if ( $self->inactive && !$self->_active );
-    return '' if $self->password;
-    return unless $result || $self->has_result;
-    my $lresult = $result || $self->result;
-    if ( ( $self->has_result && $self->has_input && !$self->fif_from_value ) ||
-        ( $self->fif_from_value && !defined $lresult->value ) )
-    {
-        return defined $lresult->input ? $lresult->input : '';
-    }
-    if ( defined $lresult->value ) {
-        if( $self->deflate_to eq 'fif' && $self->_can_deflate ) {
-            return $self->_apply_deflation($lresult->value);
-        }
-        else {
-            return $lresult->value;
-        }
-    }
-    elsif ( defined $self->value ) {
-        # this is because checkboxes and submit buttons have their own 'value'
-        # needs to be fixed in some better way
-        return $self->value;
-    }
-    return '';
-}
-
-has 'accessor' => (
-    isa     => 'Str',
-    is      => 'rw',
-    lazy    => 1,
-    default => sub {
-        my $self     = shift;
-        my $accessor = $self->name;
-        $accessor =~ s/^(.*)\.//g if ( $accessor =~ /\./ );
-        return $accessor;
-    }
-);
-has 'temp' => ( is => 'rw' );
-
-sub has_flag {
-    my ( $self, $flag_name ) = @_;
-    return unless $self->can($flag_name);
-    return $self->$flag_name;
-}
-
-has 'label' => (
-    isa     => 'Str',
-    is      => 'rw',
-    lazy    => 1,
-    builder => 'build_label',
-);
-sub build_label {
-    my $self = shift;
-    my $label = $self->name;
-    $label =~ s/_/ /g;
-    $label = ucfirst($label);
-    return $label;
-}
-sub loc_label {
-    my $self = shift;
-    return $self->_localize($self->label);
-}
-has 'title'     => ( isa => 'Str',               is => 'rw' );
-has 'style'     => ( isa => 'Str',               is => 'rw' );
-has 'css_class' => ( isa => 'Str',               is => 'rw' );
-has 'input_class' => ( isa => 'Str',             is => 'rw' );
-has 'form'      => ( 
-    isa => 'HTML::FormHandler',
-    is => 'rw',
-    weak_ref => 1,
-    predicate => 'has_form',
-);
-has 'html_name' => (
-    isa     => 'Str',
-    is      => 'rw',
-    lazy    => 1,
-    builder => 'build_html_name'
-);
-
-sub build_html_name {
-    my $self = shift;
-    my $prefix = ( $self->form && $self->form->html_prefix ) ? $self->form->name . "." : '';
-    return $prefix . $self->full_name;
-}
-has 'widget'            => ( isa => 'Str',  is => 'rw' );
-has 'widget_wrapper'    => ( isa => 'Str',  is => 'rw' );
-has 'widget_tags'         => ( 
-    traits => ['Hash'],
-    isa => 'HashRef', 
-    is => 'ro',
-    default => sub {{}},
-    handles => {
-      get_tag => 'get',
-      set_tag => 'set',
-      tag_exists => 'exists',
-    },
-);
-has 'widget_name_space' => ( 
-    traits => ['Array'],
-    isa => 'ArrayRef[Str]',  
-    is => 'ro',
-    default => sub {[]},
-    handles => {
-        add_widget_name_space => 'push',
-    }, 
-);
-has 'order'             => ( isa => 'Int',  is => 'rw', default => 0 );
-# 'inactive' is set in the field declaration, and is static. Default status.
-has 'inactive'          => ( isa => 'Bool', is => 'rw', clearer => 'clear_inactive' );
-# 'active' is cleared whenever the form is cleared. Ephemeral activation.
-has '_active'         => ( isa => 'Bool', is => 'rw', clearer => 'clear_active' );
-has 'id'                => ( isa => 'Str',  is => 'rw', lazy => 1, builder => 'build_id' );
-sub build_id { shift->html_name }
-has 'javascript' => ( isa => 'Str',  is => 'rw' );
-has 'password'   => ( isa => 'Bool', is => 'rw' );
-has 'writeonly'  => ( isa => 'Bool', is => 'rw' );
-has 'disabled'   => ( isa => 'Bool', is => 'rw' );
-has 'readonly'   => ( isa => 'Bool', is => 'rw' );
-has 'noupdate'   => ( isa => 'Bool', is => 'rw' );
-has 'set_validate' => ( isa => 'Str', is => 'ro',);
-sub _can_validate {
-    my $self = shift;
-    my $set_validate = $self->_set_validate_meth;
-    return
-        unless $self->form &&
-            $set_validate &&
-            $self->form->can( $set_validate );
-    return $set_validate;
-}
-sub _set_validate_meth {
-    my $self = shift;
-    return $self->set_validate if $self->set_validate;
-    my $name = $self->full_name;
-    $name =~ s/\./_/g;
-    $name =~ s/_\d+_/_/g; # remove repeatable field instances
-    return 'validate_' . $name;
-}
-sub _validate {
-    my $self = shift;
-    return unless (my $meth = $self->_can_validate);
-    $self->form->$meth($self);
-}
-has 'set_default' => ( isa => 'Str', is => 'ro', writer => '_set_default');
-sub _can_default {
-    my $self = shift;
-    my $set_default = $self->_set_default_meth; 
-    return
-        unless $self->form &&
-            $set_default &&
-            $self->form->can( $set_default );
-    return $set_default;
-}
-sub _comp_default_meth {
-    my $self = shift;
-    my $name = $self->full_name;
-    $name =~ s/\./_/g;
-    $name =~ s/_\d+_/_/g;
-    return 'init_value_' . $name;
-}
-sub _set_default_meth {
-    my $self = shift;
-    return $self->set_default if $self->set_default;
-    my $name = $self->full_name;
-    $name =~ s/\./_/g;
-    $name =~ s/_\d_/_/g;
-    return 'default_' . $name;
-}
-sub get_default_value {
-    my $self = shift;
-    if ( my $meth = $self->_can_default ) {
-        return $self->form->$meth( $self, $self->form->item );
-    }
-    elsif ( defined $self->default ) {
-        return $self->default;
-    }
-    return;
-}
-has 'deflation' => (
-    is        => 'rw',
-    predicate => 'has_deflation',
-);
-# deflate_to either 'value' or 'fif'
-has 'deflate_to' => ( is => 'rw', default => 'value' );
-has 'trim' => (
-    is      => 'rw',
-    default => sub { { transform => \&default_trim } }
-);
-
-sub default_trim {
-    my $value = shift;
-    return unless defined $value;
-    my @values = ref $value eq 'ARRAY' ? @$value : ($value);
-    for (@values) {
-        next if ref $_ or !defined;
-        s/^\s+//;
-        s/\s+$//;
-    }
-    return ref $value eq 'ARRAY' ? \@values : $values[0];
-}
-has 'render_filter' => (
-     traits => ['Code'],
-     is     => 'ro',
-     isa    => 'CodeRef',
-     builder => 'build_render_filter',
-     handles => { html_filter => 'execute' },
-);
-
-sub build_render_filter {
-    my $self = shift;
-    if( $self->form && $self->form->can('render_filter') ) {
-        return sub {
-            my $name = shift;
-            return $self->form->render_filter($name);
-        }
-    }
-    else {
-        return sub {
-            my $name = shift;
-            return $self->default_render_filter($name);
-        }  
-    }
-}
-sub default_render_filter {
-    my ( $self, $string ) = @_;
-    $string =~ s/&/&amp;/g;
-    $string =~ s/</&lt;/g;
-    $string =~ s/>/&gt;/g;
-    $string =~ s/"/&quot;/g;
-    return $string;
-}
-
-has 'input_param' => ( is => 'rw', isa => 'Str' );
-
-sub BUILDARGS {
-    my $class = shift;
-
-    # for compatibility, change 'set_init' to 'set_default'
-    my @new;
-    push @new, ('set_default', {@_}->{set_init} )
-        if( exists {@_}->{set_init} );
-    return $class->SUPER::BUILDARGS(@_, @new);
-}
-
-sub BUILD {
-    my ( $self, $params ) = @_;
-
-    $self->_set_default( $self->_comp_default_meth )
-        if( $self->form && $self->form->can( $self->_comp_default_meth ) );
-    $self->add_widget_name_space( @{$self->form->widget_name_space} ) if $self->form;
-    # widgets will already have been applied by BuildFields, but this allows
-    # testing individual fields
-    $self->apply_rendering_widgets unless ($self->can('render') );
-    $self->add_action( $self->trim ) if $self->trim;
-    $self->_build_apply_list;
-    $self->add_action( @{ $params->{apply} } ) if $params->{apply};
-}
-
-# this is the recursive routine that is used
-# to initial fields if there is no initial object and no params
-sub _result_from_fields {
-    my ( $self, $result ) = @_;
-
-    if ( my @values = $self->get_default_value ) {
-        if ( $self->_can_deflate && $self->deflate_to eq 'value' ) {
-            @values = $self->_apply_deflation(@values);
-        }
-        my $value = @values > 1 ? \@values : shift @values;
-        $self->init_value($value)   if defined $value;
-        $result->_set_value($value) if defined $value;
-    }
-    $self->_set_result($result);
-    $result->_set_field_def($self);
-    return $result;
-}
-
-sub _result_from_input {
-    my ( $self, $result, $input, $exists ) = @_;
-
-    if ($exists) {
-        $result->_set_input($input);
-    }
-    elsif ( $self->has_input_without_param ) {
-        $result->_set_input( $self->input_without_param );
-    }
-    $self->_set_result($result);
-    $result->_set_field_def($self);
-    return $result;
-}
-
-sub _result_from_object {
-    my ( $self, $result, $value ) = @_;
-
-    $self->_set_result($result);
-
-    if ( $self->form ) {
-        $self->form->init_value( $self, $value );
-    }
-    else {
-        $self->init_value($value);
-        $result->_set_value($value);
-    }
-    $result->_set_value(undef) if $self->writeonly;
-    $result->_set_field_def($self);
-    return $result;
-}
-
-sub full_name {
-    my $field = shift;
-
-    my $name = $field->name;
-    my $parent = $field->parent || return $name;
-    return $parent->full_name . '.' . $name;
-}
-
-sub full_accessor {
-    my $field = shift;
-
-    my $accessor = $field->accessor;
-    my $parent = $field->parent || return $accessor;
-    return $parent->full_accessor . '.' . $accessor;
-}
-
-sub add_error {
-    my ( $self, @message ) = @_;
-
-    unless ( defined $message[0] ) {
-        @message = ('field is invalid');
-    }
-    @message = @{$message[0]} if ref $message[0] eq 'ARRAY';
-    my $out;
-    try { 
-        $out = $self->_localize(@message); 
-    }
-    catch {
-        die "Error occurred localizing error message for " . $self->label . ".  $_";
-    };
-
-    $self->push_errors($out);
-    return;
-}
-
-sub _apply_deflation {
-    my ( $self, $value ) = @_;
-
-    if ( $self->has_deflation ) {
-        $value = $self->deflation->($value);
-    }
-    elsif ( $self->can('deflate') ) {
-        $value = $self->deflate($value);
-    }
-    return $value;
-}
-sub _can_deflate {
-    my $self = shift;
-    return $self->has_deflation || $self->can('deflate');
-}
-
-# use Class::MOP to clone
-sub clone {
-    my ( $self, %params ) = @_;
-    $self->meta->clone_object( $self, %params );
-}
-
-sub value_changed {
-    my ($self) = @_;
-
-    my @cmp;
-    for ( 'init_value', 'value' ) {
-        my $val = $self->$_;
-        $val = '' unless defined $val;
-        push @cmp, join '|', sort
-            map { ref($_) && $_->isa('DateTime') ? $_->iso8601 : "$_" }
-            ref($val) eq 'ARRAY' ? @$val : $val;
-    }
-    return $cmp[0] ne $cmp[1];
-}
-
-sub required_text { shift->required ? 'required' : 'optional' }
-
-sub input_defined {
-    my ($self) = @_;
-    return unless $self->has_input;
-    return has_some_value( $self->input );
-}
-
-sub dump {
-    my $self = shift;
-
-    require Data::Dumper;
-    warn "HFH: -----  ", $self->name, " -----\n";
-    warn "HFH: type: ",  $self->type, "\n";
-    warn "HFH: required: ", ( $self->required || '0' ), "\n";
-    warn "HFH: label: ",  $self->label,  "\n";
-    warn "HFH: widget: ", $self->widget, "\n";
-    my $v = $self->value;
-    warn "HFH: value: ", Data::Dumper::Dumper $v if $v;
-    my $iv = $self->init_value;
-    warn "HFH: init_value: ", Data::Dumper::Dumper $iv if $iv;
-    my $i = $self->input;
-    warn "HFH: input: ", Data::Dumper::Dumper $i if $i;
-    my $fif = $self->fif;
-    warn "HFH: fif: ", Data::Dumper::Dumper $fif if $fif;
-
-    if ( $self->can('options') ) {
-        my $o = $self->options;
-        warn "HFH: options: " . Data::Dumper::Dumper $o;
-    }
-}
-
-sub apply_rendering_widgets {
-    my $self = shift;
-
-    if ( $self->widget ) {
-        $self->apply_widget_role( $self, $self->widget, 'Field' );
-    }
-    my $widget_wrapper = $self->widget_wrapper;
-    $widget_wrapper ||= $self->form->widget_wrapper if $self->form;
-    $widget_wrapper ||= 'Simple';
-    unless ( $widget_wrapper eq 'none' ) {
-        $self->apply_widget_role( $self, $widget_wrapper, 'Wrapper' );
-    }
-    return;
-
-}
-
-sub peek {
-    my ( $self, $indent ) = @_;
-
-    $indent ||= '';
-    my $string = $indent . 'field: "' . $self->name . '"  type: ' . $self->type . "\n";
-    if( $self->has_flag('has_contains') ) {
-        $string .= $indent . "contains: \n";
-        my $lindent = $indent . '  ';
-        foreach my $field ( $self->contains->sorted_fields ) {
-            $string .= $field->peek( $lindent );
-        }
-    }
-    if( $self->has_fields ) {
-        $string .= $indent . 'subfields of "' . $self->name . '": ' . $self->num_fields . "\n";
-        my $lindent = $indent . '  ';
-        foreach my $field ( $self->sorted_fields ) {
-            $string .= $field->peek( $lindent );
-        }
-    }
-    return $string;
-}
-
-=head1 AUTHORS
-
-HTML::FormHandler Contributors; see HTML::FormHandler
-
-Initially based on the original source code of L<Form::Processor::Field> by Bill Moseley
-
-=head1 COPYRIGHT
-
-This library is free software, you can redistribute it and/or modify it under
-the same terms as Perl itself.
+This is free software; you can redistribute it and/or modify it under
+the same terms as the Perl 5 programming language system itself.
 
 =cut
 
-__PACKAGE__->meta->make_immutable;
-use namespace::autoclean;
-1;

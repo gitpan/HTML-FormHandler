@@ -1,4 +1,5 @@
 package HTML::FormHandler::Field::Date;
+# ABSTRACT: a date field with formats
 
 use Moose;
 extends 'HTML::FormHandler::Field::Text';
@@ -6,45 +7,6 @@ use DateTime;
 use DateTime::Format::Strptime;
 our $VERSION = '0.03';
 
-=head1 NAME
-
-HTML::FormHandler::Field::Date - a date field with formats 
-
-=head1 SUMMARY
-
-This field may be used with the jQuery Datepicker plugin.
-
-You can specify the format for the date using jQuery formatDate strings
-or DateTime strftime formats. (Default format is format => '%Y-%m-%d'.)
-
-   d  - "%e" - day of month (no leading zero)
-   dd - "%d" - day of month (two digit)
-   o  - "%{day_of_year}" - day of the year (no leading zeros)
-   oo - "%j" - day of the year (three digit)
-   D  - "%a" - day name short
-   DD - "%A" - day name long
-   m  - "%{day_of_month" - month of year (no leading zero)
-   mm - "%m" - month of year (two digit) "%m"
-   M  - "%b" - month name short
-   MM - "%B" - month name long
-   y  - "%y" - year (two digit)
-   yy - "%Y" - year (four digit)
-   @  - "%s" - Unix timestamp (ms since 01/01/1970) 
-
-For example:  
-
-   has_field 'start_date' => ( type => 'Date', format => "dd/mm/y" );
-
-or
-
-   has_field 'start_date' => ( type => 'Date', format => "%d/%m/%y" );
-
-You can also set 'date_end' and 'date_start' attributes for validation
-of the date range. Use iso_8601 formats for these dates ("yyyy-mm-dd");
-
-   has_field 'start_date' => ( type => 'Date', date_start => "2009-12-25" );
-
-=cut
 
 has 'format' => ( is => 'rw', isa => 'Str', default => "%Y-%m-%d" );
 has 'locale'     => ( is => 'rw', isa => 'Str' );                                  # TODO
@@ -129,3 +91,62 @@ sub get_strf_format {
 __PACKAGE__->meta->make_immutable;
 use namespace::autoclean;
 1;
+
+__END__
+=pod
+
+=head1 NAME
+
+HTML::FormHandler::Field::Date - a date field with formats
+
+=head1 VERSION
+
+version 0.32002
+
+=head1 SUMMARY
+
+This field may be used with the jQuery Datepicker plugin.
+
+You can specify the format for the date using jQuery formatDate strings
+or DateTime strftime formats. (Default format is format => '%Y-%m-%d'.)
+
+   d  - "%e" - day of month (no leading zero)
+   dd - "%d" - day of month (two digit)
+   o  - "%{day_of_year}" - day of the year (no leading zeros)
+   oo - "%j" - day of the year (three digit)
+   D  - "%a" - day name short
+   DD - "%A" - day name long
+   m  - "%{day_of_month" - month of year (no leading zero)
+   mm - "%m" - month of year (two digit) "%m"
+   M  - "%b" - month name short
+   MM - "%B" - month name long
+   y  - "%y" - year (two digit)
+   yy - "%Y" - year (four digit)
+   @  - "%s" - Unix timestamp (ms since 01/01/1970)
+
+For example:
+
+   has_field 'start_date' => ( type => 'Date', format => "dd/mm/y" );
+
+or
+
+   has_field 'start_date' => ( type => 'Date', format => "%d/%m/%y" );
+
+You can also set 'date_end' and 'date_start' attributes for validation
+of the date range. Use iso_8601 formats for these dates ("yyyy-mm-dd");
+
+   has_field 'start_date' => ( type => 'Date', date_start => "2009-12-25" );
+
+=head1 AUTHOR
+
+FormHandler Contributors - see HTML::FormHandler
+
+=head1 COPYRIGHT AND LICENSE
+
+This software is copyright (c) 2010 by Gerda Shank.
+
+This is free software; you can redistribute it and/or modify it under
+the same terms as the Perl 5 programming language system itself.
+
+=cut
+

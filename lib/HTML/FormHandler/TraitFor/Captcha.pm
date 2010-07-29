@@ -1,4 +1,5 @@
 package HTML::FormHandler::TraitFor::Captcha;
+# ABSTRACT: generate and validate captchas
 
 use HTML::FormHandler::Moose::Role;
 use GD::SecurityImage;
@@ -8,34 +9,6 @@ requires('ctx');
 
 has_field 'captcha' => ( type => 'Captcha', label => 'Verification' );
 
-=head1 NAME
-
-HTML::FormHandler::TraitFor::Captcha - generate and validate captchas
-
-=head1 SYNOPSIS
-
-A role to use in a form to implement a captcha field.
-
-   package MyApp::Form;
-   use HTML::FormHandler::Moose;
-   with 'HTML::FormHandler::TraitFor::Captcha';
-
-or
-
-   my $form = MyApp::Form->new( traits => ['HTML::FormHandler::TraitFor::Captcha'],
-       ctx => $c );
-
-Needs a context object set in the form's 'ctx' attribute which has a session
-hashref in which to store a 'captcha' hashref, such as is provided by Catalyst
-session plugin.
-
-=head1 METHODS
-
-=head2 get_captcha
-
-Get a captcha stored in C<< $form->ctx->{session} >>
-
-=cut
 
 sub get_captcha {
     my $self = shift;
@@ -44,11 +17,6 @@ sub get_captcha {
     return $captcha;
 }
 
-=head1 set_captcha
-
-Set a captcha in C<< $self->ctx->{session} >>
-
-=cut
 
 sub set_captcha {
     my ( $self, $captcha ) = @_;
@@ -73,3 +41,55 @@ sub captcha_image_url {
 
 use namespace::autoclean;
 1;
+
+__END__
+=pod
+
+=head1 NAME
+
+HTML::FormHandler::TraitFor::Captcha - generate and validate captchas
+
+=head1 VERSION
+
+version 0.32002
+
+=head1 SYNOPSIS
+
+A role to use in a form to implement a captcha field.
+
+   package MyApp::Form;
+   use HTML::FormHandler::Moose;
+   with 'HTML::FormHandler::TraitFor::Captcha';
+
+or
+
+   my $form = MyApp::Form->new( traits => ['HTML::FormHandler::TraitFor::Captcha'],
+       ctx => $c );
+
+Needs a context object set in the form's 'ctx' attribute which has a session
+hashref in which to store a 'captcha' hashref, such as is provided by Catalyst
+session plugin.
+
+=head1 METHODS
+
+=head2 get_captcha
+
+Get a captcha stored in C<< $form->ctx->{session} >>
+
+=head1 set_captcha
+
+Set a captcha in C<< $self->ctx->{session} >>
+
+=head1 AUTHOR
+
+FormHandler Contributors - see HTML::FormHandler
+
+=head1 COPYRIGHT AND LICENSE
+
+This software is copyright (c) 2010 by Gerda Shank.
+
+This is free software; you can redistribute it and/or modify it under
+the same terms as the Perl 5 programming language system itself.
+
+=cut
+

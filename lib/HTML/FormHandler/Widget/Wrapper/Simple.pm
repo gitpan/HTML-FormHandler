@@ -1,31 +1,11 @@
 package HTML::FormHandler::Widget::Wrapper::Simple;
+# ABSTRACT: simple field wrapper
 
 use Moose::Role;
 use namespace::autoclean;
 
 with 'HTML::FormHandler::Widget::Wrapper::Base';
 
-=head1 NAME
-
-HTML::FormHandler::Widget::Wrapper::Simple
-
-=head1 SYNOPSIS
-
-This is the default wrapper role. It will be installed if
-no other wrapper is specified and widget_wrapper is not set to
-'none'.
-
-It used the 'widget_tags' keys 'wrapper_start' and 'wrapper_end',
-so that the default C<< '<div<%class>>' >> and C<< '</div>' >> tags
-may be replaced. The following will cause the fields to be wrapped
-in paragraph tags instead:
-
-   has '+widget_tags' => ( default => sub { {
-      wrapper_start => '<p>',
-      wrapper_end   => '</p>' }
-   );
-    
-=cut
 
 sub wrap_field {
     my ( $self, $result, $rendered_widget ) = @_;
@@ -37,7 +17,7 @@ sub wrap_field {
     my $output = "\n";
 
     $start_tag =~ s/<%class%>/$class/g;
-    $output .= $start_tag; 
+    $output .= $start_tag;
 
     if ( $is_compound ) {
         $output .= '<fieldset class="' . $self->html_name . '">';
@@ -59,3 +39,44 @@ sub wrap_field {
 }
 
 1;
+
+__END__
+=pod
+
+=head1 NAME
+
+HTML::FormHandler::Widget::Wrapper::Simple - simple field wrapper
+
+=head1 VERSION
+
+version 0.32002
+
+=head1 SYNOPSIS
+
+This is the default wrapper role. It will be installed if
+no other wrapper is specified and widget_wrapper is not set to
+'none'.
+
+It used the 'widget_tags' keys 'wrapper_start' and 'wrapper_end',
+so that the default C<< '<div<%class>>' >> and C<< '</div>' >> tags
+may be replaced. The following will cause the fields to be wrapped
+in paragraph tags instead:
+
+   has '+widget_tags' => ( default => sub { {
+      wrapper_start => '<p>',
+      wrapper_end   => '</p>' }
+   );
+
+=head1 AUTHOR
+
+FormHandler Contributors - see HTML::FormHandler
+
+=head1 COPYRIGHT AND LICENSE
+
+This software is copyright (c) 2010 by Gerda Shank.
+
+This is free software; you can redistribute it and/or modify it under
+the same terms as the Perl 5 programming language system itself.
+
+=cut
+

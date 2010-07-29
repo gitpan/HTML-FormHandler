@@ -1,8 +1,48 @@
 package HTML::FormHandler::TraitFor::I18N;
+# ABSTRACT: localization
 
 use HTML::FormHandler::I18N;
 use Moose::Role;
 use Moose::Util::TypeConstraints;
+
+
+has 'language_handle' => (
+    isa => duck_type( [ qw(maketext) ] ),
+    is => 'rw',
+    lazy_build => 1,
+    required => 1,
+);
+
+sub _build_language_handle {
+    my ($self) = @_;
+
+    if (!$self->isa('HTML::FormHandler') && $self->has_form) {
+        return $self->form->language_handle();
+    }
+    return $ENV{LANGUAGE_HANDLE} || HTML::FormHandler::I18N->get_handle;
+}
+
+sub _localize {
+    my ($self, @message) = @_;
+    my $message = $self->language_handle->maketext(@message);
+    return $message;
+}
+
+no Moose::Role;
+no Moose::Util::TypeConstraints;
+
+1;
+
+__END__
+=pod
+
+=head1 NAME
+
+HTML::FormHandler::TraitFor::I18N - localization
+
+=head1 VERSION
+
+version 0.32002
 
 =head3 language_handle, _build_language_handle
 
@@ -34,31 +74,16 @@ You can use non-Locale::Maketext language handles, such as L<Data::Localize>.
 There's an example of building a L<Data::Localize> language handle
 in t/xt/locale_data_localize.t in the distribution.
 
-=cut 
+=head1 AUTHOR
 
-has 'language_handle' => (
-    isa => duck_type( [ qw(maketext) ] ),
-    is => 'rw',
-    lazy_build => 1,
-    required => 1,
-);
+FormHandler Contributors - see HTML::FormHandler
 
-sub _build_language_handle {
-    my ($self) = @_;
+=head1 COPYRIGHT AND LICENSE
 
-    if (!$self->isa('HTML::FormHandler') && $self->has_form) {
-        return $self->form->language_handle();
-    }
-    return $ENV{LANGUAGE_HANDLE} || HTML::FormHandler::I18N->get_handle;
-}
+This software is copyright (c) 2010 by Gerda Shank.
 
-sub _localize {
-    my ($self, @message) = @_;
-    my $message = $self->language_handle->maketext(@message);
-    return $message;
-}
+This is free software; you can redistribute it and/or modify it under
+the same terms as the Perl 5 programming language system itself.
 
-no Moose::Role;
-no Moose::Util::TypeConstraints;
+=cut
 
-1;

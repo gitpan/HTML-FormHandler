@@ -1,17 +1,8 @@
 package HTML::FormHandler::Result::Role;
+# ABSTRACT: role with common code for form & field results
 
 use Moose::Role;
 
-=head1 NAME
-
-HTML::FormHandler::Role::Result
-
-=head1 SYNOPSIS
-
-Role to hold common result attributes for L<HTML::FormHandler::Result>
-and L<HTML::FormHandler::Result::Field>.
-
-=cut
 
 has 'name' => ( isa => 'Str', is => 'rw', required => 1 );
 
@@ -38,7 +29,7 @@ has '_results' => (
     is         => 'rw',
     default    => sub { [] },
     handles   => {
-        results => 'elements', 
+        results => 'elements',
         add_result => 'push',
         num_results => 'count',
         has_results => 'count',
@@ -101,16 +92,39 @@ sub field {
     die "Field '$name' not found in '$self'";
 }
 
-=head1 AUTHORS
+use namespace::autoclean;
+1;
 
-HTML::FormHandler Contributors; see HTML::FormHandler
+__END__
+=pod
 
-=head1 COPYRIGHT
+=head1 NAME
 
-This library is free software, you can redistribute it and/or modify it under
-the same terms as Perl itself.
+HTML::FormHandler::Result::Role - role with common code for form & field results
+
+=head1 VERSION
+
+version 0.32002
+
+=head1 SYNOPSIS
+
+Role to hold common result attributes for L<HTML::FormHandler::Result>
+and L<HTML::FormHandler::Result::Field>.
+
+=head1 NAME
+
+HTML::FormHandler::Result::Role - common code for form & field results
+
+=head1 AUTHOR
+
+FormHandler Contributors - see HTML::FormHandler
+
+=head1 COPYRIGHT AND LICENSE
+
+This software is copyright (c) 2010 by Gerda Shank.
+
+This is free software; you can redistribute it and/or modify it under
+the same terms as the Perl 5 programming language system itself.
 
 =cut
 
-use namespace::autoclean;
-1;

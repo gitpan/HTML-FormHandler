@@ -1,4 +1,5 @@
 package HTML::FormHandler::Field::IntRange;
+# ABSTRACT: integer range in select list
 
 use Moose;
 extends 'HTML::FormHandler::Field::Select';
@@ -27,9 +28,21 @@ sub build_options {
             $self->range_start .. $self->range_end ];
 }
 
+
+__PACKAGE__->meta->make_immutable;
+use namespace::autoclean;
+1;
+
+__END__
+=pod
+
 =head1 NAME
 
-HTML::FormHandler::Field::IntRange - Select an integer range in a select list
+HTML::FormHandler::Field::IntRange - integer range in select list
+
+=head1 VERSION
+
+version 0.32002
 
 =head1 DESCRIPTION
 
@@ -41,17 +54,16 @@ range_start and range_end for a select list with a different range.
 
 Widget type is 'select'.
 
-=head1 AUTHORS
+=head1 AUTHOR
 
-Gerda Shank
+FormHandler Contributors - see HTML::FormHandler
 
-=head1 COPYRIGHT
+=head1 COPYRIGHT AND LICENSE
 
-This library is free software, you can redistribute it and/or modify it under
-the same terms as Perl itself.
+This software is copyright (c) 2010 by Gerda Shank.
+
+This is free software; you can redistribute it and/or modify it under
+the same terms as the Perl 5 programming language system itself.
 
 =cut
 
-__PACKAGE__->meta->make_immutable;
-use namespace::autoclean;
-1;

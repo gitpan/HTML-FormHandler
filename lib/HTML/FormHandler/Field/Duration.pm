@@ -1,4 +1,5 @@
 package HTML::FormHandler::Field::Duration;
+# ABSTRACT: DateTime::Duration from HTML form values
 
 use Moose;
 extends 'HTML::FormHandler::Field::Compound';
@@ -6,26 +7,6 @@ use DateTime;
 
 our $VERSION = '0.01';
 
-=head1 NAME
-
-HTML::FormHandler::Field::Duration -  DateTime::Duration from HTML form values
-
-=head1 SubFields
-
-Subfield names:
-
-  years, months, weeks, days, hours, minutes, seconds, nanoseconds
-
-For example:
-
-   has 'duration' => ( type => 'Duration' );
-   has 'duration.hours' => ( type => 'Int', range_start => 0,
-        range_end => 23 );
-   has 'duration.minutes' => ( type => 'Int', range_start => 0,
-        range_end => 59 );
-
-
-=cut
 
 sub validate {
     my ($self) = @_;
@@ -47,4 +28,43 @@ sub validate {
 __PACKAGE__->meta->make_immutable;
 use namespace::autoclean;
 1;
+
+
+__END__
+=pod
+
+=head1 NAME
+
+HTML::FormHandler::Field::Duration - DateTime::Duration from HTML form values
+
+=head1 VERSION
+
+version 0.32002
+
+=head1 SubFields
+
+Subfield names:
+
+  years, months, weeks, days, hours, minutes, seconds, nanoseconds
+
+For example:
+
+   has 'duration' => ( type => 'Duration' );
+   has 'duration.hours' => ( type => 'Int', range_start => 0,
+        range_end => 23 );
+   has 'duration.minutes' => ( type => 'Int', range_start => 0,
+        range_end => 59 );
+
+=head1 AUTHOR
+
+FormHandler Contributors - see HTML::FormHandler
+
+=head1 COPYRIGHT AND LICENSE
+
+This software is copyright (c) 2010 by Gerda Shank.
+
+This is free software; you can redistribute it and/or modify it under
+the same terms as the Perl 5 programming language system itself.
+
+=cut
 

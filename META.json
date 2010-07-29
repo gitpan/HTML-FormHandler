@@ -1,0 +1,63 @@
+{
+   "abstract" : "HTML forms using Moose",
+   "author" : [
+      "FormHandler Contributors - see HTML::FormHandler"
+   ],
+   "dynamic_config" : 0,
+   "generated_by" : "Dist::Zilla version 4.101900, CPAN::Meta::Converter version 2.101670",
+   "license" : [
+      "perl_5"
+   ],
+   "meta-spec" : {
+      "url" : "http://search.cpan.org/perldoc?CPAN::Meta::Spec",
+      "version" : "2"
+   },
+   "name" : "HTML-FormHandler",
+   "prereqs" : {
+      "configure" : {
+         "requires" : {
+            "ExtUtils::MakeMaker" : "6.31",
+            "File::ShareDir::Install" : "0.03"
+         }
+      },
+      "runtime" : {
+         "requires" : {
+            "Carp" : 0,
+            "DateTime" : 0,
+            "DateTime::Format::Strptime" : 0,
+            "Email::Valid" : 0,
+            "File::ShareDir" : 0,
+            "File::Spec" : 0,
+            "Locale::Maketext" : "1.09",
+            "Moose" : "0.90",
+            "MooseX::Getopt" : "0.16",
+            "MooseX::Traits" : 0,
+            "MooseX::Types" : "0.20",
+            "MooseX::Types::Common" : 0,
+            "Try::Tiny" : 0,
+            "aliased" : 0,
+            "namespace::autoclean" : "0.09"
+         }
+      },
+      "test" : {
+         "requires" : {
+            "Test::Differences" : 0,
+            "Test::Exception" : 0,
+            "Test::More" : "0.94"
+         }
+      }
+   },
+   "release_status" : "stable",
+   "resources" : {
+      "bugtracker" : {
+         "mailto" : "bug-HTML-FormHandler@rt.cpan.org",
+         "web" : "https://rt.cpan.org/Public/Dist/Display.html?Name=HTML-FormHandler"
+      },
+      "repository" : {
+         "type" : "git",
+         "url" : "git://github.com/gshank/html-formhandler.git",
+         "web" : "http://github.com/gshank/html-formhandler"
+      }
+   },
+   "version" : "0.32002"
+}

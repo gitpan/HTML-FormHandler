@@ -1,12 +1,54 @@
 package HTML::FormHandler::Field::Password;
+# ABSTRACT: password field
 
 use HTML::FormHandler::Moose;
 extends 'HTML::FormHandler::Field::Text';
 our $VERSION = '0.04';
 
+
+has '+widget'           => ( default => 'password' );
+has '+password'         => ( default => 1 );
+has '+required_message' => ( default => 'Please enter a password in this field' );
+has 'ne_username'       => ( isa     => 'Str', is => 'rw' );
+
+after 'validate_field' => sub {
+    my $self = shift;
+
+    if ( !$self->required && !( defined( $self->value ) && length( $self->value ) ) ) {
+        $self->noupdate(1);
+        $self->clear_errors;
+    }
+};
+
+sub validate {
+    my $self = shift;
+
+    $self->noupdate(0);
+    return unless $self->next::method;
+
+    my $value = $self->value;
+    if ( $self->form && $self->ne_username ) {
+        my $username = $self->form->get_param( $self->ne_username );
+        return $self->add_error( 'Password must not match ' . $self->ne_username )
+            if $username && $username eq $value;
+    }
+    return 1;
+}
+
+__PACKAGE__->meta->make_immutable;
+use namespace::autoclean;
+1;
+
+__END__
+=pod
+
 =head1 NAME
 
-HTML::FormHandler::Field::Password - Input a password
+HTML::FormHandler::Field::Password - password field
+
+=head1 VERSION
+
+version 0.32002
 
 =head1 DESCRIPTION
 
@@ -38,50 +80,16 @@ Set this attribute to the name of your username field (default 'username')
 if you want to check that the password is not the same as the username.
 Does not check by default.
 
-=cut
+=head1 AUTHOR
 
-has '+widget'           => ( default => 'password' );
-has '+password'         => ( default => 1 );
-has '+required_message' => ( default => 'Please enter a password in this field' );
-has 'ne_username'       => ( isa     => 'Str', is => 'rw' );
+FormHandler Contributors - see HTML::FormHandler
 
-after 'validate_field' => sub {
-    my $self = shift;
+=head1 COPYRIGHT AND LICENSE
 
-    if ( !$self->required && !( defined( $self->value ) && length( $self->value ) ) ) {
-        $self->noupdate(1);
-        $self->clear_errors;
-    }
-};
+This software is copyright (c) 2010 by Gerda Shank.
 
-sub validate {
-    my $self = shift;
-
-    $self->noupdate(0);
-    return unless $self->next::method;
-
-    my $value = $self->value;
-    if ( $self->form && $self->ne_username ) {
-        my $username = $self->form->get_param( $self->ne_username );
-        return $self->add_error( 'Password must not match ' . $self->ne_username )
-            if $username && $username eq $value;
-    }
-    return 1;
-}
-
-=head1 AUTHORS
-
-Gerda Shank
-
-=head1 COPYRIGHT
-
-See L<HTML::FormHandler> for copyright.
-
-This library is free software, you can redistribute it and/or modify it under
-the same terms as Perl itself.
+This is free software; you can redistribute it and/or modify it under
+the same terms as the Perl 5 programming language system itself.
 
 =cut
 
-__PACKAGE__->meta->make_immutable;
-use namespace::autoclean;
-1;

@@ -1,19 +1,9 @@
 package HTML::FormHandler::Field::NoValue;
+# ABSTRACT: base class for submit field
 
 use Moose;
 extends 'HTML::FormHandler::Field';
 
-=head1 NAME
-
-HTML::FormHandler::Field::NoValue 
-
-=head1 SYNOPSIS
-
-This is the base class for the Submit field. It can be used for fields that
-are do not produce valid 'values'. It should not be used for fields that 
-produce a value or need validating.
-
-=cut
 
 has 'html' => ( is => 'rw', isa => 'Str', default => '' );
 has 'value' => (
@@ -61,3 +51,34 @@ sub render {
 __PACKAGE__->meta->make_immutable;
 use namespace::autoclean;
 1;
+
+__END__
+=pod
+
+=head1 NAME
+
+HTML::FormHandler::Field::NoValue - base class for submit field
+
+=head1 VERSION
+
+version 0.32002
+
+=head1 SYNOPSIS
+
+This is the base class for the Submit field. It can be used for fields that
+are do not produce valid 'values'. It should not be used for fields that
+produce a value or need validating.
+
+=head1 AUTHOR
+
+FormHandler Contributors - see HTML::FormHandler
+
+=head1 COPYRIGHT AND LICENSE
+
+This software is copyright (c) 2010 by Gerda Shank.
+
+This is free software; you can redistribute it and/or modify it under
+the same terms as the Perl 5 programming language system itself.
+
+=cut
+

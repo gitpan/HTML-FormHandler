@@ -1,126 +1,18 @@
 package HTML::FormHandler::Render::Simple;
+# ABSTRACT: simple rendering role
 
 use Moose::Role;
 
 requires( 'sorted_fields', 'field' );
 
+with 'HTML::FormHandler::Widget::Form::Role::HTMLAttributes';
 our $VERSION = 0.01;
 
-=head1 NAME
 
-HTML::FormHandler::Render::Simple - Simple rendering routine
-
-=head1 SYNOPSIS
-
-This is a Moose role that is an example of a very simple rendering
-routine for L<HTML::FormHandler>. It has almost no features, but can
-be used as an example for producing something more complex.
-The idea is to produce your own custom rendering roles...
-
-You are advised to create a copy of this module for use in your
-forms, since it is not possible to make improvements to this module
-and maintain backwards compatibility.
-
-In your Form class:
-
-   package MyApp::Form::Silly;
-   use Moose;
-   extends 'HTML::FormHandler::Model::DBIC';
-   with 'HTML::FormHandler::Render::Simple';
-
-In a template:
-
-   [% form.render %]
-
-or for individual fields:
-
-   [% form.render_field( 'title' ) %]
-
-
-=head1 DESCRIPTION
-
-This role provides HTML output routines for the 'widget' types
-defined in the provided FormHandler fields. Each 'widget' name
-has a 'widget_$name' method here.
-
-These widget routines output strings with HTML suitable for displaying
-form fields.
-
-The widget for a particular field can be defined in the form. You can
-create additional widget routines in your form for custom widgets.
-
-The fill-in-form values ('fif') are cleaned with the 'render_filter'
-method of the base field class. You can change the filter to suit
-your own needs: see L<HTML::FormHandler::Manual::Rendering>
-
-=cut
-
-=head2 render
-
-To render all the fields in a form in sorted order (using
-'sorted_fields' method).
-
-=head2 render_start, render_end
-
-Will render the beginning and ending <form> tags and fieldsets. Allows for easy
-splitting up of the form if you want to hand-render some of the fields.
-
-   [% form.render_start %]
-   [% form.render_field('title') %]
-   <insert specially rendered field>
-   [% form.render_field('some_field') %]
-   [% form.render_end %]
-
-=head2 render_field
-
-Render a field passing in a field object or a field name
-
-   $form->render_field( $field )
-   $form->render_field( 'title' )
-
-=head2 render_text
-
-Output an HTML string for a text widget
-
-=head2 render_password
-
-Output an HTML string for a password widget
-
-=head2 render_hidden
-
-Output an HTML string for a hidden input widget
-
-=head2 render_select
-
-Output an HTML string for a 'select' widget, single or multiple
-
-=head2 render_checkbox
-
-Output an HTML string for a 'checkbox' widget
-
-=head2 render_radio_group
-
-Output an HTML string for a 'radio_group' selection widget.
-This widget should be for a field that inherits from 'Select',
-since it requires the existance of an 'options' array.
-
-=head2 render_textarea
-
-Output an HTML string for a textarea widget
-
-=head2 render_compound
-
-Renders field with 'compound' widget
-
-=head2 render_submit
-
-Renders field with 'submit' widget
-
-=cut
 
 has 'auto_fieldset' => ( isa => 'Bool', is => 'rw', default => 1 );
 has 'label_types' => (
-    traits    => ['Hash'], 
+    traits    => ['Hash'],
     isa       => 'HashRef[Str]',
     is        => 'rw',
     default   => sub {
@@ -152,14 +44,13 @@ sub render {
 
 sub render_start {
     my $self   = shift;
-    my $output = '<form ';
-    $output .= 'action="' . $self->action . '" '      if $self->action;
-    $output .= 'id="' . $self->name . '" '            if $self->name;
-    $output .= 'method="' . $self->http_method . '" ' if $self->http_method;
-    $output .= 'enctype="' . $self->enctype . '" '    if $self->enctype;
-    $output .= '>' . "\n";
-    $output .= '<fieldset class="main_fieldset">'     if $self->auto_fieldset;
-    return $output;
+
+    my $output = $self->html_form_tag;
+
+    $output .= '<fieldset class="main_fieldset">'
+        if $self->form->auto_fieldset;
+
+    return $output
 }
 
 sub render_end {
@@ -276,7 +167,7 @@ sub render_select {
     $output .= '>';
     my $index = 0;
     if( $field->empty_select ) {
-        $output .= '<option value="">' . $field->_localize($field->empty_select) . '</option>'; 
+        $output .= '<option value="">' . $field->_localize($field->empty_select) . '</option>';
     }
     foreach my $option ( @{ $field->options } ) {
         $output .= '<option value="' . $field->html_filter($option->{value}) . '" ';
@@ -368,7 +259,7 @@ sub render_upload {
 
 sub _label {
     my ( $self, $field ) = @_;
-    return '<label class="label" for="' . $field->id . '">' . 
+    return '<label class="label" for="' . $field->id . '">' .
         $field->html_filter($field->loc_label)
         . ': </label>';
 }
@@ -419,17 +310,134 @@ sub _add_html_attributes {
     return $output;
 }
 
-=head1 AUTHORS
-
-See CONTRIBUTORS in L<HTML::FormHandler>
-
-=head1 COPYRIGHT
-
-This library is free software, you can redistribute it and/or modify it under
-the same terms as Perl itself.
-
-=cut
-
 use namespace::autoclean;
 1;
+
+
+__END__
+=pod
+
+=head1 NAME
+
+HTML::FormHandler::Render::Simple - simple rendering role
+
+=head1 VERSION
+
+version 0.32002
+
+=head1 SYNOPSIS
+
+This is a Moose role that is an example of a very simple rendering
+routine for L<HTML::FormHandler>. It has almost no features, but can
+be used as an example for producing something more complex.
+The idea is to produce your own custom rendering roles...
+
+You are advised to create a copy of this module for use in your
+forms, since it is not possible to make improvements to this module
+and maintain backwards compatibility.
+
+In your Form class:
+
+   package MyApp::Form::Silly;
+   use Moose;
+   extends 'HTML::FormHandler::Model::DBIC';
+   with 'HTML::FormHandler::Render::Simple';
+
+In a template:
+
+   [% form.render %]
+
+or for individual fields:
+
+   [% form.render_field( 'title' ) %]
+
+=head1 DESCRIPTION
+
+This role provides HTML output routines for the 'widget' types
+defined in the provided FormHandler fields. Each 'widget' name
+has a 'widget_$name' method here.
+
+These widget routines output strings with HTML suitable for displaying
+form fields.
+
+The widget for a particular field can be defined in the form. You can
+create additional widget routines in your form for custom widgets.
+
+The fill-in-form values ('fif') are cleaned with the 'render_filter'
+method of the base field class. You can change the filter to suit
+your own needs: see L<HTML::FormHandler::Manual::Rendering>
+
+=head2 render
+
+To render all the fields in a form in sorted order (using
+'sorted_fields' method).
+
+=head2 render_start, render_end
+
+Will render the beginning and ending <form> tags and fieldsets. Allows for easy
+splitting up of the form if you want to hand-render some of the fields.
+
+   [% form.render_start %]
+   [% form.render_field('title') %]
+   <insert specially rendered field>
+   [% form.render_field('some_field') %]
+   [% form.render_end %]
+
+=head2 render_field
+
+Render a field passing in a field object or a field name
+
+   $form->render_field( $field )
+   $form->render_field( 'title' )
+
+=head2 render_text
+
+Output an HTML string for a text widget
+
+=head2 render_password
+
+Output an HTML string for a password widget
+
+=head2 render_hidden
+
+Output an HTML string for a hidden input widget
+
+=head2 render_select
+
+Output an HTML string for a 'select' widget, single or multiple
+
+=head2 render_checkbox
+
+Output an HTML string for a 'checkbox' widget
+
+=head2 render_radio_group
+
+Output an HTML string for a 'radio_group' selection widget.
+This widget should be for a field that inherits from 'Select',
+since it requires the existance of an 'options' array.
+
+=head2 render_textarea
+
+Output an HTML string for a textarea widget
+
+=head2 render_compound
+
+Renders field with 'compound' widget
+
+=head2 render_submit
+
+Renders field with 'submit' widget
+
+=head1 AUTHOR
+
+FormHandler Contributors - see HTML::FormHandler
+
+=head1 COPYRIGHT AND LICENSE
+
+This software is copyright (c) 2010 by Gerda Shank.
+
+This is free software; you can redistribute it and/or modify it under
+the same terms as the Perl 5 programming language system itself.
+
+=cut
 

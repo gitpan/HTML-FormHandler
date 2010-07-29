@@ -1,12 +1,42 @@
 package HTML::FormHandler::Field::Checkbox;
+# ABSTRACT: a checkbox field type
 
 use HTML::FormHandler::Moose;
 extends 'HTML::FormHandler::Field';
 our $VERSION = '0.02';
 
+
+has '+widget'              => ( default => 'checkbox' );
+has 'checkbox_value'       => ( is      => 'rw', default => 1 );
+has '+input_without_param' => ( default => 0 );
+
+sub value {
+    my $field = shift;
+    return $field->next::method(@_) if @_;
+    my $v = $field->next::method();
+    return defined $v ? $v : 0;
+}
+
+sub validate {
+    my $self = shift;
+    $self->add_error($self->required_message) if( $self->required && !$self->value );
+    return;
+}
+
+__PACKAGE__->meta->make_immutable;
+use namespace::autoclean;
+1;
+
+__END__
+=pod
+
 =head1 NAME
 
-HTML::FormHandler::Field::Checkbox - A checkbox field type
+HTML::FormHandler::Field::Checkbox - a checkbox field type
+
+=head1 VERSION
+
+version 0.32002
 
 =head1 DESCRIPTION
 
@@ -37,36 +67,16 @@ fields, will not be ignored if there is no input. If a particular
 checkbox should not be processed for a particular form, you must
 set 'inactive' to 1 instead.
 
-=cut
+=head1 AUTHOR
 
-has '+widget'              => ( default => 'checkbox' );
-has 'checkbox_value'       => ( is      => 'rw', default => 1 );
-has '+input_without_param' => ( default => 0 );
+FormHandler Contributors - see HTML::FormHandler
 
-sub value {
-    my $field = shift;
-    return $field->next::method(@_) if @_;
-    my $v = $field->next::method();
-    return defined $v ? $v : 0;
-}
+=head1 COPYRIGHT AND LICENSE
 
-sub validate {
-    my $self = shift;
-    $self->add_error($self->required_message) if( $self->required && !$self->value );
-    return;
-}
+This software is copyright (c) 2010 by Gerda Shank.
 
-=head1 AUTHORS
-
-Gerda Shank
-
-=head1 COPYRIGHT
-
-This library is free software, you can redistribute it and/or modify it under
-the same terms as Perl itself.
+This is free software; you can redistribute it and/or modify it under
+the same terms as the Perl 5 programming language system itself.
 
 =cut
 
-__PACKAGE__->meta->make_immutable;
-use namespace::autoclean;
-1;

@@ -1,4 +1,5 @@
 package HTML::FormHandler::Field::Year;
+# ABSTRACT: year selection list
 
 use Moose;
 extends 'HTML::FormHandler::Field::IntRange';
@@ -18,26 +19,37 @@ has '+range_end' => (
     }
 );
 
+
+__PACKAGE__->meta->make_immutable;
+use namespace::autoclean;
+1;
+
+__END__
+=pod
+
 =head1 NAME
 
-HTML::FormHandler::Field::Year - Select a recent year.
+HTML::FormHandler::Field::Year - year selection list
+
+=head1 VERSION
+
+version 0.32002
 
 =head1 DESCRIPTION
 
 Provides a list of years starting five years back and extending 10 years into
 the future.
 
-=head1 AUTHORS
+=head1 AUTHOR
 
-Gerda Shank
+FormHandler Contributors - see HTML::FormHandler
 
-=head1 COPYRIGHT
+=head1 COPYRIGHT AND LICENSE
 
-This library is free software, you can redistribute it and/or modify it under
-the same terms as Perl itself.
+This software is copyright (c) 2010 by Gerda Shank.
+
+This is free software; you can redistribute it and/or modify it under
+the same terms as the Perl 5 programming language system itself.
 
 =cut
 
-__PACKAGE__->meta->make_immutable;
-use namespace::autoclean;
-1;

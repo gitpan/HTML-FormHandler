@@ -1,5 +1,6 @@
 package    # hide from Pause
     HTML::FormHandler::Model::CDBI;
+# ABSTRACT: Class::DBI model class (non-functioning)
 
 use Moose;
 use Carp;
@@ -8,61 +9,9 @@ extends 'HTML::FormHandler';
 
 our $VERSION = '0.02';
 
-=head1 NAME
-
-HTML::FormHandler::Model::CDBI - Class::DBI model class for HTML::FormHandler
-
-=head1 SYNOPSIS
-
-    package MyApplication::Form::User;
-    use strict;
-    use base 'HTML::FormHandler::Model::CDBI';
-
-
-    # Associate this form with a CDBI class
-    has '+item_class' => ( default => 'MyDB::User' );
-
-    # Define the fields that this form will operate on
-    sub field_list {
-        return {
-            [
-                name        => 'Text',
-                age         => 'PosInteger',
-                sex         => 'Select',
-                birthdate   => 'DateTimeDMYHM',
-            ]
-        };
-    }
-
-=head1 DESCRIPTION
-
-A Class::DBI database model for HTML::FormHandler
-
-I don't use CDBI, so this module almost certainly doesn't work.
-It is only being left here as a starting point in case somebody is
-interested in getting it to work.
-
-Patches and tests gratefully accepted.
-
-
-=head1 METHODS
-
-=head2 item_class
-
-The name of your database class.
-
-=cut
 
 HTML::FormHandler::Model::CDBI->meta->make_immutable;
 
-=head2 init_item
-
-This is called first time $form->item is called.
-It does the equivalent of:
-
-    return $self->item_class->retrieve( $self->item_id );
-
-=cut
 
 sub init_item {
     my $self = shift;
@@ -76,22 +25,6 @@ sub BUILDARGS {
     return {@args};
 }
 
-=head2 guess_field_type
-
-Pass in a column and assigns field types.
-Must set $self->item_class to return the related item class.
-Returns the type in scalar context, returns the type and maybe the related table
-in list context.
-
-Currently returns:
-
-    DateTime        - for a has_a relationship that isa DateTime
-    Select          - for a has_a relationship
-    Multiple        - for a has_many
-    DateTime        - if the field ends in _time
-    Text            - otherwise
-
-=cut
 
 sub guess_field_type {
     my ( $self, $column, $class ) = @_;
@@ -133,34 +66,6 @@ sub guess_field_type {
     return wantarray ? @return : $return[0];
 }
 
-=head2 lookup_options
-
-Returns a array reference of key/value pairs for the column passed in.
-Calls $field->label_column to get the column name to use as the label.
-The default is "name".  The labels are sorted by Perl's cmp sort.
-
-If there is an "active" column then only active are included, with the exception
-being if the form (item) has currently selected the inactive item.  This allows
-existing records that reference inactive items to still have those as valid select
-options.  The inactive labels are formatted with brackets to indicate in the select
-list that they are inactive.
-
-The active column name is determined by calling:
-
-    $active_col = $form->can( 'active_column' )
-        ? $form->active_column
-        : $field->active_column;
-
-Which allows setting the name of the active column globally if
-your tables are consistantly named (all lookup tables have the same
-column name to indicate they are active), or on a per-field basis.
-
-In addition, if the foreign class is the same as the item's class (or the class returned
-by item_class) then options pointing to item are excluded.  The reason for this is
-for a table column that points to the same table (self referenced), such as a "parent"
-column.  The assumption is that a record cannot be its own parent.
-
-=cut
 
 sub lookup_options {
     my ( $self, $field ) = @_;
@@ -213,12 +118,6 @@ sub lookup_options {
 
 }
 
-=head2 init_value
-
-Populate $field->value with object ids from the CDBI object.  If the column
-expands to more than one object then an array ref is set.
-
-=cut
 
 sub init_value {
     my ( $self, $field, $item ) = @_;
@@ -248,15 +147,6 @@ sub init_value {
     $field->value($value);
 }
 
-=head2 validate_model
-
-Validates fields that are dependent on the model.
-Currently, "unique" fields are checked  to make sure they are unique.
-
-This validation happens after other form validation.  The form already has any
-field values entered in $field->value at this point.
-
-=cut
 
 sub validate_model {
     my ($self) = @_;
@@ -265,11 +155,6 @@ sub validate_model {
     return 1;
 }
 
-=head2 validate_unique
-
-Checks that the value for the field is not currently in the database.
-
-=cut
 
 sub validate_unique {
     my ($self) = @_;
@@ -377,12 +262,6 @@ sub update_model {
     return $item;
 }
 
-=head2 items_same
-
-Returns true if the two passed in cdbi objects are the same object.
-If both are undefined returns true.
-
-=cut
 
 sub items_same {
     my ( $self, $item1, $item2 ) = @_;
@@ -394,11 +273,6 @@ sub items_same {
     return $self->obj_key($item1) eq $self->obj_key($item2);
 }
 
-=head2 obj_key
-
-returns a key for a given object, or undef if the object is undefined.
-
-=cut
 
 sub obj_key {
     my ( $self, $item ) = @_;
@@ -406,19 +280,144 @@ sub obj_key {
         map { $_ . '=' . ( $item->$_ || '.' ) } $item->primary_columns;
 }
 
-=head1 AUTHOR
-
-Gerda Shank, gshank@cpan.org
-
-Based on the original source code of L<Form::Processor::Model::CDBI> by Bill Moseley
-
-=head1 COPYRIGHT
-
-This library is free software, you can redistribute it and/or modify it under
-the same terms as Perl itself.
-
-=cut
-
 __PACKAGE__->meta->make_immutable;
 no Moose;
 1;
+
+__END__
+=pod
+
+=head1 NAME
+
+HTML::FormHandler::Model::CDBI - Class::DBI model class (non-functioning)
+
+=head1 VERSION
+
+version 0.32002
+
+=head1 SYNOPSIS
+
+    package MyApplication::Form::User;
+    use strict;
+    use base 'HTML::FormHandler::Model::CDBI';
+
+
+    # Associate this form with a CDBI class
+    has '+item_class' => ( default => 'MyDB::User' );
+
+    # Define the fields that this form will operate on
+    sub field_list {
+        return {
+            [
+                name        => 'Text',
+                age         => 'PosInteger',
+                sex         => 'Select',
+                birthdate   => 'DateTimeDMYHM',
+            ]
+        };
+    }
+
+=head1 DESCRIPTION
+
+A Class::DBI database model for HTML::FormHandler
+
+I don't use CDBI, so this module almost certainly doesn't work.
+It is only being left here as a starting point in case somebody is
+interested in getting it to work.
+
+Patches and tests gratefully accepted.
+
+=head1 METHODS
+
+=head2 item_class
+
+The name of your database class.
+
+=head2 init_item
+
+This is called first time $form->item is called.
+It does the equivalent of:
+
+    return $self->item_class->retrieve( $self->item_id );
+
+=head2 guess_field_type
+
+Pass in a column and assigns field types.
+Must set $self->item_class to return the related item class.
+Returns the type in scalar context, returns the type and maybe the related table
+in list context.
+
+Currently returns:
+
+    DateTime        - for a has_a relationship that isa DateTime
+    Select          - for a has_a relationship
+    Multiple        - for a has_many
+    DateTime        - if the field ends in _time
+    Text            - otherwise
+
+=head2 lookup_options
+
+Returns a array reference of key/value pairs for the column passed in.
+Calls $field->label_column to get the column name to use as the label.
+The default is "name".  The labels are sorted by Perl's cmp sort.
+
+If there is an "active" column then only active are included, with the exception
+being if the form (item) has currently selected the inactive item.  This allows
+existing records that reference inactive items to still have those as valid select
+options.  The inactive labels are formatted with brackets to indicate in the select
+list that they are inactive.
+
+The active column name is determined by calling:
+
+    $active_col = $form->can( 'active_column' )
+        ? $form->active_column
+        : $field->active_column;
+
+Which allows setting the name of the active column globally if
+your tables are consistantly named (all lookup tables have the same
+column name to indicate they are active), or on a per-field basis.
+
+In addition, if the foreign class is the same as the item's class (or the class returned
+by item_class) then options pointing to item are excluded.  The reason for this is
+for a table column that points to the same table (self referenced), such as a "parent"
+column.  The assumption is that a record cannot be its own parent.
+
+=head2 init_value
+
+Populate $field->value with object ids from the CDBI object.  If the column
+expands to more than one object then an array ref is set.
+
+=head2 validate_model
+
+Validates fields that are dependent on the model.
+Currently, "unique" fields are checked  to make sure they are unique.
+
+This validation happens after other form validation.  The form already has any
+field values entered in $field->value at this point.
+
+=head2 validate_unique
+
+Checks that the value for the field is not currently in the database.
+
+=head2 items_same
+
+Returns true if the two passed in cdbi objects are the same object.
+If both are undefined returns true.
+
+=head2 obj_key
+
+returns a key for a given object, or undef if the object is undefined.
+
+=head1 AUTHOR
+
+FormHandler Contributors - see HTML::FormHandler
+
+=head1 COPYRIGHT AND LICENSE
+
+This software is copyright (c) 2010 by Gerda Shank.
+
+This is free software; you can redistribute it and/or modify it under
+the same terms as the Perl 5 programming language system itself.
+
+=cut
+

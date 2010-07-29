@@ -1,4 +1,5 @@
 package HTML::FormHandler::Widget::Field::CheckboxGroup;
+# ABSTRACT: checkbox group field role
 
 use Moose::Role;
 use namespace::autoclean;
@@ -12,7 +13,7 @@ sub render {
     my $output = " <br />";
     my $index  = 0;
     my $id = $self->id;
-    my $html_attributes = $self->_add_html_attributes;	# does that make sense?
+    my $html_attributes = $self->_add_html_attributes;
 
     foreach my $option ( @{ $self->options } ) {
         $output .= '<input type="checkbox" value="'
@@ -48,3 +49,28 @@ sub render {
 }
 
 1;
+
+__END__
+=pod
+
+=head1 NAME
+
+HTML::FormHandler::Widget::Field::CheckboxGroup - checkbox group field role
+
+=head1 VERSION
+
+version 0.32002
+
+=head1 AUTHOR
+
+FormHandler Contributors - see HTML::FormHandler
+
+=head1 COPYRIGHT AND LICENSE
+
+This software is copyright (c) 2010 by Gerda Shank.
+
+This is free software; you can redistribute it and/or modify it under
+the same terms as the Perl 5 programming language system itself.
+
+=cut
+

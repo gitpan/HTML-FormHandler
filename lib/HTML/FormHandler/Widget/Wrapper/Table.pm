@@ -1,4 +1,5 @@
 package HTML::FormHandler::Widget::Wrapper::Table;
+# ABSTRACT: wrapper class for table layout
 
 use Moose::Role;
 with 'HTML::FormHandler::Widget::Wrapper::Base';
@@ -27,3 +28,28 @@ sub wrap_field {
 
 use namespace::autoclean;
 1;
+
+__END__
+=pod
+
+=head1 NAME
+
+HTML::FormHandler::Widget::Wrapper::Table - wrapper class for table layout
+
+=head1 VERSION
+
+version 0.32002
+
+=head1 AUTHOR
+
+FormHandler Contributors - see HTML::FormHandler
+
+=head1 COPYRIGHT AND LICENSE
+
+This software is copyright (c) 2010 by Gerda Shank.
+
+This is free software; you can redistribute it and/or modify it under
+the same terms as the Perl 5 programming language system itself.
+
+=cut
+

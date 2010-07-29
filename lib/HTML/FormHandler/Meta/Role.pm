@@ -1,17 +1,9 @@
 package    # hide from Pause
     HTML::FormHandler::Meta::Role;
+# ABSTRACT: field_list and apply_list
 
 use Moose::Role;
 
-=head1 NAME
-
-HTML::FormHandler::Meta::Role
-
-=head1 SYNOPSIS
-
-Add metaclass to field_list attribute
-
-=cut
 
 has 'field_list' => (
     traits    => ['Array'],
@@ -37,16 +29,34 @@ has 'apply_list' => (
     }
 );
 
+use namespace::autoclean;
+1;
+
+__END__
+=pod
+
+=head1 NAME
+
+HTML::FormHandler::Meta::Role - field_list and apply_list
+
+=head1 VERSION
+
+version 0.32002
+
+=head1 SYNOPSIS
+
+Add metaclass to field_list attribute
+
 =head1 AUTHOR
 
-Gerda Shank, gshank@cpan.org
+FormHandler Contributors - see HTML::FormHandler
 
-=head1 COPYRIGHT
+=head1 COPYRIGHT AND LICENSE
 
-This library is free software, you can redistribute it and/or modify it under
-the same terms as Perl itself.
+This software is copyright (c) 2010 by Gerda Shank.
+
+This is free software; you can redistribute it and/or modify it under
+the same terms as the Perl 5 programming language system itself.
 
 =cut
 
-use namespace::autoclean;
-1;

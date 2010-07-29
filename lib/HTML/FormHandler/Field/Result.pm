@@ -1,17 +1,9 @@
 package HTML::FormHandler::Field::Result;
+# ABSTRACT: result class for fields
 
 use Moose;
 with 'HTML::FormHandler::Result::Role';
 
-=head1 NAME
-
-HTML::FormHandler::Field::Result
-
-=head1 SYNOPSIS
-
-Result class for L<HTML::FormHandler::Field>
-
-=cut
 
 has 'field_def' => (
     is     => 'ro',
@@ -50,18 +42,35 @@ sub peek {
     return $string;
 }
 
-
-=head1 AUTHORS
-
-HTML::FormHandler Contributors; see HTML::FormHandler
-
-=head1 COPYRIGHT
-
-This library is free software, you can redistribute it and/or modify it under
-the same terms as Perl itself.
-
-=cut
-
 __PACKAGE__->meta->make_immutable;
 use namespace::autoclean;
 1;
+
+__END__
+=pod
+
+=head1 NAME
+
+HTML::FormHandler::Field::Result - result class for fields
+
+=head1 VERSION
+
+version 0.32002
+
+=head1 SYNOPSIS
+
+Result class for L<HTML::FormHandler::Field>
+
+=head1 AUTHOR
+
+FormHandler Contributors - see HTML::FormHandler
+
+=head1 COPYRIGHT AND LICENSE
+
+This software is copyright (c) 2010 by Gerda Shank.
+
+This is free software; you can redistribute it and/or modify it under
+the same terms as the Perl 5 programming language system itself.
+
+=cut
+

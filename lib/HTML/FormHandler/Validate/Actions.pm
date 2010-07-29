@@ -1,17 +1,8 @@
 package HTML::FormHandler::Validate::Actions;
+# ABSTRACT: internal role to validate actions
 
 use Moose::Role;
 
-=head1 NAME
-
-FormHandler::Validate::Actions
-
-=head1 SYNOPSIS
-
-Role applies 'actions' (Moose types, coderefs, callbacks) to
-L<HTML::FormHandler::Field> and L<HTML::FormHandler>.
-
-=cut
 
 has 'actions' => (
     traits     => ['Array'],
@@ -168,16 +159,35 @@ sub has_some_value {
     return;
 }
 
-=head1 AUTHORS
+use namespace::autoclean;
+1;
 
-HTML::FormHandler Contributors; see HTML::FormHandler
+__END__
+=pod
 
-=head1 COPYRIGHT
+=head1 NAME
 
-This library is free software, you can redistribute it and/or modify it under
-the same terms as Perl itself.
+HTML::FormHandler::Validate::Actions - internal role to validate actions
+
+=head1 VERSION
+
+version 0.32002
+
+=head1 SYNOPSIS
+
+Role applies 'actions' (Moose types, coderefs, callbacks) to
+L<HTML::FormHandler::Field> and L<HTML::FormHandler>.
+
+=head1 AUTHOR
+
+FormHandler Contributors - see HTML::FormHandler
+
+=head1 COPYRIGHT AND LICENSE
+
+This software is copyright (c) 2010 by Gerda Shank.
+
+This is free software; you can redistribute it and/or modify it under
+the same terms as the Perl 5 programming language system itself.
 
 =cut
 
-use namespace::autoclean;
-1;

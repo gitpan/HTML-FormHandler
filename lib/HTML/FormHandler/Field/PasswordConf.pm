@@ -1,24 +1,10 @@
 package HTML::FormHandler::Field::PasswordConf;
+# ABSTRACT: password confirmation
 
 use HTML::FormHandler::Moose;
 extends 'HTML::FormHandler::Field::Text';
 our $VERSION = '0.03';
 
-=head1 NAME
-
-HTML::FormHandler::Field::PasswordConf - Password confirmation
-
-=head1 DESCRIPTION
-
-This field needs to be declared after the related Password field (or more
-precisely it needs to come after the Password field in the list returned by
-the L<HTML::FormHandler/fields> method).
-
-=head2 password_field
-
-Set this attribute to the name of your password field (default 'password')
-
-=cut
 
 has '+widget'           => ( default => 'password' );
 has '+password'         => ( default => 1 );
@@ -43,19 +29,41 @@ sub validate {
     return 1;
 }
 
-=head1 AUTHORS
-
-See L<HTML::FormHandler> for authors.
-
-=head1 COPYRIGHT
-
-See L<HTML::FormHandler> for copyright.
-
-This library is free software, you can redistribute it and/or modify it under
-the same terms as Perl itself.
-
-=cut
-
 __PACKAGE__->meta->make_immutable;
 use namespace::autoclean;
 1;
+
+__END__
+=pod
+
+=head1 NAME
+
+HTML::FormHandler::Field::PasswordConf - password confirmation
+
+=head1 VERSION
+
+version 0.32002
+
+=head1 DESCRIPTION
+
+This field needs to be declared after the related Password field (or more
+precisely it needs to come after the Password field in the list returned by
+the L<HTML::FormHandler/fields> method).
+
+=head2 password_field
+
+Set this attribute to the name of your password field (default 'password')
+
+=head1 AUTHOR
+
+FormHandler Contributors - see HTML::FormHandler
+
+=head1 COPYRIGHT AND LICENSE
+
+This software is copyright (c) 2010 by Gerda Shank.
+
+This is free software; you can redistribute it and/or modify it under
+the same terms as the Perl 5 programming language system itself.
+
+=cut
+

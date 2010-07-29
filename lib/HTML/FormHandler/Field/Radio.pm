@@ -1,11 +1,28 @@
 package HTML::FormHandler::Field::Radio;
+# ABSTRACT: not used
 
 use Moose;
 extends 'HTML::FormHandler::Field';
 
+
+has 'radio_value' => ( is => 'rw', default => 1 );
+
+has '+widget' => ( default => 'radio' );
+
+__PACKAGE__->meta->make_immutable;
+use namespace::autoclean;
+1;
+
+__END__
+=pod
+
 =head1 NAME
 
-HTML::FormHandler::Field::Radio
+HTML::FormHandler::Field::Radio - not used
+
+=head1 VERSION
+
+version 0.32002
 
 =head1 SYNOPSIS
 
@@ -20,28 +37,20 @@ atomic radio buttons.
     [% END %]
    />
 
-
 =head2 radio_value
 
 See synopsis. Sets the value used in the radio button.
 
-=cut
+=head1 AUTHOR
 
-has 'radio_value' => ( is => 'rw', default => 1 );
+FormHandler Contributors - see HTML::FormHandler
 
-has '+widget' => ( default => 'radio' );
+=head1 COPYRIGHT AND LICENSE
 
-=head1 AUTHORS
+This software is copyright (c) 2010 by Gerda Shank.
 
-Gerda Shank
-
-=head1 COPYRIGHT
-
-This library is free software, you can redistribute it and/or modify it under
-the same terms as Perl itself.
+This is free software; you can redistribute it and/or modify it under
+the same terms as the Perl 5 programming language system itself.
 
 =cut
 
-__PACKAGE__->meta->make_immutable;
-use namespace::autoclean;
-1;

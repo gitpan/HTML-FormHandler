@@ -1,110 +1,11 @@
 package HTML::FormHandler::Field::Repeatable;
+# ABSTRACT: repeatable (array) field
 
 use Moose;
 extends 'HTML::FormHandler::Field::Compound';
 
 use aliased 'HTML::FormHandler::Field::Repeatable::Instance';
 
-=head1 NAME
-
-HTML::FormHandler::Field::Repeatable - Repeatable (array) field
-
-=head1 SYNOPSIS
-
-In a form, for an array of hashrefs, equivalent to a 'has_many' database
-relationship.
-
-  has_field 'addresses' => ( type => 'Repeatable' );
-  has_field 'addresses.address_id' => ( type => 'PrimaryKey' );
-  has_field 'addresses.street';
-  has_field 'addresses.city';
-  has_field 'addresses.state';
-
-For a database field include a PrimaryKey hidden field, or set 'auto_id' to
-have an 'id' field automatically created.
-
-In a form, for an array of single fields (not directly equivalent to a
-database relationship) use the 'contains' pseudo field name:
-
-  has_field 'tags' => ( type => 'Repeatable' );
-  has_field 'tags.contains' => ( type => 'Text',
-       apply => [ { check => ['perl', 'programming', 'linux', 'internet'],
-                    message => 'Not a valid tag' } ]
-  );
-
-or use 'contains' with single fields which are compound fields:
-
-  has_field 'addresses' => ( type => 'Repeatable' );
-  has_field 'addresses.contains' => ( type => '+MyAddress' );
-
-If the MyAddress field contains fields 'address_id', 'street', 'city', and
-'state', then this syntax is functionally equivalent to the first method
-where the fields are declared with dots ('addresses.city');
-
-=head1 DESCRIPTION
-
-This class represents an array. It can either be an array of hashrefs
-(compound fields) or an array of single fields.
-
-The 'contains' keyword is used for elements that do not have names
-because they are not hash elements.
-
-This field node will build arrays of fields from the the parameters or an
-initial object, or empty fields for an empty form.
-
-The name of the element fields will be an array index,
-starting with 0. Therefore the first array element can be accessed with:
-
-   $form->field('tags')->field('0')
-   $form->field('addresses')->field('0)->field('city')
-
-or using the shortcut form:
-
-   $form->field('tags.0')
-   $form->field('addresses.0.city')
-
-The array of elements will be in C<< $form->field('addresses')->fields >>.
-The subfields of the elements will be in a fields array in each element.
-
-   foreach my $element ( $form->field('addresses')->fields )
-   {
-      foreach my $field ( $element->fields )
-      {
-         # do something
-      }
-   }
-
-Every field that has a 'fields' array will also have an 'error_fields' array
-containing references to the fields that contain errors.
-
-Note that after updates to the database the fields will be reloaded. This means
-that the array indexes ( the '3' in C<< $form->field('addresses.3') >> ) may
-not be the same if there have been changes since the fields were initially 
-loaded.
-
-=head1 ATTRIBUTES
-
-=over
-
-=item  index
-
-This attribute contains the next index number available to create an
-additional array element.
-
-=item  num_when_empty
-
-This attribute (default 1) indicates how many empty fields to present
-in an empty form which hasn't been filled from parameters or database
-rows.
-
-=item auto_id
-
-Will create an 'id' field automatically
-
-=back
-
-
-=cut
 
 has 'contains' => (
     isa       => 'HTML::FormHandler::Field',
@@ -123,7 +24,7 @@ sub _fields_validate {
     # loop through array of fields and validate
     my @value_array;
     foreach my $field ( $self->all_fields ) {
-        next if ( $field->inactive && !$field->_active ); 
+        next if ( $field->inactive && !$field->_active );
         # Validate each field and "inflate" input -> value.
         $field->validate_field;    # this calls the field's 'validate' routine
         push @value_array, $field->value;
@@ -227,7 +128,7 @@ sub _result_from_input {
 sub _result_from_object {
     my ( $self, $result, $values ) = @_;
 
-    return $self->_result_from_fields( $result ) 
+    return $self->_result_from_fields( $result )
         if ( $self->num_when_empty > 0 && !$values );
     $self->item($values);
     $self->init_state;
@@ -304,3 +205,122 @@ before 'value' => sub {
 __PACKAGE__->meta->make_immutable;
 use namespace::autoclean;
 1;
+
+__END__
+=pod
+
+=head1 NAME
+
+HTML::FormHandler::Field::Repeatable - repeatable (array) field
+
+=head1 VERSION
+
+version 0.32002
+
+=head1 SYNOPSIS
+
+In a form, for an array of hashrefs, equivalent to a 'has_many' database
+relationship.
+
+  has_field 'addresses' => ( type => 'Repeatable' );
+  has_field 'addresses.address_id' => ( type => 'PrimaryKey' );
+  has_field 'addresses.street';
+  has_field 'addresses.city';
+  has_field 'addresses.state';
+
+For a database field include a PrimaryKey hidden field, or set 'auto_id' to
+have an 'id' field automatically created.
+
+In a form, for an array of single fields (not directly equivalent to a
+database relationship) use the 'contains' pseudo field name:
+
+  has_field 'tags' => ( type => 'Repeatable' );
+  has_field 'tags.contains' => ( type => 'Text',
+       apply => [ { check => ['perl', 'programming', 'linux', 'internet'],
+                    message => 'Not a valid tag' } ]
+  );
+
+or use 'contains' with single fields which are compound fields:
+
+  has_field 'addresses' => ( type => 'Repeatable' );
+  has_field 'addresses.contains' => ( type => '+MyAddress' );
+
+If the MyAddress field contains fields 'address_id', 'street', 'city', and
+'state', then this syntax is functionally equivalent to the first method
+where the fields are declared with dots ('addresses.city');
+
+=head1 DESCRIPTION
+
+This class represents an array. It can either be an array of hashrefs
+(compound fields) or an array of single fields.
+
+The 'contains' keyword is used for elements that do not have names
+because they are not hash elements.
+
+This field node will build arrays of fields from the the parameters or an
+initial object, or empty fields for an empty form.
+
+The name of the element fields will be an array index,
+starting with 0. Therefore the first array element can be accessed with:
+
+   $form->field('tags')->field('0')
+   $form->field('addresses')->field('0)->field('city')
+
+or using the shortcut form:
+
+   $form->field('tags.0')
+   $form->field('addresses.0.city')
+
+The array of elements will be in C<< $form->field('addresses')->fields >>.
+The subfields of the elements will be in a fields array in each element.
+
+   foreach my $element ( $form->field('addresses')->fields )
+   {
+      foreach my $field ( $element->fields )
+      {
+         # do something
+      }
+   }
+
+Every field that has a 'fields' array will also have an 'error_fields' array
+containing references to the fields that contain errors.
+
+Note that after updates to the database the fields will be reloaded. This means
+that the array indexes ( the '3' in C<< $form->field('addresses.3') >> ) may
+not be the same if there have been changes since the fields were initially
+loaded.
+
+=head1 ATTRIBUTES
+
+=over
+
+=item index
+
+This attribute contains the next index number available to create an
+additional array element.
+
+=item num_when_empty
+
+This attribute (default 1) indicates how many empty fields to present
+in an empty form which hasn't been filled from parameters or database
+rows.
+
+=item auto_id
+
+Will create an 'id' field automatically
+
+=back
+
+=head1 AUTHOR
+
+FormHandler Contributors - see HTML::FormHandler
+
+=head1 COPYRIGHT AND LICENSE
+
+This software is copyright (c) 2010 by Gerda Shank.
+
+This is free software; you can redistribute it and/or modify it under
+the same terms as the Perl 5 programming language system itself.
+
+=cut
+

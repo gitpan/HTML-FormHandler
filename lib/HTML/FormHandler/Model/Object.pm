@@ -1,4 +1,5 @@
 package HTML::FormHandler::Model::Object;
+# ABSTRACT: stub for Object model
 
 use Moose::Role;
 
@@ -16,3 +17,28 @@ sub update_model {
 
 use namespace::autoclean;
 1;
+
+__END__
+=pod
+
+=head1 NAME
+
+HTML::FormHandler::Model::Object - stub for Object model
+
+=head1 VERSION
+
+version 0.32002
+
+=head1 AUTHOR
+
+FormHandler Contributors - see HTML::FormHandler
+
+=head1 COPYRIGHT AND LICENSE
+
+This software is copyright (c) 2010 by Gerda Shank.
+
+This is free software; you can redistribute it and/or modify it under
+the same terms as the Perl 5 programming language system itself.
+
+=cut
+

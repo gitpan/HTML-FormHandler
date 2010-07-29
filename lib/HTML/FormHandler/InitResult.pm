@@ -1,16 +1,8 @@
 package HTML::FormHandler::InitResult;
+# ABSTRACT: internal code
 
 use Moose::Role;
 
-=head1 NAME
-
-HTML::FormHandler::InitResult
-
-=head1 SYNOPSIS
-
-Internal role for initializing the result objects.
-
-=cut
 
 # _init is for building fields when
 # there is no initial object and no params
@@ -50,7 +42,7 @@ sub _result_from_input {
     if ( ref $input eq 'HASH' ) {
         foreach my $field ( $self->sorted_fields ) {
             next if ($field->inactive && !$field->_active);
-            my $field_name = $field->name; 
+            my $field_name = $field->name;
             my $result     = HTML::FormHandler::Field::Result->new(
                 name   => $field_name,
                 parent => $self_result
@@ -123,16 +115,34 @@ sub _get_value {
     return $value;
 }
 
-=head1 AUTHORS
+use namespace::autoclean;
+1;
 
-HTML::FormHandler Contributors; see HTML::FormHandler
+__END__
+=pod
 
-=head1 COPYRIGHT
+=head1 NAME
 
-This library is free software, you can redistribute it and/or modify it under
-the same terms as Perl itself.
+HTML::FormHandler::InitResult - internal code
+
+=head1 VERSION
+
+version 0.32002
+
+=head1 SYNOPSIS
+
+Internal role for initializing the result objects.
+
+=head1 AUTHOR
+
+FormHandler Contributors - see HTML::FormHandler
+
+=head1 COPYRIGHT AND LICENSE
+
+This software is copyright (c) 2010 by Gerda Shank.
+
+This is free software; you can redistribute it and/or modify it under
+the same terms as the Perl 5 programming language system itself.
 
 =cut
 
-use namespace::autoclean;
-1;

@@ -1,19 +1,11 @@
 package HTML::FormHandler::Widget::Wrapper::Fieldset;
+# ABSTRACT: fieldset field wrapper
 
 use Moose::Role;
 use namespace::autoclean;
 
 with 'HTML::FormHandler::Widget::Wrapper::Base';
 
-=head1 NAME
-
-HTML::FormHandler::Widget::Wrapper::Fieldset
-
-=head1 SYNOPSIS
-
-Wraps a single field in a fieldset.
-    
-=cut
 
 sub wrap_field {
     my ( $self, $result, $rendered_widget ) = @_;
@@ -31,3 +23,36 @@ sub wrap_field {
 }
 
 1;
+
+__END__
+=pod
+
+=head1 NAME
+
+HTML::FormHandler::Widget::Wrapper::Fieldset - fieldset field wrapper
+
+=head1 VERSION
+
+version 0.32002
+
+=head1 SYNOPSIS
+
+Wraps a single field in a fieldset.
+
+=head1 NAME
+
+HTML::FormHandler::Widget::Wrapper::Fieldset - fieldset field wrapper
+
+=head1 AUTHOR
+
+FormHandler Contributors - see HTML::FormHandler
+
+=head1 COPYRIGHT AND LICENSE
+
+This software is copyright (c) 2010 by Gerda Shank.
+
+This is free software; you can redistribute it and/or modify it under
+the same terms as the Perl 5 programming language system itself.
+
+=cut
+

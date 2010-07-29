@@ -1,11 +1,69 @@
 package HTML::FormHandler::Model;
+# ABSTRACT: default model base class
 
 use Moose::Role;
 use Carp;
 
+
+has 'item' => (
+    is      => 'rw',
+    lazy    => 1,
+    builder => 'build_item',
+    clearer => 'clear_item',
+    trigger => sub { shift->set_item(@_) }
+);
+sub build_item { return }
+
+sub set_item {
+    my ( $self, $item ) = @_;
+    $self->item_class( ref $item );
+}
+
+
+has 'item_id' => (
+    is      => 'rw',
+    clearer => 'clear_item_id',
+    trigger => sub { shift->set_item_id(@_) }
+);
+
+sub set_item_id { }
+
+
+has 'item_class' => (
+    isa => 'Str',
+    is  => 'rw',
+);
+
+
+sub guess_field_type {
+    Carp::confess "Don't know how to determine field type of [$_[1]]";
+}
+
+
+sub lookup_options { }
+
+
+sub validate_model { }
+
+
+sub clear_model { }
+
+
+sub update_model { }
+
+use namespace::autoclean;
+1;
+
+__END__
+=pod
+
 =head1 NAME
 
 HTML::FormHandler::Model - default model base class
+
+=head1 VERSION
+
+version 0.32002
 
 =head1 SYNOPSIS
 
@@ -35,37 +93,11 @@ For example, with Class::DBI you might return:
 
     return $self->item_class->retrieve( $self->item_id );
 
-=cut
-
-has 'item' => (
-    is      => 'rw',
-    lazy    => 1,
-    builder => 'build_item',
-    clearer => 'clear_item',
-    trigger => sub { shift->set_item(@_) }
-);
-sub build_item { return }
-
-sub set_item {
-    my ( $self, $item ) = @_;
-    $self->item_class( ref $item );
-}
-
 =head2 item_id
 
 The id (primary key) of the item (object) that the form is updating
 or has just created. The model class should have a build_item method that can
 fetch the object from the item_class for this id.
-
-=cut
-
-has 'item_id' => (
-    is      => 'rw',
-    clearer => 'clear_item_id',
-    trigger => sub { shift->set_item_id(@_) }
-);
-
-sub set_item_id { }
 
 =head2 item_class
 
@@ -88,13 +120,6 @@ to access the data related to the form.
 
 A builder for 'item_class' might be to return the class of the 'item'.
 
-=cut
-
-has 'item_class' => (
-    isa => 'Str',
-    is  => 'rw',
-);
-
 =head2 guess_field_type
 
 Returns the guessed field type.  The field name is passed as the first argument.
@@ -103,12 +128,6 @@ You could override this in your form class, for example, if you use a field
 naming convention that indicates the field type.
 
 The metadata info about the columns can be used to assign types.
-
-=cut
-
-sub guess_field_type {
-    Carp::confess "Don't know how to determine field type of [$_[1]]";
-}
 
 =head2 lookup_options
 
@@ -129,10 +148,6 @@ options are looked up:
 
 The default for label_column is "name".
 
-=cut
-
-sub lookup_options { }
-
 =head2 validate_model
 
 Validates fields that are dependent on the model.
@@ -147,38 +162,24 @@ add_error method:
 
 The default method does nothing.
 
-=cut
-
-sub validate_model { }
-
 =head2 clear_model
 
 Clear out any dynamic data for persistent object
-
-=cut
-
-sub clear_model { }
 
 =head2 update_model
 
 Update the model with validated fields
 
-=cut
+=head1 AUTHOR
 
-sub update_model { }
+FormHandler Contributors - see HTML::FormHandler
 
-=head1 AUTHORS
+=head1 COPYRIGHT AND LICENSE
 
-HTML::FormHandler Contributors; see HTML::FormHandler
+This software is copyright (c) 2010 by Gerda Shank.
 
-Initially based on the original source code of L<Form::Processor::Model> by Bill Moseley
-
-=head1 COPYRIGHT
-
-This library is free software, you can redistribute it and/or modify it under
-the same terms as Perl itself.
+This is free software; you can redistribute it and/or modify it under
+the same terms as the Perl 5 programming language system itself.
 
 =cut
 
-use namespace::autoclean;
-1;

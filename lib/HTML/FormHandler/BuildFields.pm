@@ -1,20 +1,9 @@
 package HTML::FormHandler::BuildFields;
+# ABSTRACT: role to build field array
 
 use Moose::Role;
 use Try::Tiny;
 
-=head1 NAME
-
-HTML::FormHandler::BuildFields - role to build field array
-
-=head1 SYNOPSIS
-
-These are the methods that are necessary to build the fields arrays 
-in a form. This is a role which is composed into L<HTML::FormHandler>.
-
-Internal code only. This role has no user interfaces.
-
-=cut
 
 has 'fields_from_model' => ( isa => 'Bool', is => 'rw' );
 
@@ -177,11 +166,11 @@ sub _make_field {
     {
         push @classes, $ns . "::" . $type;
     }
-    # look for Field in possible namespaces 
+    # look for Field in possible namespaces
     my $loaded;
     my $class;
     foreach my $try ( @classes ) {
-        try { 
+        try {
             Class::MOP::load_class($try);
             $loaded++;
             $class = $try;
@@ -281,9 +270,9 @@ sub new_field_with_traits {
         push @traits, $widget_role, $wrapper_role;
     }
     if( @traits ) {
-        $field = $class->new_with_traits( traits => \@traits, %{$field_attr} ); 
+        $field = $class->new_with_traits( traits => \@traits, %{$field_attr} );
     }
-    else { 
+    else {
         $field = $class->new( %{$field_attr} );
     }
     if( $field->form ) {
@@ -295,16 +284,37 @@ sub new_field_with_traits {
     return $field;
 }
 
-=head1 AUTHORS
+use namespace::autoclean;
+1;
 
-HTML::FormHandler Contributors; see HTML::FormHandler
+__END__
+=pod
 
-=head1 COPYRIGHT
+=head1 NAME
 
-This library is free software, you can redistribute it and/or modify it under
-the same terms as Perl itself.
+HTML::FormHandler::BuildFields - role to build field array
+
+=head1 VERSION
+
+version 0.32002
+
+=head1 SYNOPSIS
+
+These are the methods that are necessary to build the fields arrays
+in a form. This is a role which is composed into L<HTML::FormHandler>.
+
+Internal code only. This role has no user interfaces.
+
+=head1 AUTHOR
+
+FormHandler Contributors - see HTML::FormHandler
+
+=head1 COPYRIGHT AND LICENSE
+
+This software is copyright (c) 2010 by Gerda Shank.
+
+This is free software; you can redistribute it and/or modify it under
+the same terms as the Perl 5 programming language system itself.
 
 =cut
 
-use namespace::autoclean;
-1;

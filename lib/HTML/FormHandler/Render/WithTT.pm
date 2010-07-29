@@ -1,51 +1,20 @@
 package HTML::FormHandler::Render::WithTT;
+# ABSTRACT: tt rendering
 
 use Moose::Role;
 use File::ShareDir;
 use Template;
-use namespace::autoclean; 
+use namespace::autoclean;
 
 requires 'form';
 
-=head1 NAME
-
-HTML::FormHandler::Render::WithTT
-
-=head1 SYNOPSIS
-
-Warning: this feature is not quite ready for prime time. It has not
-been well tested and the template widgets aren't complete. Contributions
-welcome.
-
-A rendering role for HTML::FormHandler that allows rendering using 
-Template::Toolkit
-
-   package MyApp::Form;
-   use HTML::FormHandler::Moose;
-   extends 'HTML::FormHandler';
-   with 'HTML::FormHandler::Render::WithTT';
-
-   sub build_tt_template { 'user_form.tt' }
-   sub build_tt_include_path { 'root/templates' }
-   ....< define form >....
-
-   my $form = MyApp::Form->new( 
-   $form->tt_render;
-
-
-=head1 DESCRIPTION
-
-Uses 'tt_render' instead of 'render' to allow using both TT templates and the
-built-in rendering.
-
-=cut
 
 has 'tt_include_path' => (
     traits => ['Array'],
     is => 'rw',
     isa => 'ArrayRef',
     lazy => 1,
-    builder => 'build_tt_include_path', 
+    builder => 'build_tt_include_path',
 );
 sub build_tt_include_path {[]}
 
@@ -55,18 +24,18 @@ has 'tt_config' => (
     lazy => 1,
     builder => 'build_tt_config',
 );
-sub build_tt_config { 
+sub build_tt_config {
     my $self = shift;
     return {
-        INCLUDE_PATH => [ 
+        INCLUDE_PATH => [
            @{ $self->tt_include_path },
-           File::ShareDir::dist_dir('HTML-FormHandler') . '/templates/' 
+           File::ShareDir::dist_dir('HTML-FormHandler') . '/templates/'
         ]
     };
 }
 
 # either file name string or string ref?
-has 'tt_template' => ( is => 'rw', isa => 'Str', lazy => 1, 
+has 'tt_template' => ( is => 'rw', isa => 'Str', lazy => 1,
    builder => 'build_tt_template' );
 sub build_tt_template { 'form.tt' }
 
@@ -91,7 +60,7 @@ sub build_default_tt_vars {
     return { form => $self->form };
 }
 
-has 'tt_default_options' => ( 
+has 'tt_default_options' => (
     traits => ['Hash'],
     is => 'rw',
     isa => 'HashRef',
@@ -112,3 +81,54 @@ sub tt_render {
 
 
 1;
+
+__END__
+=pod
+
+=head1 NAME
+
+HTML::FormHandler::Render::WithTT - tt rendering
+
+=head1 VERSION
+
+version 0.32002
+
+=head1 SYNOPSIS
+
+Warning: this feature is not quite ready for prime time. It has not
+been well tested and the template widgets aren't complete. Contributions
+welcome.
+
+A rendering role for HTML::FormHandler that allows rendering using
+Template::Toolkit
+
+   package MyApp::Form;
+   use HTML::FormHandler::Moose;
+   extends 'HTML::FormHandler';
+   with 'HTML::FormHandler::Render::WithTT';
+
+   sub build_tt_template { 'user_form.tt' }
+   sub build_tt_include_path { 'root/templates' }
+   ....< define form >....
+
+   my $form = MyApp::Form->new(
+   $form->tt_render;
+
+=head1 DESCRIPTION
+
+Uses 'tt_render' instead of 'render' to allow using both TT templates and the
+built-in rendering.
+
+=head1 AUTHOR
+
+FormHandler Contributors - see HTML::FormHandler
+
+=head1 COPYRIGHT AND LICENSE
+
+This software is copyright (c) 2010 by Gerda Shank.
+
+This is free software; you can redistribute it and/or modify it under
+the same terms as the Perl 5 programming language system itself.
+
+=cut
+

@@ -1,46 +1,75 @@
+
 use strict;
 use warnings;
-use inc::Module::Install 0.91;
 
-# Not strictly needed, but reminds idiots like
-# me what M::I extensions I need ;)
-use Module::Install::AuthorTests;
 
-name 'HTML-FormHandler';
-author 'Gerda Shank';
-all_from 'lib/HTML/FormHandler.pm';
-license 'perl';
 
-repository 'http://github.com/gshank/html-formhandler/tree/master';
+use ExtUtils::MakeMaker 6.31;
 
-# prereqs
-requires 'Carp';
-requires 'Moose'              => '0.90';
-requires 'Locale::Maketext'   => '1.09';
-requires 'DateTime';
-requires 'DateTime::Format::Strptime';
-requires 'MooseX::Getopt' => '0.16';
-requires 'MooseX::Types' => '0.20';
-requires 'MooseX::Types::Common';
-requires 'MooseX::Traits';
-requires 'aliased';
-requires 'File::Spec';
-requires 'File::ShareDir';
-requires 'Try::Tiny';
-requires 'namespace::autoclean' => '0.09';
-requires 'Email::Valid';
+use File::ShareDir::Install;
+install_share dist => "share";
 
-# things the tests need
-test_requires 'Test::More'      => '0.88';
-test_requires 'Test::Differences';
-test_requires 'Test::Exception';
 
-tests();
-author_tests('t/xt');
+my %WriteMakefileArgs = (
+  'ABSTRACT' => 'HTML forms using Moose',
+  'AUTHOR' => 'FormHandler Contributors - see HTML::FormHandler',
+  'BUILD_REQUIRES' => {
+    'Test::Differences' => '0',
+    'Test::Exception' => '0',
+    'Test::More' => '0.94'
+  },
+  'CONFIGURE_REQUIRES' => {
+    'ExtUtils::MakeMaker' => '6.31',
+    'File::ShareDir::Install' => '0.03'
+  },
+  'DISTNAME' => 'HTML-FormHandler',
+  'EXE_FILES' => [],
+  'LICENSE' => 'perl',
+  'NAME' => 'HTML::FormHandler',
+  'PREREQ_PM' => {
+    'Carp' => '0',
+    'DateTime' => '0',
+    'DateTime::Format::Strptime' => '0',
+    'Email::Valid' => '0',
+    'File::ShareDir' => '0',
+    'File::Spec' => '0',
+    'Locale::Maketext' => '1.09',
+    'Moose' => '0.90',
+    'MooseX::Getopt' => '0.16',
+    'MooseX::Traits' => '0',
+    'MooseX::Types' => '0.20',
+    'MooseX::Types::Common' => '0',
+    'Try::Tiny' => '0',
+    'aliased' => '0',
+    'namespace::autoclean' => '0.09'
+  },
+  'VERSION' => '0.32002',
+  'test' => {
+    'TESTS' => 't/*.t'
+  }
+);
 
-install_share 'share';
 
-auto_install();
+unless ( eval { ExtUtils::MakeMaker->VERSION(6.56) } ) {
+  my $br = delete $WriteMakefileArgs{BUILD_REQUIRES};
+  my $pp = $WriteMakefileArgs{PREREQ_PM};
+  for my $mod ( keys %$br ) {
+    if ( exists $pp->{$mod} ) {
+      $pp->{$mod} = $br->{$mod} if $br->{$mod} > $pp->{$mod};
+    }
+    else {
+      $pp->{$mod} = $br->{$mod};
+    }
+  }
+}
 
-WriteAll();
+delete $WriteMakefileArgs{CONFIGURE_REQUIRES}
+  unless eval { ExtUtils::MakeMaker->VERSION(6.52) };
+
+WriteMakefile(%WriteMakefileArgs);
+
+package
+MY;
+use File::ShareDir::Install qw(postamble);
+
 

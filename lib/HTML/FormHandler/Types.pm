@@ -1,4 +1,5 @@
 package HTML::FormHandler::Types;
+# ABSTRACT: Moose type constraints
 
 use strict;
 use warnings;
@@ -16,112 +17,6 @@ use MooseX::Types -declare => [
 
 use MooseX::Types::Moose ( 'Str', 'Num', 'Int' );
 
-=head1 NAME
-
-HTML::FormHandler::Types
-
-=head1 SYNOPSIS
-
-These types are provided by MooseX::Types. These types must not be quoted
-when they are used:
-
-  has 'posint' => ( is => 'rw', isa => PositiveInt);
-  has_field 'email' => ( apply => [ Email ] );
-
-Types declared using Moose::Util::TypeConstraints, on the other hand,
-must be quoted:
-
-  has_field 'text_both' => ( apply => [ PositiveInt, 'GreaterThan10' ] );
-
-To import these types into your forms, you must either specify (':all')
-or list the types you want to use:
-
-   use HTML::FormHandler::Types (':all');
-
-or:
-
-   use HTML::FormHandler::Types ('Email', 'PositiveInt');
-
-=head1 DESCRIPTION
-
-
-It would be possible to import the MooseX types (Common, etc), but for now
-we'll just re-implement them here in order to be able to change the
-messages and keep control of what types we provide.
-
-From MooseX::Types::Common:
-
-  'PositiveNum', 'PositiveInt', 'NegativeNum', 'NegativeInt', 'SingleDigit',
-  'SimpleStr', 'NonEmptySimpleStr', 'Password', 'StrongPassword', 'NonEmptyStr',
-
-
-=head1 Type Constraints
-
-These types check the value and issue an error message.
-
-=over
-
-=item Email
-
-Uses Email::Valid
-
-=item State
-
-Checks that the state is in a list of two uppercase letters.
-
-=item Zip
-
-=item IPAddress
-
-Must be a valid IPv4 address.
-
-=item NoSpaces
-
-No spaces in string allowed.
-
-=item WordChars
-
-Must be made up of letters, digits, and underscores.
-
-=item NotAllDigits
-
-Might be useful for passwords.
-
-=item Printable
-
-Must not contain non-printable characters.
-
-=item SingleWord
-
-Contains a single word.
-
-=back
-
-=head2 Type Coercions
-
-These types will transform the value without an error message;
-
-=over
-
-=item Collapse
-
-Replaces multiple spaces with a single space
-
-=item Upper
-
-Makes the string all upper case
-
-=item Lower
-
-Makes the string all lower case
-
-=item Trim
-
-Trims the string of starting and ending spaces
-
-=back
-
-=cut
 
 subtype PositiveNum, as Num, where { $_ >= 0 }, message { "Must be a positive number" };
 
@@ -239,19 +134,132 @@ subtype Trim,
 coerce Trim,
    from Str,
    via { s/^\s+// &&
-         s/\s+$//; 
+         s/\s+$//;
          return $_;  };
 
-=head1 AUTHORS
+1;
 
-  HTML::FormHandler Contributors; see HTML::FormHandler
 
-=head1 COPYRIGHT
+__END__
+=pod
 
-  This library is free software, you can redistribute it and/or modify it under
-  the same terms as Perl itself.
+=head1 NAME
+
+HTML::FormHandler::Types - Moose type constraints
+
+=head1 VERSION
+
+version 0.32002
+
+=head1 SYNOPSIS
+
+These types are provided by MooseX::Types. These types must not be quoted
+when they are used:
+
+  has 'posint' => ( is => 'rw', isa => PositiveInt);
+  has_field 'email' => ( apply => [ Email ] );
+
+Types declared using Moose::Util::TypeConstraints, on the other hand,
+must be quoted:
+
+  has_field 'text_both' => ( apply => [ PositiveInt, 'GreaterThan10' ] );
+
+To import these types into your forms, you must either specify (':all')
+or list the types you want to use:
+
+   use HTML::FormHandler::Types (':all');
+
+or:
+
+   use HTML::FormHandler::Types ('Email', 'PositiveInt');
+
+=head1 DESCRIPTION
+
+It would be possible to import the MooseX types (Common, etc), but for now
+we'll just re-implement them here in order to be able to change the
+messages and keep control of what types we provide.
+
+From MooseX::Types::Common:
+
+  'PositiveNum', 'PositiveInt', 'NegativeNum', 'NegativeInt', 'SingleDigit',
+  'SimpleStr', 'NonEmptySimpleStr', 'Password', 'StrongPassword', 'NonEmptyStr',
+
+=head1 Type Constraints
+
+These types check the value and issue an error message.
+
+=over
+
+=item Email
+
+Uses Email::Valid
+
+=item State
+
+Checks that the state is in a list of two uppercase letters.
+
+=item Zip
+
+=item IPAddress
+
+Must be a valid IPv4 address.
+
+=item NoSpaces
+
+No spaces in string allowed.
+
+=item WordChars
+
+Must be made up of letters, digits, and underscores.
+
+=item NotAllDigits
+
+Might be useful for passwords.
+
+=item Printable
+
+Must not contain non-printable characters.
+
+=item SingleWord
+
+Contains a single word.
+
+=back
+
+=head2 Type Coercions
+
+These types will transform the value without an error message;
+
+=over
+
+=item Collapse
+
+Replaces multiple spaces with a single space
+
+=item Upper
+
+Makes the string all upper case
+
+=item Lower
+
+Makes the string all lower case
+
+=item Trim
+
+Trims the string of starting and ending spaces
+
+=back
+
+=head1 AUTHOR
+
+FormHandler Contributors - see HTML::FormHandler
+
+=head1 COPYRIGHT AND LICENSE
+
+This software is copyright (c) 2010 by Gerda Shank.
+
+This is free software; you can redistribute it and/or modify it under
+the same terms as the Perl 5 programming language system itself.
 
 =cut
-
-1;
 
