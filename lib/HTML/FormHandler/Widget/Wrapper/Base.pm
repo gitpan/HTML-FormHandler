@@ -5,7 +5,7 @@ use Moose::Role;
 
 sub render_label {
     my $self = shift;
-    return '<label class="label" for="' . $self->id . '">' . $self->loc_label . ': </label>';
+    return '<label class="label" for="' . $self->id . '">' . $self->html_filter($self->loc_label) . ': </label>';
 }
 
 sub render_class {
@@ -36,7 +36,7 @@ HTML::FormHandler::Widget::Wrapper::Base - commong methods for widget wrappers
 
 =head1 VERSION
 
-version 0.32002
+version 0.32003
 
 =head1 AUTHOR
 

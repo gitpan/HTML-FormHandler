@@ -217,11 +217,12 @@ sub render_radio_group {
     my $output = " <br />";
     my $index  = 0;
     foreach my $option ( @{ $field->options } ) {
-        $output .= '<input type="radio" value="' . $field->html_filter($option->{value}) . '"';
-        $output .= ' name="' . $field->html_name . '" id="' . $field->id . ".$index\"";
+        my $id = $field->id . ".$index";
+        $output .= qq{<label for="$id"><input type="radio" value="} . $field->html_filter($option->{value}) . '"';
+        $output .= ' name="' . $field->html_name . '" id="' . "$id\"";
         $output .= ' checked="checked"' if $option->{value} eq $field->fif;
         $output .= ' />';
-        $output .= $field->html_filter($option->{label}) . '<br />';
+        $output .= $field->html_filter($option->{label}) . '</label><br />';
         $index++;
     }
     return $output;
@@ -323,7 +324,7 @@ HTML::FormHandler::Render::Simple - simple rendering role
 
 =head1 VERSION
 
-version 0.32002
+version 0.32003
 
 =head1 SYNOPSIS
 

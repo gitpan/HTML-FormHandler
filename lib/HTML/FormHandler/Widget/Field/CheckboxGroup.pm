@@ -59,7 +59,7 @@ HTML::FormHandler::Widget::Field::CheckboxGroup - checkbox group field role
 
 =head1 VERSION
 
-version 0.32002
+version 0.32003
 
 =head1 AUTHOR
 

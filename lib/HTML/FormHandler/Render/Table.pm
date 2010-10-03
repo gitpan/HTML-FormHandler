@@ -4,7 +4,7 @@ package HTML::FormHandler::Render::Table;
 use Moose::Role;
 
 with 'HTML::FormHandler::Render::Simple' =>
-    { excludes => [ 'render', 'render_field_struct', 'render_end', 'render_start' ] };
+    { -excludes => [ 'render', 'render_field_struct', 'render_end', 'render_start' ] };
 
 
 sub render {
@@ -68,7 +68,7 @@ HTML::FormHandler::Render::Table - render a form with a table layout
 
 =head1 VERSION
 
-version 0.32002
+version 0.32003
 
 =head1 SYNOPSIS
 

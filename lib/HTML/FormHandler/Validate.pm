@@ -108,7 +108,7 @@ HTML::FormHandler::Validate - validation role (internal)
 
 =head1 VERSION
 
-version 0.32002
+version 0.32003
 
 =head1 SYNOPSIS
 

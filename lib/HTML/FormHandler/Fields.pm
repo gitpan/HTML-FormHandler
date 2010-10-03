@@ -96,7 +96,7 @@ sub _fields_validate {
     # validate all fields
     my %value_hash;
     foreach my $field ( $self->all_fields ) {
-        next if ( ($field->inactive && !$field->_active) || !$field->has_result );
+        next if ( $field->is_inactive || !$field->has_result );
         # Validate each field and "inflate" input -> value.
         $field->validate_field;    # this calls the field's 'validate' routine
         $value_hash{ $field->accessor } = $field->value
@@ -109,7 +109,7 @@ sub fields_set_value {
     my $self = shift;
     my %value_hash;
     foreach my $field ( $self->all_fields ) {
-        next if ( ($field->inactive && !$field->_active) || !$field->has_result );
+        next if ( $field->is_inactive || !$field->has_result );
         $value_hash{ $field->accessor } = $field->value
             if ( $field->has_value && !$field->noupdate );
     }
@@ -128,7 +128,7 @@ sub fields_fif {
     my %params;
     foreach my $fld_result ( $result->results ) {
         my $field = $fld_result->field_def;
-        next if ( ($field->inactive && !$field->_active) || $field->password );
+        next if ( $field->is_inactive || $field->password );
         my $fif = $fld_result->fif;
         next if ( !defined $fif || (ref $fif eq 'ARRAY' && ! scalar @{$fif} ) );
         if ( $fld_result->has_results ) {
@@ -201,7 +201,7 @@ HTML::FormHandler::Fields - internal role for form and compound fields
 
 =head1 VERSION
 
-version 0.32002
+version 0.32003
 
 =head1 SYNOPSIS
 

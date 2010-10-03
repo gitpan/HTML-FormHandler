@@ -23,7 +23,7 @@ sub wrap_field {
         $output .= '<fieldset class="' . $self->html_name . '">';
         $output .= '<legend>' . $self->loc_label . '</legend>';
     }
-    elsif ( !$self->has_flag('no_render_label') && $self->label ) {
+    elsif ( !$self->has_flag('no_render_label') && length( $self->label ) > 0 ) {
         $output .= $self->render_label;
     }
 
@@ -49,7 +49,7 @@ HTML::FormHandler::Widget::Wrapper::Simple - simple field wrapper
 
 =head1 VERSION
 
-version 0.32002
+version 0.32003
 
 =head1 SYNOPSIS
 

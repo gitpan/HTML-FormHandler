@@ -39,7 +39,7 @@ HTML::FormHandler::Field::Multiple - multiple select list
 
 =head1 VERSION
 
-version 0.32002
+version 0.32003
 
 =head1 DESCRIPTION
 

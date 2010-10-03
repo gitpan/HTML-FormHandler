@@ -104,7 +104,7 @@ HTML::FormHandler::I18N::ua_ua - Ukrainian message file
 
 =head1 VERSION
 
-version 0.32002
+version 0.32003
 
 =head1 AUTHOR
 

@@ -11,6 +11,7 @@ sub render {
     my $result = shift || $self->result;
     my $t;
 
+    my $rendered = $self->html_filter($result->fif);
     my $output = '<input type="text" name="'
         . $self->html_name . '" id="' . $self->id . '"';
     $output .= qq{ size="$t"} if $t = $self->size;
@@ -33,7 +34,7 @@ HTML::FormHandler::Widget::Field::Text - text field rendering widget
 
 =head1 VERSION
 
-version 0.32002
+version 0.32003
 
 =head1 AUTHOR
 

@@ -61,7 +61,7 @@ HTML::FormHandler::Field::NoValue - base class for submit field
 
 =head1 VERSION
 
-version 0.32002
+version 0.32003
 
 =head1 SYNOPSIS
 

@@ -18,13 +18,14 @@ has 'index'          => ( isa => 'Int',  is => 'rw', default => 0 );
 has 'auto_id'        => ( isa => 'Bool', is => 'rw', default => 0 );
 has '+reload_after_update' => ( default => 1 );
 has 'is_repeatable' => ( is => 'ro', default => 1 );
+has '+widget' => ( default => 'repeatable' );
 
 sub _fields_validate {
     my $self = shift;
     # loop through array of fields and validate
     my @value_array;
     foreach my $field ( $self->all_fields ) {
-        next if ( $field->inactive && !$field->_active );
+        next if ( $field->is_inactive );
         # Validate each field and "inflate" input -> value.
         $field->validate_field;    # this calls the field's 'validate' routine
         push @value_array, $field->value;
@@ -215,7 +216,7 @@ HTML::FormHandler::Field::Repeatable - repeatable (array) field
 
 =head1 VERSION
 
-version 0.32002
+version 0.32003
 
 =head1 SYNOPSIS
 
@@ -310,6 +311,8 @@ rows.
 Will create an 'id' field automatically
 
 =back
+
+Initial idea based on L<HTML::FormFu::Element::Repeatable>.
 
 =head1 AUTHOR
 

@@ -3,7 +3,7 @@ package HTML::FormHandler::Widget::Form::Table;
 
 use Moose::Role;
 with 'HTML::FormHandler::Widget::Form::Simple' =>
-    { excludes => [ 'render_start', 'render_end' ] };
+    { -excludes => [ 'render_start', 'render_end' ] };
 
 
 sub render_start {
@@ -31,7 +31,7 @@ HTML::FormHandler::Widget::Form::Table - render a form with a table layout
 
 =head1 VERSION
 
-version 0.32002
+version 0.32003
 
 =head1 SYNOPSIS
 

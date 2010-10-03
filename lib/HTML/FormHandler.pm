@@ -13,12 +13,13 @@ with 'MooseX::Traits';
 use Carp;
 use Class::MOP;
 use HTML::FormHandler::Result;
+use HTML::FormHandler::Field;
 use Try::Tiny;
 
 use 5.008;
 
 # always use 5 digits after decimal because of toolchain issues
-our $VERSION = '0.32002';
+our $VERSION = '0.32003';
 
 
 # Moose attributes
@@ -503,7 +504,7 @@ HTML::FormHandler - HTML forms using Moose
 
 =head1 VERSION
 
-version 0.32002
+version 0.32003
 
 =head1 SYNOPSIS
 
@@ -671,7 +672,7 @@ in the form class:
 
    item_class  - source name of row
    dependency  - (see dependency)
-   field_list  - and array of field definitions
+   field_list  - an array of field definitions
    init_object - a hashref or object to provide initial values
 
 Examples of creating a form object with new:
@@ -892,6 +893,11 @@ those fields will be active for the life of the form object. Fields specified as
 active on 'process' will have the field's '_active' flag set just for the life of the
 request.
 
+The 'sorted_fields' method returns only active fields. The 'fields' method returns
+all fields.
+
+   foreach my $field ( $self->sorted_fields ) { ... }
+
 =head3 field_name_space
 
 Use to set the name space used to locate fields that
@@ -905,6 +911,11 @@ name.
 The array of fields, objects of L<HTML::FormHandler::Field> or its subclasses.
 A compound field will itself have an array of fields,
 so this is a tree structure.
+
+=head3 sorted_fields
+
+Returns those fields from the fields array which are currently active. This
+is the method that returns the fields that are looped through when rendering.
 
 =head3 field($name)
 
@@ -971,8 +982,6 @@ If the field name has dots they should be replaced with underscores.
 
 =head3 validate
 
-(This method used to be called 'cross_validate'. It was renamed to 'validate'
-to make the api more consistent.)
 This is a form method that is useful for cross checking values after they have
 been saved as their final validated value, and for performing more complex
 dependency validation. It is called after all other field validation is done,
@@ -1165,6 +1174,32 @@ dew: Dan Thomas
 koki: Klaus Ita
 
 jnapiorkowski: John Napiorkowski
+
+lestrrat: Daisuke Maki
+
+hobbs: Andrew Rodland
+
+Andy Clayton
+
+boghead: Bryan Beeley
+
+Csaba Hetenyi
+
+Eisuke Oishi
+
+Lian Wan Situ
+
+Murray
+
+Nick Logan
+
+Vladimir Timofeev
+
+diegok: Diego Kuperman
+
+ijw: Ian Wells
+
+amiri: Amiri Barksdale
 
 Initially based on the source code of L<Form::Processor> by Bill Moseley
 

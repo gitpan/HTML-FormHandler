@@ -23,7 +23,7 @@ HTML::FormHandler::Field::Minute - input range from 0 to 59
 
 =head1 VERSION
 
-version 0.32002
+version 0.32003
 
 =head1 DESCRIPTION
 

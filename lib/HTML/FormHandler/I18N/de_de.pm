@@ -102,7 +102,7 @@ HTML::FormHandler::I18N::de_de - German message translations
 
 =head1 VERSION
 
-version 0.32002
+version 0.32003
 
 =head1 AUTHOR
 

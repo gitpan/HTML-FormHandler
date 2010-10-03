@@ -43,7 +43,7 @@ my %WriteMakefileArgs = (
     'aliased' => '0',
     'namespace::autoclean' => '0.09'
   },
-  'VERSION' => '0.32002',
+  'VERSION' => '0.32003',
   'test' => {
     'TESTS' => 't/*.t'
   }

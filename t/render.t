@@ -28,7 +28,7 @@ use HTML::FormHandler::Field::Text;
                   { value => 3, label => 'Three' },
       ] );
    has_field 'active' => ( type => 'Checkbox' );
-   has_field 'comments' => ( type => 'TextArea' );
+   has_field 'comments' => ( type => 'TextArea', cols => 40, rows => 3 );
    has_field 'hidden' => ( type => 'Hidden' );
    has_field 'selected' => ( type => 'Boolean' );
    has_field 'start_date' => ( type => 'DateTime' );
@@ -133,7 +133,7 @@ is( $output4,
 my $output5 = $form->render_field( $form->field('comments') );
 is( $output5,
    '
-<div><label class="label" for="comments">Comments: </label><textarea name="comments" id="comments" rows="5" cols="10">Four score and seven years ago...</textarea></div>
+<div><label class="label" for="comments">Comments: </label><textarea name="comments" id="comments" rows="3" cols="40">Four score and seven years ago...</textarea></div>
 ',
    'output from textarea' );
 
@@ -171,7 +171,7 @@ is( $output9, '
 
 my $output10 = $form->render_field( $form->field('opt_in') );
 is( $output10, '
-<div><label class="label" for="opt_in">Opt in: </label> <br /><input type="radio" value="0" name="opt_in" id="opt_in.0" checked="checked" />No<br /><input type="radio" value="1" name="opt_in" id="opt_in.1" />Yes<br /></div>
+<div><label class="label" for="opt_in">Opt in: </label> <br /><label for="opt_in.0"><input type="radio" value="0" name="opt_in" id="opt_in.0" checked="checked" />No</label><br /><label for="opt_in.1"><input type="radio" value="1" name="opt_in" id="opt_in.1" />Yes</label><br /></div>
 ', 'output from radio group' );
 
 my $output11 = $form->render_start;

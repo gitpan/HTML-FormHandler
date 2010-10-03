@@ -11,7 +11,7 @@ HTML::FormHandler::Manual::Rendering - how to render with FormHandler
 
 =head1 VERSION
 
-version 0.32002
+version 0.32003
 
 =head1 SYNOPSIS
 
@@ -58,6 +58,9 @@ The best alternative may be to render some of the HTML by hand, but use
 FormHandler to display the field elements:
 
    [% form.field('title').render %]
+
+If you wish to loop through the fields yourself, use the 'sorted_fields'
+method.
 
 FormHandler is not a template system, so unless your form is very simple,
 rendering the entire form page only with FormHandler may not be the best solution.

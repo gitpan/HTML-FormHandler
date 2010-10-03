@@ -94,6 +94,7 @@ lib/HTML/FormHandler/Widget/Field/Hidden.pm
 lib/HTML/FormHandler/Widget/Field/NoRender.pm
 lib/HTML/FormHandler/Widget/Field/Password.pm
 lib/HTML/FormHandler/Widget/Field/RadioGroup.pm
+lib/HTML/FormHandler/Widget/Field/Repeatable.pm
 lib/HTML/FormHandler/Widget/Field/Reset.pm
 lib/HTML/FormHandler/Widget/Field/Role/HTMLAttributes.pm
 lib/HTML/FormHandler/Widget/Field/Role/SelectedOption.pm
@@ -126,6 +127,7 @@ share/templates/widget/text.tt
 share/templates/widget/textarea.tt
 share/templates/widget/upload.tt
 t/01app.t
+t/build_id.t
 t/compound_field.t
 t/constraints.t
 t/dates.t
@@ -190,6 +192,7 @@ xt/check_selected_option.t
 xt/custom_fields.t
 xt/display.t
 xt/email.t
+xt/eol.t
 xt/field_list.t
 xt/form_errors.t
 xt/init.t

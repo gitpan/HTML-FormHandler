@@ -12,7 +12,7 @@ sub wrap_field {
     if ( $self->has_flag('is_compound') ) {
         $output .= '<td>' . $self->render_label . '</td></tr>';
     }
-    elsif ( !$self->has_flag('no_render_label') && $self->label ) {
+    elsif ( !$self->has_flag('no_render_label') && length( $self->label ) > 0 ) {
         $output .= '<td>' . $self->render_label . '</td>';
     }
     if ( !$self->has_flag('is_compound') ) {
@@ -38,7 +38,7 @@ HTML::FormHandler::Widget::Wrapper::Table - wrapper class for table layout
 
 =head1 VERSION
 
-version 0.32002
+version 0.32003
 
 =head1 AUTHOR
 

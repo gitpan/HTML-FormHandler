@@ -22,7 +22,7 @@ HTML::FormHandler::Field::Reset - reset field
 
 =head1 VERSION
 
-version 0.32002
+version 0.32003
 
 =head1 SYNOPSIS
 

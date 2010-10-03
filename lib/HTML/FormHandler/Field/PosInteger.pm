@@ -28,7 +28,7 @@ HTML::FormHandler::Field::PosInteger - positive integer field
 
 =head1 VERSION
 
-version 0.32002
+version 0.32003
 
 =head1 DESCRIPTION
 

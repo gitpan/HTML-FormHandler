@@ -1,25 +1,19 @@
-package HTML::FormHandler::Widget::Field::Compound;
-# ABSTRACT: compound field widget
+package HTML::FormHandler::Widget::Field::Repeatable;
+# ABSTRACT: repeatable field widget
 
 use Moose::Role;
+with 'HTML::FormHandler::Widget::Field::Compound';
 
 sub render_subfield {
     my ( $self, $result, $subfield ) = @_;
     my $subresult = $result->field( $subfield->name );
 
-    return "" unless $subresult;
-    return $subfield->render( $subresult );
-}
+    return "" unless $subresult
+        or ( $self->has_flag( "is_repeatable")
+            and $subfield->name < $self->num_when_empty
+        );
 
-sub render {
-    my ( $self, $result ) = @_;
-
-    $result ||= $self->result;
-    my $output = '';
-    foreach my $subfield ( $self->sorted_fields ) {
-        $output .= $self->render_subfield( $result, $subfield );
-    }
-    return $self->wrap_field( $result, $output );
+    return $subfield->render($subresult);
 }
 
 use namespace::autoclean;
@@ -30,7 +24,7 @@ __END__
 
 =head1 NAME
 
-HTML::FormHandler::Widget::Field::Compound - compound field widget
+HTML::FormHandler::Widget::Field::Repeatable - repeatable field widget
 
 =head1 VERSION
 
