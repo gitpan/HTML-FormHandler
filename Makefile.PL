@@ -36,14 +36,13 @@ my %WriteMakefileArgs = (
     'Locale::Maketext' => '1.09',
     'Moose' => '0.90',
     'MooseX::Getopt' => '0.16',
-    'MooseX::Traits' => '0',
     'MooseX::Types' => '0.20',
     'MooseX::Types::Common' => '0',
     'Try::Tiny' => '0',
     'aliased' => '0',
     'namespace::autoclean' => '0.09'
   },
-  'VERSION' => '0.32003',
+  'VERSION' => '0.32004',
   'test' => {
     'TESTS' => 't/*.t'
   }

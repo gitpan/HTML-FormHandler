@@ -10,6 +10,7 @@ SIGNATURE
 TODO
 dist.ini
 lib/HTML/FormHandler.pm
+lib/HTML/FormHandler/Base.pm
 lib/HTML/FormHandler/BuildFields.pm
 lib/HTML/FormHandler/Field.pm
 lib/HTML/FormHandler/Field/Boolean.pm
@@ -83,6 +84,7 @@ lib/HTML/FormHandler/Result.pm
 lib/HTML/FormHandler/Result/Role.pm
 lib/HTML/FormHandler/TraitFor/Captcha.pm
 lib/HTML/FormHandler/TraitFor/I18N.pm
+lib/HTML/FormHandler/Traits.pm
 lib/HTML/FormHandler/Types.pm
 lib/HTML/FormHandler/Validate.pm
 lib/HTML/FormHandler/Validate/Actions.pm
@@ -128,6 +130,7 @@ share/templates/widget/textarea.tt
 share/templates/widget/upload.tt
 t/01app.t
 t/build_id.t
+t/composed.t
 t/compound_field.t
 t/constraints.t
 t/dates.t

@@ -3,7 +3,7 @@ package HTML::FormHandler::Result;
 
 use Moose;
 with 'HTML::FormHandler::Result::Role';
-with 'MooseX::Traits';
+with 'HTML::FormHandler::Traits';
 
 
 has 'form' => (
@@ -59,7 +59,7 @@ HTML::FormHandler::Result - form result object
 
 =head1 VERSION
 
-version 0.32003
+version 0.32004
 
 =head1 SYNOPSIS
 

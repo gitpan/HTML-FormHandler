@@ -1,11 +1,9 @@
-package HTML::FormHandler::Widget::Field::NoRender;
-# ABSTRACT: no rendering widget
+package HTML::FormHandler::Base;
+# ABSTRACT: stub
+use Moose;
 
-use Moose::Role;
+with 'HTML::FormHandler::Widget::Form::Simple';
 
-sub render { '' }
-
-use namespace::autoclean;
 1;
 
 __END__
@@ -13,7 +11,7 @@ __END__
 
 =head1 NAME
 
-HTML::FormHandler::Widget::Field::NoRender - no rendering widget
+HTML::FormHandler::Base - stub
 
 =head1 VERSION
 

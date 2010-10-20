@@ -5,7 +5,7 @@ use HTML::FormHandler::Moose;
 use HTML::FormHandler::Field::Result;
 use Try::Tiny;
 
-with 'MooseX::Traits';
+with 'HTML::FormHandler::Traits';
 with 'HTML::FormHandler::Validate';
 with 'HTML::FormHandler::Validate::Actions';
 with 'HTML::FormHandler::Widget::ApplyRole';
@@ -357,12 +357,12 @@ sub build_render_filter {
 }
 sub default_render_filter {
     my ( $self, $string ) = @_;
-    return if (!defined $string);
+    return '' if (!defined $string);
     $string =~ s/&/&amp;/g;
     $string =~ s/</&lt;/g;
     $string =~ s/>/&gt;/g;
     $string =~ s/"/&quot;/g;
-    return $string;
+    return $string // '';
 }
 
 has 'input_param' => ( is => 'rw', isa => 'Str' );
@@ -594,7 +594,7 @@ HTML::FormHandler::Field - base class for fields
 
 =head1 VERSION
 
-version 0.32003
+version 0.32004
 
 =head1 SYNOPSIS
 
@@ -970,6 +970,20 @@ In a FormHandler field_list
         range_end       => 120,
     }
 
+=item not_nullable
+
+Fields that contain 'empty' values such as '' are changed to undef in the validation process.
+If this flag is set, the value is not changed to undef. If your database column requires
+an empty string instead of a null value (such as a NOT NULL column), set this attribute.
+
+    has_field 'description' => (
+        type => 'TextArea',
+        not_nullable => 1,
+    );
+
+This attribute is also used when you want an empty array to stay an empty array and not
+be set to undef.
+
 =back
 
 =head2 apply
@@ -1093,6 +1107,7 @@ return true or false:
              check => sub { if ( $_[0] =~ /(\d+)/ ) { return $1 > 10 } },
              message => 'Must contain number greater than 10',
          }
+      ]
   );
 
 A 'check' regular expression:

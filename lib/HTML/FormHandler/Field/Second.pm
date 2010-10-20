@@ -22,7 +22,7 @@ HTML::FormHandler::Field::Second - select list 0 to 59
 
 =head1 VERSION
 
-version 0.32003
+version 0.32004
 
 =head1 DESCRIPTION
 

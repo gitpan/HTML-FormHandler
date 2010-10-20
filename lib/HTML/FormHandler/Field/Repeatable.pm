@@ -216,7 +216,7 @@ HTML::FormHandler::Field::Repeatable - repeatable (array) field
 
 =head1 VERSION
 
-version 0.32003
+version 0.32004
 
 =head1 SYNOPSIS
 
@@ -311,8 +311,6 @@ rows.
 Will create an 'id' field automatically
 
 =back
-
-Initial idea based on L<HTML::FormFu::Element::Repeatable>.
 
 =head1 AUTHOR
 

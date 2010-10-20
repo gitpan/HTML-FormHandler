@@ -42,7 +42,7 @@ HTML::FormHandler::TraitFor::I18N - localization
 
 =head1 VERSION
 
-version 0.32003
+version 0.32004
 
 =head3 language_handle, _build_language_handle
 
@@ -73,6 +73,10 @@ L<I18N::LangTags> may guess, with unexpected results.
 You can use non-Locale::Maketext language handles, such as L<Data::Localize>.
 There's an example of building a L<Data::Localize> language handle
 in t/xt/locale_data_localize.t in the distribution.
+
+If you don't want a particular error message to go through localization,
+you can use 'push_errors' and 'push_form_errors' instead of 'add_error' and
+'add_form_errors'.
 
 =head1 AUTHOR
 
