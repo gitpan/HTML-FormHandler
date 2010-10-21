@@ -55,7 +55,7 @@ HTML::FormHandler::Field::Result - result class for fields
 
 =head1 VERSION
 
-version 0.32004
+version 0.32005
 
 =head1 SYNOPSIS
 

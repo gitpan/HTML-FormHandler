@@ -362,7 +362,7 @@ sub default_render_filter {
     $string =~ s/</&lt;/g;
     $string =~ s/>/&gt;/g;
     $string =~ s/"/&quot;/g;
-    return $string // '';
+    return $string;
 }
 
 has 'input_param' => ( is => 'rw', isa => 'Str' );
@@ -594,7 +594,7 @@ HTML::FormHandler::Field - base class for fields
 
 =head1 VERSION
 
-version 0.32004
+version 0.32005
 
 =head1 SYNOPSIS
 

@@ -32,7 +32,7 @@ HTML::FormHandler::Widget::Field::Password - password rendering widget
 
 =head1 VERSION
 
-version 0.32004
+version 0.32005
 
 =head1 AUTHOR
 

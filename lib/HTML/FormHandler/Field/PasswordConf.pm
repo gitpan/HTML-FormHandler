@@ -42,7 +42,7 @@ HTML::FormHandler::Field::PasswordConf - password confirmation
 
 =head1 VERSION
 
-version 0.32004
+version 0.32005
 
 =head1 DESCRIPTION
 

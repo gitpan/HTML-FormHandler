@@ -216,7 +216,7 @@ HTML::FormHandler::Field::Repeatable - repeatable (array) field
 
 =head1 VERSION
 
-version 0.32004
+version 0.32005
 
 =head1 SYNOPSIS
 
