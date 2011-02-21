@@ -23,6 +23,7 @@ sub render {
         $form   = $self;
     }
     my $output = $form->render_start;
+    $output .= $form->render_form_errors( $form, $result );
 
     foreach my $fld_result ( $result->results ) {
         die "no field in result for " . $fld_result->name
@@ -43,6 +44,17 @@ sub render_start {
         if $self->form->auto_fieldset;
 
     return $output
+}
+
+sub render_form_errors {
+    my ( $self, $form, $result ) = @_;
+
+    return '' unless $result->has_form_errors;
+    my $output = "\n<div class=\"form_errors\">";
+    $output .= qq{\n<span class="error_message">$_</span>}
+        for $result->all_form_errors;
+    $output .= "\n</div>";
+    return $output;
 }
 
 sub render_end {
@@ -66,7 +78,7 @@ HTML::FormHandler::Widget::Form::Simple - widget to render a form with divs
 
 =head1 VERSION
 
-version 0.32005
+version 0.33000
 
 =head1 SYNOPSIS
 

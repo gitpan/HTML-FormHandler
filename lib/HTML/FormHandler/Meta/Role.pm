@@ -29,6 +29,18 @@ has 'apply_list' => (
     }
 );
 
+has 'page_list' => (
+    traits    => ['Array'],
+    is        => 'rw',
+    isa       => 'ArrayRef',
+    default   => sub { [] },
+    handles  => {
+        add_to_page_list => 'push',
+        has_page_list => 'count',
+        clear_page_list => 'clear',
+    }
+);
+
 use namespace::autoclean;
 1;
 
@@ -41,7 +53,7 @@ HTML::FormHandler::Meta::Role - field_list and apply_list
 
 =head1 VERSION
 
-version 0.32005
+version 0.33000
 
 =head1 SYNOPSIS
 

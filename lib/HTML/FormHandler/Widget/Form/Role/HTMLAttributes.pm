@@ -18,7 +18,7 @@ sub html_form_tag {
     my $output = '<form';
     foreach my $attr_pair (@attr_accessors) {
         my $accessor = $attr_pair->[1];
-        if ( my $value = $self->$accessor ) {
+        if ( defined( my $value = $self->$accessor ) ) {
             $output .= ' ' . $attr_pair->[0] . '="' . $value . '"';
         }
     }
@@ -38,7 +38,7 @@ HTML::FormHandler::Widget::Form::Role::HTMLAttributes - set HTML attributes on t
 
 =head1 VERSION
 
-version 0.32005
+version 0.33000
 
 =head1 AUTHOR
 

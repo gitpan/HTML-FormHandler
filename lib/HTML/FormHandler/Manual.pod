@@ -13,7 +13,7 @@ HTML::FormHandler::Manual - index of the manual
 
 =head1 VERSION
 
-version 0.32005
+version 0.33000
 
 =head1 DESCRIPTION
 
@@ -48,6 +48,10 @@ Cut-and-paste examples of templates to use with FormHandler
 =head2 L<HTML::FormHandler::Manual::Catalyst>
 
 Catalyst specific documentation
+
+=head1 L<HTML::FormHandler::Manual::Reference>
+
+Quick reference of FormHandler interface
 
 =head1 SUPPORT
 

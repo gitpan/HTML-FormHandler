@@ -88,6 +88,19 @@ sub build_input_without_param {
     }
 }
 
+our $class_messages = {
+    'select_not_multiple' => 'This field does not take multiple values',
+    'select_invalid_value' => '\'[_1]\' is not a valid value',
+};
+
+sub get_class_messages  {
+    my $self = shift;
+    return {
+        %{ $self->next::method },
+        %$class_messages,
+    }
+}
+
 sub select_widget {
     my $field = shift;
 
@@ -119,7 +132,7 @@ sub _inner_validate_field {
     if ( ref $value eq 'ARRAY' &&
         !( $self->can('multiple') && $self->multiple ) )
     {
-        $self->add_error('This field does not take multiple values');
+        $self->add_error( $self->get_message('select_not_multiple') );
         return;
     }
     elsif ( ref $value ne 'ARRAY' && $self->multiple ) {
@@ -131,7 +144,7 @@ sub _inner_validate_field {
     my %options = map { $_->{value} => 1 } @{ $self->options };
     for my $value ( ref $value eq 'ARRAY' ? @$value : ($value) ) {
         unless ( $options{$value} ) {
-            $self->add_error("'$value' is not a valid value");
+            $self->add_error($self->get_message('select_invalid_value'), $value);
             return;
         }
     }
@@ -157,6 +170,8 @@ sub _result_from_fields {
 sub _result_from_input {
     my ( $self, $result, $input, $exists ) = @_;
 
+    $input = ref $input eq 'ARRAY' ? $input : [$input]
+        if $self->multiple;
     $result = $self->next::method( $result, $input, $exists );
     $self->_load_options;
     return $result;
@@ -226,7 +241,7 @@ HTML::FormHandler::Field::Select - select fields
 
 =head1 VERSION
 
-version 0.32005
+version 0.33000
 
 =head1 DESCRIPTION
 
@@ -303,6 +318,26 @@ to the hashes that you can use in creating the HTML:
       while ( my $license = $licenses->next ) {
          push @selections, { value => $license->id, label => $license->label,
               note => $license->note };
+      }
+      return @selections;
+   }
+
+To have an option being shown, but disabled (thus not selectable), use the
+'disabled' key with a true value inside this hashref. Let's extend the example
+above, adding also inactive licenses, and disabling them.  Keep in mind that a
+disabled option can be made selectable later, by removing the disabled
+attribute, e.g. using javascript.
+
+   sub options_license
+   {
+      my $self = shift;
+      return unless $self->schema;
+      my $licenses = $self->schema->resultset('License')->search(undef,
+           {order_by => 'sequence'});
+      my @selections;
+      while ( my $license = $licenses->next ) {
+         push @selections, { value => $license->id, label => $license->label,
+              note => $license->note, disabled => ($license->active == 0) ? 1 : 0 };
       }
       return @selections;
    }
@@ -418,6 +453,11 @@ otherwise will return C<checkbox_group>.
 Returns the option label for the option value that matches the field's current value.
 Can be helpful for displaying information about the field in a more friendly format.
 This does a string compare.
+
+=head2 error messages
+
+Customize 'select_invalid_value' and 'select_not_multiple'. Though neither of these
+messages should really be seen by users in a properly constructed select.
 
 =head1 AUTHOR
 

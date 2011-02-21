@@ -4,12 +4,12 @@ package HTML::FormHandler::Field;
 use HTML::FormHandler::Moose;
 use HTML::FormHandler::Field::Result;
 use Try::Tiny;
+use Moose::Util::TypeConstraints;
 
 with 'HTML::FormHandler::Traits';
 with 'HTML::FormHandler::Validate';
 with 'HTML::FormHandler::Validate::Actions';
 with 'HTML::FormHandler::Widget::ApplyRole';
-with 'HTML::FormHandler::TraitFor::I18N';
 
 our $VERSION = '0.02';
 
@@ -170,6 +170,7 @@ has 'label' => (
     lazy    => 1,
     builder => 'build_label',
 );
+has 'no_render_label' => ( isa => 'Bool', is => 'rw' );
 sub build_label {
     my $self = shift;
     my $label = $self->name;
@@ -229,14 +230,14 @@ has 'order'             => ( isa => 'Int',  is => 'rw', default => 0 );
 # 'inactive' is set in the field declaration, and is static. Default status.
 has 'inactive'          => ( isa => 'Bool', is => 'rw', clearer => 'clear_inactive' );
 # 'active' is cleared whenever the form is cleared. Ephemeral activation.
-has '_active'         => ( isa => 'Bool', is => 'rw', clearer => 'clear_active' );
+has '_active'         => ( isa => 'Bool', is => 'rw', clearer => 'clear_active', predicate => 'has__active' );
 sub is_active {
     my $self = shift;
     return ! $self->is_inactive;
 }
 sub is_inactive {
     my $self = shift;
-    return ($self->inactive && !$self->_active);
+    return (($self->inactive && !$self->_active) || (!$self->inactive && $self->has__active && $self->_active == 0 ) );
 }
 has 'id'                => ( isa => 'Str',  is => 'rw', lazy => 1, builder => 'build_id' );
 sub build_id { shift->html_name }
@@ -342,21 +343,18 @@ has 'render_filter' => (
 
 sub build_render_filter {
     my $self = shift;
+
     if( $self->form && $self->form->can('render_filter') ) {
-        return sub {
-            my $name = shift;
-            return $self->form->render_filter($name);
-        }
+        my $coderef = $self->form->can('render_filter');
+        return $coderef;
     }
     else {
-        return sub {
-            my $name = shift;
-            return $self->default_render_filter($name);
-        }
+        return \&default_render_filter;
     }
 }
+
 sub default_render_filter {
-    my ( $self, $string ) = @_;
+    my $string = shift;
     return '' if (!defined $string);
     $string =~ s/&/&amp;/g;
     $string =~ s/</&lt;/g;
@@ -366,6 +364,101 @@ sub default_render_filter {
 }
 
 has 'input_param' => ( is => 'rw', isa => 'Str' );
+
+has 'language_handle' => (
+    isa => duck_type( [ qw(maketext) ] ),
+    is => 'rw',
+    reader => 'get_language_handle',
+    writer => 'set_language_handle',
+    predicate => 'has_language_handle'
+);
+
+sub language_handle {
+    my ( $self, $value ) = @_;
+    if( $value ) {
+        $self->set_language_handle($value);
+        return;
+    }
+    return $self->get_language_handle if( $self->has_language_handle );
+    return $self->form->language_handle if ( $self->has_form );
+    require HTML::FormHandler::I18N;
+    return $ENV{LANGUAGE_HANDLE} || HTML::FormHandler::I18N->get_handle;
+}
+
+has 'localize_meth' => (
+     traits => ['Code'],
+     is     => 'ro',
+     isa    => 'CodeRef',
+     builder => 'build_localize_meth',
+     handles => { '_localize' => 'execute_method' },
+);
+
+sub build_localize_meth {
+    my $self = shift;
+
+    if( $self->form && $self->form->can('localize_meth') ) {
+        my $coderef = $self->form->can('localize_meth');
+        return $coderef;
+    }
+    else {
+        return \&default_localize;
+    }
+}
+
+sub default_localize {
+    my ($self, @message) = @_;
+    my $message = $self->language_handle->maketext(@message);
+    return $message;
+}
+
+has 'messages' => ( is => 'rw',
+    isa => 'HashRef',
+    traits => ['Hash'],
+    default => sub {{}},
+    handles => {
+        '_get_field_message' => 'get',
+        '_has_field_message' => 'exists',
+        'set_message' => 'set',
+    },
+);
+
+our $class_messages = {
+    'field_invalid'   => 'field is invalid',
+    'range_too_low'   => 'Value must be greater than or equal to [_1]',
+    'range_too_high'  => 'Value must be less than or equal to [_1]',
+    'range_incorrect' => 'Value must be between [_1] and [_2]',
+    'wrong_value'     => 'Wrong value',
+    'no_match'        => '[_1] does not match',
+    'not_allowed'     => '[_1] not allowed',
+    'error_occurred'  => 'error occurred',
+    'required'        => '[_1] field is required',
+};
+
+sub get_class_messages  {
+    my $self = shift;
+    my $messages = { %$class_messages };
+    return $messages;
+}
+
+sub get_message {
+    my ( $self, $msg ) = @_;
+
+    # first look in messages set on individual field
+    return $self->_get_field_message($msg)
+       if $self->_has_field_message($msg);
+    # then look at form messages
+    return $self->form->_get_form_message($msg)
+       if $self->has_form && $self->form->_has_form_message($msg);
+    # then look for messages up through inherited field classes
+    return $self->get_class_messages->{$msg};
+}
+sub all_messages {
+    my $self = shift;
+    my $form_messages = $self->has_form ? $self->form->messages : {};
+    my $field_messages = $self->messages || {};
+    my $lclass_messages = $self->my_class_messages || {};
+    return {%{$lclass_messages}, %{$form_messages}, %{$field_messages}};
+}
 
 sub BUILDARGS {
     my $class = shift;
@@ -385,7 +478,7 @@ sub BUILD {
     $self->add_widget_name_space( @{$self->form->widget_name_space} ) if $self->form;
     # widgets will already have been applied by BuildFields, but this allows
     # testing individual fields
-    $self->apply_rendering_widgets unless ($self->can('render') );
+#   $self->apply_rendering_widgets unless ($self->can('render') );
     $self->add_action( $self->trim ) if $self->trim;
     $self->_build_apply_list;
     $self->add_action( @{ $params->{apply} } ) if $params->{apply};
@@ -460,7 +553,7 @@ sub add_error {
     my ( $self, @message ) = @_;
 
     unless ( defined $message[0] ) {
-        @message = ('field is invalid');
+        @message = ( $class_messages->{field_invalid});
     }
     @message = @{$message[0]} if ref $message[0] eq 'ARRAY';
     my $out;
@@ -527,19 +620,19 @@ sub dump {
     warn "HFH: type: ",  $self->type, "\n";
     warn "HFH: required: ", ( $self->required || '0' ), "\n";
     warn "HFH: label: ",  $self->label,  "\n";
-    warn "HFH: widget: ", $self->widget, "\n";
+    warn "HFH: widget: ", $self->widget || '', "\n";
     my $v = $self->value;
-    warn "HFH: value: ", Data::Dumper::Dumper $v if $v;
+    warn "HFH: value: ", Data::Dumper::Dumper($v) if $v;
     my $iv = $self->init_value;
-    warn "HFH: init_value: ", Data::Dumper::Dumper $iv if $iv;
+    warn "HFH: init_value: ", Data::Dumper::Dumper($iv) if $iv;
     my $i = $self->input;
-    warn "HFH: input: ", Data::Dumper::Dumper $i if $i;
+    warn "HFH: input: ", Data::Dumper::Dumper($i) if $i;
     my $fif = $self->fif;
-    warn "HFH: fif: ", Data::Dumper::Dumper $fif if $fif;
+    warn "HFH: fif: ", Data::Dumper::Dumper($fif) if $fif;
 
     if ( $self->can('options') ) {
         my $o = $self->options;
-        warn "HFH: options: " . Data::Dumper::Dumper $o;
+        warn "HFH: options: " . Data::Dumper::Dumper($o);
     }
 }
 
@@ -547,6 +640,7 @@ sub apply_rendering_widgets {
     my $self = shift;
 
     if ( $self->widget ) {
+        warn "in apply_rendering_widgets " . $self->widget . " Field\n";
         $self->apply_widget_role( $self, $self->widget, 'Field' );
     }
     my $widget_wrapper = $self->widget_wrapper;
@@ -581,6 +675,28 @@ sub peek {
     return $string;
 }
 
+sub has_some_value {
+    my $x = shift;
+
+    return unless defined $x;
+    return $x =~ /\S/ if !ref $x;
+    if ( ref $x eq 'ARRAY' ) {
+        for my $elem (@$x) {
+            return 1 if has_some_value($elem);
+        }
+        return 0;
+    }
+    if ( ref $x eq 'HASH' ) {
+        for my $key ( keys %$x ) {
+            return 1 if has_some_value( $x->{$key} );
+        }
+        return 0;
+    }
+    return 1 if blessed($x);    # true if blessed, otherwise false
+    return 1 if ref( $x );
+    return;
+}
+
 __PACKAGE__->meta->make_immutable;
 use namespace::autoclean;
 1;
@@ -594,7 +710,7 @@ HTML::FormHandler::Field - base class for fields
 
 =head1 VERSION
 
-version 0.32005
+version 0.33000
 
 =head1 SYNOPSIS
 
@@ -725,10 +841,11 @@ you to look for a different input parameter.
 
 =item inactive, is_inactive, is_active
 
-Set this attribute if this field is inactive. This provides a way to define fields
-in the form and selectively set them to inactive. There is also an '_active' attribute,
-for internal use to indicate that the field has been activated by the form's 'active'
-attribute.
+Set the 'inactive' attribute to 1 if this field is inactive. The 'inactive' attribute
+that isn't set or is set to 0 will make a field 'active'.
+This provides a way to define fields in the form and selectively set them to inactive.
+There is also an '_active' attribute, for internal use to indicate that the field has
+been activated/inactivated on 'process' by the form's 'active'/'inactive' attributes.
 
 You can use the is_inactive and is_active methods to check whether this particular
 field is active.
@@ -822,10 +939,14 @@ Compound fields will have an array of errors from the subfields.
    javascript  - for a Javascript string
    order       - Used for sorting errors and fields. Built automatically,
                  but may also be explicitly set
+   render_filter - Coderef for filtering fields before rendering. By default
+                 changes >, <, &, " to the html entities
 
 =head2 widget
 
-The 'widget' attribute is not used by base FormHandler code.
+The 'widget' attribute is used in rendering, so if you are
+not using FormHandler's rendering facility, you don't need this
+attribute.
 It is intended for use in generating HTML, in templates and the
 rendering roles, and is used in L<HTML::FormHandler::Render::Simple>.
 Fields of different type can use the same widget.
@@ -834,9 +955,11 @@ This attribute is set in the field classes, or in the fields
 defined in the form. If you want a new widget type, use a new
 name and provide a C<< 'widget_<name>' >> method in your copy
 of Render::Simple or in your form class.
+
 If you are using a template based rendering system you will want
 to create a widget template.
 (see L<HTML::FormHandler::Manual::Templates>)
+
 If you are using the widget roles, you can specify the widget
 with the short class name instead.
 
@@ -864,6 +987,18 @@ Widget roles are automatically applied to field classes
 unless they already have a 'render' method. Render::Simple
 will fall back to doing C<< $field->render >> if the corresponding
 widget method does not exist.
+
+You can create your own widget roles and specify the namespace
+in 'widget_name_space'. In the form:
+
+    has '+widget_name_space' => ( default => sub { ['MyApp::Widget'] } );
+
+If you want to use a fully specified role name for a widget, you
+can prefix it with a '+':
+
+   widget => '+MyApp::Widget::SomeWidget'
+
+For more about widgets, see L<HTML::FormHandler::Manual::Rendering>.
 
 =head2 Flags
 
@@ -938,18 +1073,22 @@ see tests in the distribution.
 
 Flag indicating whether this field must have a value
 
-=item required_message
-
-Error message text added to errors if required field is not present
-The default is "Field <field label> is required".
-
 =item unique
 
-Flag to initiate checks in the database model for uniqueness.
+For DB field - check for uniqueness. Action is performed by
+the DB model.
 
-=item unique_message
+=item messages
 
-Error message text added to errors if field is not unique
+    messages => { required => '...', unique => '...' }
+
+Set messages created by FormHandler by setting in the 'messages'
+hashref. Some field subclasses have additional settable messages.
+
+required:  Error message text added to errors if required field is not present
+The default is "Field <field label> is required".
+
+unique: message for when 'unique' is set, but field is not unique
 
 =item range_start
 

@@ -5,7 +5,6 @@ use Moose;
 extends 'HTML::FormHandler::Base'; # to make some methods overridable by roles
 with 'HTML::FormHandler::Model', 'HTML::FormHandler::Fields',
     'HTML::FormHandler::BuildFields',
-    'HTML::FormHandler::Validate::Actions',
     'HTML::FormHandler::TraitFor::I18N';
 with 'HTML::FormHandler::InitResult';
 with 'HTML::FormHandler::Widget::ApplyRole';
@@ -20,7 +19,7 @@ use Try::Tiny;
 use 5.008;
 
 # always use 5 digits after decimal because of toolchain issues
-our $VERSION = '0.32005';
+our $VERSION = '0.33000';
 
 
 # Moose attributes
@@ -84,6 +83,17 @@ has 'active' => (
         clear_active => 'clear',
     }
 );
+has 'inactive' => (
+    is => 'rw',
+    traits => ['Array'],
+    isa => 'ArrayRef[Str]',
+    default => sub {[]},
+    handles => {
+        add_inactive => 'push',
+        has_inactive => 'count',
+        clear_inactive => 'clear',
+    }
+);
 
 
 # object with which to initialize
@@ -108,6 +118,11 @@ has 'http_method'   => ( isa => 'Str',  is  => 'ro', default => 'post' );
 has 'enctype'       => ( is  => 'rw',   isa => 'Str' );
 has 'css_class' =>     ( isa => 'Str',  is => 'ro' );
 has 'style'     =>     ( isa => 'Str',  is => 'rw' );
+sub has_flag {
+    my ( $self, $flag_name ) = @_;
+    return unless $self->can($flag_name);
+    return $self->$flag_name;
+}
 
 has 'widget_tags'         => (
     traits => ['Hash'],
@@ -148,6 +163,34 @@ has '_required' => (
     }
 );
 
+# these messages could apply to either fields or form
+has 'messages' => ( is => 'rw',
+    isa => 'HashRef',
+    traits => ['Hash'],
+    builder => 'build_messages',
+    handles => {
+        '_get_form_message' => 'get',
+        '_has_form_message' => 'exists',
+        'set_message' => 'set',
+    },
+);
+sub build_messages { {} }
+
+my $class_messages = {};
+sub get_class_messages  {
+    return $class_messages;
+}
+
+sub get_message {
+    my ( $self, $msg ) = @_;
+    return $self->_get_form_message($msg) if $self->_has_form_message($msg);
+    return $self->get_class_messages->{$msg};
+}
+sub all_messages {
+    my $self = shift;
+    return { %{$self->get_class_messages}, %{$self->messages} };
+}
+
 {
     use Moose::Util::TypeConstraints;
 
@@ -183,7 +226,7 @@ sub BUILD {
     $self->apply_widget_role( $self, $self->widget_form, 'Form' )
         if ( $self->widget_form && $self->widget_form ne 'Simple' );
     $self->_build_fields;    # create the form fields (BuildFields.pm)
-    $self->build_active if $self->has_active; # set optional fields active
+    $self->build_active if $self->has_active || $self->has_inactive || $self->has_flag('is_wizard');
     return if defined $self->item_id && !$self->item;
     # load values from object (if any)
     if ( my $init_object = $self->item || $self->init_object ) {
@@ -267,7 +310,6 @@ sub validate_form {
     my $params = $self->params;
     $self->_set_dependency;    # set required dependencies
     $self->_fields_validate;
-    $self->_apply_actions;
     $self->validate;           # empty method for users
     $self->validate_model;     # model specific validation
     $self->fields_set_value;
@@ -345,32 +387,59 @@ sub setup_form {
 # if active => [...] is set at process time, set 'active' flag
 sub set_active {
     my $self = shift;
-    return unless $self->has_active;
-    foreach my $fname (@{$self->active}) {
-        my $field = $self->field($fname);
-        if ( $field ) {
-            $field->_active(1);
+    if( $self->has_active ) {
+        foreach my $fname (@{$self->active}) {
+            my $field = $self->field($fname);
+            if ( $field ) {
+                $field->_active(1);
+            }
+            else {
+                warn "field $fname not found to set active";
+            }
         }
-        else {
-            warn "field $fname not found to set active";
-        }
+        $self->clear_active;
     }
-    $self->clear_active;
+    if( $self->has_inactive ) {
+        foreach my $fname (@{$self->inactive}) {
+            my $field = $self->field($fname);
+            if ( $field ) {
+                $field->_active(0);
+            }
+            else {
+                warn "field $fname not found to set inactive";
+            }
+        }
+        $self->clear_inactive;
+    }
 }
 
 # if active => [...] is set at build time, remove 'inactive' flags
 sub build_active {
     my $self = shift;
-    foreach my $fname (@{$self->active}) {
-        my $field = $self->field($fname);
-        if( $field ) {
-            $field->clear_inactive;
+    if( $self->has_active ) {
+        foreach my $fname (@{$self->active}) {
+            my $field = $self->field($fname);
+            if( $field ) {
+                $field->clear_inactive;
+            }
+            else {
+                warn "field $fname not found to set active";
+            }
         }
-        else {
-            warn "field $fname not found to set active";
-        }
+        $self->clear_active;
     }
-    $self->clear_active;
+    if( $self->has_inactive ) {
+        foreach my $fname (@{$self->inactive}) {
+            my $field = $self->field($fname);
+            if( $field ) {
+                $field->inactive(1);
+            }
+            else {
+                warn "field $fname not found to set inactive";
+            }
+        }
+        $self->clear_inactive;
+    }
 }
 
 sub fif { shift->fields_fif(@_) }
@@ -399,7 +468,7 @@ sub _set_dependency {
             # This is to allow requiring a field when a boolean is true.
             my $field = $self->field($name);
             next if $self->field($name)->type eq 'Boolean' && $value == 0;
-            next unless has_some_value($value);
+            next unless HTML::FormHandler::Field::has_some_value($value);
             # one field was found non-blank, so set all to required
             for (@$group) {
                 my $field = $self->field($_);
@@ -507,7 +576,7 @@ HTML::FormHandler - HTML forms using Moose
 
 =head1 VERSION
 
-version 0.32005
+version 0.33000
 
 =head1 SYNOPSIS
 
@@ -894,28 +963,37 @@ which can also be used in a form to do specific field updates:
         $self->field('bar')->default( 'foo_value' );
     }
 
-(Note that you can't set a field's 'value' directly here, since it will
+(Note that you although you can set a field's 'default', you can't set a
+field's 'value' directly here, since it will
 be overwritten by the validation process. Set the value in a field
 validation method.)
 
-=head3 active
+=head3 active/inactive
 
-If a form has a variable number of fields, fields which are not always to be
-used should be defined as 'inactive':
-
-   has_field 'foo' => ( type => 'Text', inactive => 1 );
-
+A field can be marked 'inactive' and set to active at new or process time;
 Then the field name can be specified in the 'active' array, either on 'new',
 or on 'process':
 
+   has_field 'foo' => ( type => 'Text', inactive => 1 );
+   ...
    my $form = MyApp::Form->new( active => ['foo'] );
    ...
    $form->process( active => ['foo'] );
 
-Fields specified as active on new will have the 'inactive' flag cleared, and so:
-those fields will be active for the life of the form object. Fields specified as
-active on 'process' will have the field's '_active' flag set just for the life of the
-request.
+Or a field can be a normal active field and set to inactive at new or process
+time:
+
+   has_field 'bar';
+   ...
+   my $form = MyApp::Form->new( inactive => ['foo'] );
+   ...
+   $form->process( inactive => ['foo'] );
+
+Fields specified as active/inactive on new will have the form's inactive/active
+arrayref cleared and the the field's inactive flag set appropriately, so the
+that state will be effective for the life of the form object. Fields specified as
+active/inactive on 'process' will have the field's '_active' flag set for the life
+of the request (the _active flag will be cleared when the form is cleared).
 
 The 'sorted_fields' method returns only active fields. The 'fields' method returns
 all fields.

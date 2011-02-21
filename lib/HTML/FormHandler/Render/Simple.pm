@@ -34,6 +34,8 @@ sub render {
     my $self   = shift;
     my $output = $self->render_start;
 
+    $output .= $self->render_form_errors;
+
     foreach my $field ( $self->sorted_fields ) {
         $output .= $self->render_field($field);
     }
@@ -51,6 +53,17 @@ sub render_start {
         if $self->form->auto_fieldset;
 
     return $output
+}
+
+sub render_form_errors {
+    my $self = shift;
+
+    return '' unless $self->has_form_errors;
+    my $output = "\n<div class=\"form_errors\">";
+    $output .= qq{\n<span class="error_message">$_</span>}
+        for $self->all_form_errors;
+    $output .= "\n</div>";
+    return $output;
 }
 
 sub render_end {
@@ -166,12 +179,15 @@ sub render_select {
     $output .= $self->_add_html_attributes( $field );
     $output .= '>';
     my $index = 0;
-    if( $field->empty_select ) {
+    if( defined $field->empty_select ) {
         $output .= '<option value="">' . $field->_localize($field->empty_select) . '</option>';
     }
     foreach my $option ( @{ $field->options } ) {
         $output .= '<option value="' . $field->html_filter($option->{value}) . '" ';
         $output .= 'id="' . $field->id . ".$index\" ";
+        if( defined $option->{disabled} && $option->{disabled} ) {
+            $output .= 'disabled="disabled" ';
+        }
         if ( $field->fif ) {
             if ( $field->multiple == 1 ) {
                 my @fif;
@@ -324,7 +340,7 @@ HTML::FormHandler::Render::Simple - simple rendering role
 
 =head1 VERSION
 
-version 0.32005
+version 0.33000
 
 =head1 SYNOPSIS
 

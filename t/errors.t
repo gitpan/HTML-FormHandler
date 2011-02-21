@@ -14,7 +14,7 @@ use_ok( 'HTML::FormHandler' );
            reqname     => {
               type => 'Text',
               required => 1,
-              required_message => 'You must supply a reqname',
+              messages => { required => 'You must supply a reqname' },
            },
            fruit       => 'Select',
            optname     => 'Text',
@@ -126,5 +126,7 @@ ok( $form, 'form created');
 $form->process( $init_object );
 ok( !$form->validated, 'form did not validate' );
 is( $form->num_errors, 2, 'form has two errors' );
+my $rendered_field = $form->field('addresses')->render;
+ok( $rendered_field, 'rendered field with auto_id ok' );
 
 done_testing;

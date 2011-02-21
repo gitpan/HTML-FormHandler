@@ -5,6 +5,13 @@ use Moose;
 with 'HTML::FormHandler::Result::Role';
 
 
+has 'value' => (
+    is        => 'ro',
+    writer    => '_set_value',
+    clearer   => '_clear_value',
+    predicate => 'has_value',
+);
+
 has 'field_def' => (
     is     => 'ro',
     isa    => 'HTML::FormHandler::Field',
@@ -55,7 +62,7 @@ HTML::FormHandler::Field::Result - result class for fields
 
 =head1 VERSION
 
-version 0.32005
+version 0.33000
 
 =head1 SYNOPSIS
 

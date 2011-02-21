@@ -34,7 +34,7 @@ HTML::FormHandler::Widget::Field::Compound - compound field widget
 
 =head1 VERSION
 
-version 0.32005
+version 0.33000
 
 =head1 AUTHOR
 

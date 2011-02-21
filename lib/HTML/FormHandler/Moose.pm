@@ -9,7 +9,7 @@ use constant HAS_MOOSE_V109_METAROLE => ($Moose::VERSION >= 1.09);
 
 
 Moose::Exporter->setup_import_methods(
-    with_meta => [ 'has_field', 'apply' ],
+    with_meta => [ 'has_field', 'has_page', 'apply' ],
     also        => 'Moose',
 );
 
@@ -42,6 +42,13 @@ sub has_field {
     $meta->add_to_field_list( { name => $_, %options } ) for @$names;
 }
 
+sub has_page {
+    my ( $meta, $name, %options ) = @_;
+    my $names = ( ref($name) eq 'ARRAY' ) ? $name : [ ($name) ];
+
+    $meta->add_to_page_list( { name => $_, %options } ) for @$names;
+}
+
 sub apply {
     my ( $meta, $arrayref ) = @_;
 
@@ -60,7 +67,7 @@ HTML::FormHandler::Moose - to add FormHandler sugar
 
 =head1 VERSION
 
-version 0.32005
+version 0.33000
 
 =head1 SYNOPSIS
 

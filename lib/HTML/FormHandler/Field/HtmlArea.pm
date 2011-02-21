@@ -82,7 +82,7 @@ HTML::FormHandler::Field::HtmlArea - input HTML in a textarea
 
 =head1 VERSION
 
-version 0.32005
+version 0.33000
 
 =head1 SYNOPSIS
 

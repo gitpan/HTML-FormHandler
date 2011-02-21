@@ -184,8 +184,8 @@ sub dump_validated {
     warn "HFH: fields validated:\n";
     foreach my $field ( $self->all_fields ) {
         $field->dump_validated if $field->can('dump_validated');
-        warn "HFH: ", $field->name, ": ",
-            ( $field->has_errors ? join( ' | ', $field->errors ) : 'validated' ), "\n";
+        my $message = $field->has_errors ? join( ' | ', $field->all_errors) : 'validated';
+        warn "HFH: ", $field->name, ": $message\n";
     }
 }
 
@@ -201,7 +201,7 @@ HTML::FormHandler::Fields - internal role for form and compound fields
 
 =head1 VERSION
 
-version 0.32005
+version 0.33000
 
 =head1 SYNOPSIS
 

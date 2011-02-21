@@ -11,6 +11,7 @@ sub render {
     my $self = shift;
 
     my $output = $self->render_start;
+    $output .= $self->render_form_errors;
     foreach my $field ( $self->sorted_fields ) {
         $output .= $self->render_field($field);
     }
@@ -22,6 +23,17 @@ sub render_start {
     my $self   = shift;
 
     return $self->html_form_tag . "<table>\n";
+}
+
+sub render_form_errors {
+    my $self = shift;
+
+    return '' unless $self->has_form_errors;
+    my $output = "\n<tr class=\"form_errors\"><td colspan=\"2\">";
+    $output .= qq{\n<span class="error_message">$_</span>}
+        for $self->all_form_errors;
+    $output .= "\n</td></tr>";
+    return $output;
 }
 
 sub render_end {
@@ -68,7 +80,7 @@ HTML::FormHandler::Render::Table - render a form with a table layout
 
 =head1 VERSION
 
-version 0.32005
+version 0.33000
 
 =head1 SYNOPSIS
 

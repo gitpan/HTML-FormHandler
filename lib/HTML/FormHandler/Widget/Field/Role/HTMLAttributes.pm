@@ -28,7 +28,7 @@ HTML::FormHandler::Widget::Field::Role::HTMLAttributes - apply HTML attributes
 
 =head1 VERSION
 
-version 0.32005
+version 0.33000
 
 =head1 AUTHOR
 

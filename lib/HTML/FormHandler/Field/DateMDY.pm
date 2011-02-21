@@ -20,7 +20,7 @@ HTML::FormHandler::Field::DateMDY - m/d/y date field
 
 =head1 VERSION
 
-version 0.32005
+version 0.33000
 
 =head1 SYNOPSIS
 

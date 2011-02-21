@@ -22,7 +22,7 @@ HTML::FormHandler::Field::Hour - accept integer from 0 to 23
 
 =head1 VERSION
 
-version 0.32005
+version 0.33000
 
 =head1 DESCRIPTION
 

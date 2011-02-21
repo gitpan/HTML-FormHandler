@@ -38,8 +38,6 @@ sub render {
                     if $self->check_selected_option($option, $ffif);
             }
         }
-        $output .= ' checked="checked"'
-            if $self->check_selected_option($option);
         $output .= $html_attributes;
         $output .= ' />';
         $output .= $self->html_filter($option->{label}) . '<br />';
@@ -59,7 +57,7 @@ HTML::FormHandler::Widget::Field::CheckboxGroup - checkbox group field role
 
 =head1 VERSION
 
-version 0.32005
+version 0.33000
 
 =head1 AUTHOR
 

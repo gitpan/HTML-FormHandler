@@ -11,6 +11,17 @@ our $VERSION = '0.04';
 
 has '+widget' => ( default => 'compound' );
 
+our $class_messages = {
+    'datetime_invalid' => 'Not a valid DateTime',
+};
+sub get_class_messages {
+    my $self = shift;
+    return {
+        %{ $self->next::method },
+        %$class_messages,
+    }
+}
+
 sub deflate {
     my ( $self, $value ) = @_;
     return $value unless ref $value eq 'DateTime';
@@ -36,7 +47,7 @@ sub validate {
         $dt = DateTime->new(@dt_parms);
     }
     catch {
-        $self->add_error('Not a valid DateTime');
+        $self->add_error( $self->get_message('datetime_invalid') );
     };
     if( $dt ) {
         $self->_set_value($dt);
@@ -60,7 +71,7 @@ HTML::FormHandler::Field::DateTime - compound DateTime field
 
 =head1 VERSION
 
-version 0.32005
+version 0.33000
 
 =head1 DESCRIPTION
 
@@ -84,6 +95,8 @@ If you want simple input fields:
          range_end => 12 );
     has_field 'my_date.day' => ( type => 'Integer', range_start => 1,
          range_end => 31 );
+
+Customizable error: 'datetime_invalid' (default = "Not a valid DateTime")
 
 =head1 AUTHOR
 
