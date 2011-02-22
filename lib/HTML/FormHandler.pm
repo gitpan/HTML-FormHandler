@@ -19,7 +19,7 @@ use Try::Tiny;
 use 5.008;
 
 # always use 5 digits after decimal because of toolchain issues
-our $VERSION = '0.33000';
+our $VERSION = '0.33001';
 
 
 # Moose attributes
@@ -576,7 +576,7 @@ HTML::FormHandler - HTML forms using Moose
 
 =head1 VERSION
 
-version 0.33000
+version 0.33001
 
 =head1 SYNOPSIS
 

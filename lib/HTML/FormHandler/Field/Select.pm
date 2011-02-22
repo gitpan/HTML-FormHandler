@@ -241,7 +241,7 @@ HTML::FormHandler::Field::Select - select fields
 
 =head1 VERSION
 
-version 0.33000
+version 0.33001
 
 =head1 DESCRIPTION
 

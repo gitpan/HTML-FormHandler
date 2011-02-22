@@ -8,7 +8,6 @@ use Moose::Util::TypeConstraints;
 
 with 'HTML::FormHandler::Traits';
 with 'HTML::FormHandler::Validate';
-with 'HTML::FormHandler::Validate::Actions';
 with 'HTML::FormHandler::Widget::ApplyRole';
 
 our $VERSION = '0.02';
@@ -710,7 +709,7 @@ HTML::FormHandler::Field - base class for fields
 
 =head1 VERSION
 
-version 0.33000
+version 0.33001
 
 =head1 SYNOPSIS
 

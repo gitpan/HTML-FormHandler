@@ -110,7 +110,7 @@ HTML::FormHandler::I18N::hu_hu - Hungarian message file
 
 =head1 VERSION
 
-version 0.33000
+version 0.33001
 
 =head1 AUTHOR
 
