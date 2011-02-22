@@ -189,6 +189,7 @@ t/render_table.t
 t/render_widgets.t
 t/render_withtt.t
 t/reprender.t
+t/req_message.t
 t/result.t
 t/result_compound.t
 t/result_errors.t

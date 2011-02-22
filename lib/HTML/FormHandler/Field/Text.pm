@@ -71,7 +71,7 @@ HTML::FormHandler::Field::Text - text field
 
 =head1 VERSION
 
-version 0.33001
+version 0.33002
 
 =head1 DESCRIPTION
 

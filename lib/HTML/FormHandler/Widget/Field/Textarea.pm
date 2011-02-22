@@ -34,7 +34,7 @@ HTML::FormHandler::Widget::Field::Textarea - textarea rendering widget
 
 =head1 VERSION
 
-version 0.33001
+version 0.33002
 
 =head1 AUTHOR
 

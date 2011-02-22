@@ -436,6 +436,8 @@ our $class_messages = {
 sub get_class_messages  {
     my $self = shift;
     my $messages = { %$class_messages };
+    $messages->{required} = $self->required_message
+        if $self->required_message;
     return $messages;
 }
 
@@ -709,7 +711,7 @@ HTML::FormHandler::Field - base class for fields
 
 =head1 VERSION
 
-version 0.33001
+version 0.33002
 
 =head1 SYNOPSIS
 

@@ -297,7 +297,7 @@ HTML::FormHandler::BuildFields - role to build field array
 
 =head1 VERSION
 
-version 0.33001
+version 0.33002
 
 =head1 SYNOPSIS
 
