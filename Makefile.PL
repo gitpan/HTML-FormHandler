@@ -4,7 +4,7 @@ use warnings;
 
 
 
-use ExtUtils::MakeMaker 6.31;
+use ExtUtils::MakeMaker 6.30;
 
 use File::ShareDir::Install;
 install_share dist => "share";
@@ -16,10 +16,11 @@ my %WriteMakefileArgs = (
   'BUILD_REQUIRES' => {
     'Test::Differences' => '0',
     'Test::Exception' => '0',
+    'Test::Memory::Cycle' => '1.04',
     'Test::More' => '0.94'
   },
   'CONFIGURE_REQUIRES' => {
-    'ExtUtils::MakeMaker' => '6.31',
+    'ExtUtils::MakeMaker' => '6.30',
     'File::ShareDir::Install' => '0.03'
   },
   'DISTNAME' => 'HTML-FormHandler',
@@ -34,7 +35,7 @@ my %WriteMakefileArgs = (
     'File::ShareDir' => '0',
     'File::Spec' => '0',
     'Locale::Maketext' => '1.09',
-    'Moose' => '0.90',
+    'Moose' => '2.0007',
     'MooseX::Getopt' => '0.16',
     'MooseX::Types' => '0.20',
     'MooseX::Types::Common' => '0',
@@ -42,7 +43,7 @@ my %WriteMakefileArgs = (
     'aliased' => '0',
     'namespace::autoclean' => '0.09'
   },
-  'VERSION' => '0.33002',
+  'VERSION' => '0.34000',
   'test' => {
     'TESTS' => 't/*.t'
   }

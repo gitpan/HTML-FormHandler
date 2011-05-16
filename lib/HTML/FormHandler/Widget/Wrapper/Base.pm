@@ -36,7 +36,7 @@ HTML::FormHandler::Widget::Wrapper::Base - commong methods for widget wrappers
 
 =head1 VERSION
 
-version 0.33002
+version 0.34000
 
 =head1 AUTHOR
 

@@ -1,4 +1,4 @@
-package HTML::FormHandler::Widget::Wrapper::Simple;
+package HTML::FormHandler::Widget::Wrapper::SimpleInline;
 # ABSTRACT: simple field wrapper
 
 use Moose::Role;
@@ -11,31 +11,25 @@ has 'auto_fieldset' => ( isa => 'Bool', is => 'rw', lazy => 1, default => 1 );
 
 sub wrap_field {
     my ( $self, $result, $rendered_widget ) = @_;
+
+    return $rendered_widget if $self->has_flag('is_compound');
+
     my $t;
+    my $output = '';
     my $start_tag = defined($t = $self->get_tag('wrapper_start')) ?
         $t : '<div<%class%>>';
-    my $is_compound = $self->has_flag('is_compound');
     my $class  = $self->render_class($result);
-    my $output = "\n";
-
+    $output .= "\n";
     $start_tag =~ s/<%class%>/$class/g;
     $output .= $start_tag;
 
-    if ( $is_compound ) {
-        if( $self->auto_fieldset ) {
-            $output .= '<fieldset class="' . $self->html_name . '">';
-            $output .= '<legend>' . $self->loc_label . '</legend>';
-        }
-    }
-    elsif ( !$self->has_flag('no_render_label') && length( $self->label ) > 0 ) {
+    if ( !$self->has_flag('no_render_label') && length( $self->label ) > 0 ) {
         $output .= $self->render_label;
     }
 
     $output .= $rendered_widget;
     $output .= qq{\n<span class="error_message">$_</span>}
         for $result->all_errors;
-    $output .= '</fieldset>'
-        if ( $is_compound && $self->auto_fieldset );
 
     $output .= defined($t = $self->get_tag('wrapper_end')) ? $t : '</div>';
 
@@ -49,7 +43,7 @@ __END__
 
 =head1 NAME
 
-HTML::FormHandler::Widget::Wrapper::Simple - simple field wrapper
+HTML::FormHandler::Widget::Wrapper::SimpleInline - simple field wrapper
 
 =head1 VERSION
 
@@ -57,19 +51,8 @@ version 0.34000
 
 =head1 SYNOPSIS
 
-This is the default wrapper role. It will be installed if
-no other wrapper is specified and widget_wrapper is not set to
-'none'.
-
-It used the 'widget_tags' keys 'wrapper_start' and 'wrapper_end',
-so that the default C<< '<div<%class>>' >> and C<< '</div>' >> tags
-may be replaced. The following will cause the fields to be wrapped
-in paragraph tags instead:
-
-   has '+widget_tags' => ( default => sub { {
-      wrapper_start => '<p>',
-      wrapper_end   => '</p>' }
-   );
+This works like the Simple Wrapper, except it doesn't wrap Compound
+fields.
 
 =head1 AUTHOR
 

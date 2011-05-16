@@ -1,5 +1,5 @@
-package HTML::FormHandler::Widget::Wrapper::Table;
-# ABSTRACT: wrapper class for table layout
+package HTML::FormHandler::Widget::Wrapper::TableInline;
+# ABSTRACT: wrapper class for table layout that doesn't wrap compound fields
 
 use Moose::Role;
 with 'HTML::FormHandler::Widget::Wrapper::Base';
@@ -7,22 +7,18 @@ with 'HTML::FormHandler::Widget::Wrapper::Base';
 sub wrap_field {
     my ( $self, $result, $rendered_widget ) = @_;
 
+    return $rendered_widget if $self->has_flag('is_compound');
+
     my $class  = $self->render_class($result);
     my $output = "\n<tr$class>";
-    if ( $self->has_flag('is_compound') ) {
-        $output .= '<td>' . $self->render_label . '</td></tr>';
-    }
-    elsif ( !$self->has_flag('no_render_label') && length( $self->label ) > 0 ) {
+    if ( !$self->has_flag('no_render_label') && length( $self->label ) > 0 ) {
         $output .= '<td>' . $self->render_label . '</td>';
     }
-    if ( !$self->has_flag('is_compound') ) {
-        $output .= '<td>';
-    }
+    $output .= '<td>';
     $output .= $rendered_widget;
     $output .= qq{\n<span class="error_message">$_</span>} for $result->all_errors;
-    if ( !$self->has_flag('is_compound') ) {
-        $output .= "</td></tr>\n";
-    }
+    $output .= "</td></tr>\n";
+
     return $output;
 }
 
@@ -34,7 +30,7 @@ __END__
 
 =head1 NAME
 
-HTML::FormHandler::Widget::Wrapper::Table - wrapper class for table layout
+HTML::FormHandler::Widget::Wrapper::TableInline - wrapper class for table layout that doesn't wrap compound fields
 
 =head1 VERSION
 

@@ -17,7 +17,7 @@ HTML::FormHandler::Widget::Wrapper::None - wrapper that doesn't wrap
 
 =head1 VERSION
 
-version 0.33002
+version 0.34000
 
 =head1 AUTHOR
 

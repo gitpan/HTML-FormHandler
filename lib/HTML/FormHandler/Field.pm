@@ -15,7 +15,7 @@ our $VERSION = '0.02';
 
 has 'name' => ( isa => 'Str', is => 'rw', required => 1 );
 has 'type' => ( isa => 'Str', is => 'rw', default => sub { ref shift } );
-has 'parent' => ( is  => 'rw',   predicate => 'has_parent' );
+has 'parent' => ( is  => 'rw',   predicate => 'has_parent', weak_ref => 1 );
 sub has_fields { }
 has 'input_without_param' => (
     is        => 'rw',
@@ -711,7 +711,7 @@ HTML::FormHandler::Field - base class for fields
 
 =head1 VERSION
 
-version 0.33002
+version 0.34000
 
 =head1 SYNOPSIS
 

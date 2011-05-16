@@ -19,23 +19,18 @@ use Try::Tiny;
 use 5.008;
 
 # always use 5 digits after decimal because of toolchain issues
-our $VERSION = '0.33002';
+our $VERSION = '0.34000';
 
+
+# for consistency in api with field nodes
+sub form { shift }
+sub has_form { 1 }
 
 # Moose attributes
 has 'name' => (
     isa     => 'Str',
     is      => 'rw',
     default => sub { return 'form' . int( rand 1000 ) }
-);
-# for consistency in api with field nodes
-has 'form' => (
-    isa      => 'HTML::FormHandler',
-    is       => 'rw',
-    weak_ref => 1,
-    predicate => 'has_form',
-    lazy     => 1,
-    default  => sub { shift }
 );
 has 'parent' => ( is => 'rw' );
 has 'result' => (
@@ -576,7 +571,7 @@ HTML::FormHandler - HTML forms using Moose
 
 =head1 VERSION
 
-version 0.33002
+version 0.34000
 
 =head1 SYNOPSIS
 

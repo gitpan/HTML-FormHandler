@@ -116,7 +116,9 @@ lib/HTML/FormHandler/Widget/Wrapper/Base.pm
 lib/HTML/FormHandler/Widget/Wrapper/Fieldset.pm
 lib/HTML/FormHandler/Widget/Wrapper/None.pm
 lib/HTML/FormHandler/Widget/Wrapper/Simple.pm
+lib/HTML/FormHandler/Widget/Wrapper/SimpleInline.pm
 lib/HTML/FormHandler/Widget/Wrapper/Table.pm
+lib/HTML/FormHandler/Widget/Wrapper/TableInline.pm
 lib/HTML/FormHandler/Wizard.pm
 share/templates/form.tt
 share/templates/widget/button.tt
@@ -136,6 +138,7 @@ share/templates/widget/textarea.tt
 share/templates/widget/upload.tt
 t/01app.t
 t/build_id.t
+t/circular_refs.t
 t/composed.t
 t/compound_field.t
 t/constraints.t
@@ -188,6 +191,7 @@ t/render_result.t
 t/render_table.t
 t/render_widgets.t
 t/render_withtt.t
+t/rep_nest.t
 t/reprender.t
 t/req_message.t
 t/result.t

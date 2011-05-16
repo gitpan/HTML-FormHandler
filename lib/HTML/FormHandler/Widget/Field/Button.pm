@@ -15,7 +15,7 @@ sub render {
     my $output = '<input type="button" name="';
     $output .= $self->html_name . '"';
     $output .= ' id="' . $self->id . '"';
-    $output .= ' value="' . $self->html_filter($self->value) . '"';
+    $output .= ' value="' . $self->html_filter($self->_localize($self->value)) . '"';
     $output .= $self->_add_html_attributes;
     $output .= ' />';
     return $self->wrap_field( $result, $output );
@@ -32,7 +32,7 @@ HTML::FormHandler::Widget::Field::Button - button field rendering widget
 
 =head1 VERSION
 
-version 0.33002
+version 0.34000
 
 =head1 AUTHOR
 
