@@ -42,7 +42,7 @@ HTML::FormHandler::Field::IntRange - integer range in select list
 
 =head1 VERSION
 
-version 0.34000
+version 0.34001
 
 =head1 DESCRIPTION
 

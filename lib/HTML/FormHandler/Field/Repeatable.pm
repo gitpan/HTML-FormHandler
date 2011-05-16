@@ -208,6 +208,8 @@ before 'value' => sub {
     my @pk_elems =
         map { $_->accessor } grep { $_->has_flag('is_primary_key') } $self->contains->all_fields
         if $self->contains->has_flag('is_compound');
+
+    return [] unless $self->has_value;
     my $value = $self->result->value;
     my @new_value;
     foreach my $element ( @{$value} ) {
@@ -239,7 +241,7 @@ HTML::FormHandler::Field::Repeatable - repeatable (array) field
 
 =head1 VERSION
 
-version 0.34000
+version 0.34001
 
 =head1 SYNOPSIS
 

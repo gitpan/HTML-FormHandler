@@ -32,7 +32,7 @@ HTML::FormHandler::Widget::Field::Button - button field rendering widget
 
 =head1 VERSION
 
-version 0.34000
+version 0.34001
 
 =head1 AUTHOR
 

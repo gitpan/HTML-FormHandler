@@ -229,6 +229,7 @@ sub sort_options { shift; return shift; }
 before 'value' => sub {
     my $self  = shift;
 
+    return undef unless $self->has_result;
     my $value = $self->result->value;
 
     if( $self->multiple ) {
@@ -268,7 +269,7 @@ HTML::FormHandler::Field::Select - select fields
 
 =head1 VERSION
 
-version 0.34000
+version 0.34001
 
 =head1 DESCRIPTION
 
