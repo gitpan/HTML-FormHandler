@@ -211,14 +211,21 @@ has 'widget_tags'         => (
     },
 );
 has 'widget_name_space' => (
-    traits => ['Array'],
-    isa => 'ArrayRef[Str]',
-    is => 'ro',
+    isa => 'Str|ArrayRef[Str]',
+    is => 'rw',
     default => sub {[]},
-    handles => {
-        add_widget_name_space => 'push',
-    },
 );
+sub add_widget_name_space {
+    my ( $self, @ns ) = @_;
+    @ns = @{$ns[0]}if( scalar @ns && ref $ns[0] eq 'ARRAY' );
+    my $widget_ns = $self->widget_name_space;
+    if( ref $widget_ns eq 'ARRAY' ) {
+        push @{$self->widget_name_space}, @ns;
+    }
+    else {
+        $self->widget_name_space( [$widget_ns, @ns] );
+    }
+}
 has 'order'             => ( isa => 'Int',  is => 'rw', default => 0 );
 # 'inactive' is set in the field declaration, and is static. Default status.
 has 'inactive'          => ( isa => 'Bool', is => 'rw', clearer => 'clear_inactive' );
@@ -234,11 +241,19 @@ sub is_inactive {
 }
 has 'id'                => ( isa => 'Str',  is => 'rw', lazy => 1, builder => 'build_id' );
 sub build_id { shift->html_name }
+
+# html attributes
 has 'javascript' => ( isa => 'Str',  is => 'rw' );
 has 'password'   => ( isa => 'Bool', is => 'rw' );
 has 'writeonly'  => ( isa => 'Bool', is => 'rw' );
 has 'disabled'   => ( isa => 'Bool', is => 'rw' );
 has 'readonly'   => ( isa => 'Bool', is => 'rw' );
+has 'tabindex' => ( is => 'rw', isa => 'Int' );
+has 'html_attr' => ( is => 'rw', traits => ['Hash'],
+   default => sub { {} }, handles => { has_html_attr => 'count',
+   set_html_attr => 'set', delete_html_attr => 'delete' }
+);
+
 has 'noupdate'   => ( isa => 'Bool', is => 'rw' );
 has 'set_validate' => ( isa => 'Str', is => 'ro',);
 sub _can_validate {
@@ -470,7 +485,7 @@ sub BUILD {
 
     $self->_set_default( $self->_comp_default_meth )
         if( $self->form && $self->form->can( $self->_comp_default_meth ) );
-    $self->add_widget_name_space( @{$self->form->widget_name_space} ) if $self->form;
+    $self->add_widget_name_space( $self->form->widget_name_space ) if $self->form;
     # widgets will already have been applied by BuildFields, but this allows
     # testing individual fields
 #   $self->apply_rendering_widgets unless ($self->can('render') );
@@ -692,6 +707,14 @@ sub has_some_value {
     return;
 }
 
+sub apply_traits {
+    my ($class, @traits) = @_;
+
+    $class->meta->make_mutable;
+    Moose::Util::apply_all_roles($class->meta, @traits);
+    $class->meta->make_immutable;
+}
+
 __PACKAGE__->meta->make_immutable;
 use namespace::autoclean;
 1;
@@ -705,7 +728,7 @@ HTML::FormHandler::Field - base class for fields
 
 =head1 VERSION
 
-version 0.34001
+version 0.35000
 
 =head1 SYNOPSIS
 
@@ -920,22 +943,42 @@ Compound fields will have an array of errors from the subfields.
 
 =head2 Attributes for creating HTML
 
-   label       - Text label for this field. Defaults to ucfirst field name.
+There's a generic 'html_attr' hashref attribute that can be used to set
+arbitrary HTML attributes on a field.
+
+   has_field 'foo' => ( html_attr => { readonly => 1, my_attr => 'abc' } );
+
+Some attributes also have specific setters
+(readonly', 'disabled', 'style', 'title', 'tabindex).
+
+   has_field 'bar' => ( readonly => 1 ); 
+         
    title       - Place to put title for field.
    style       - Place to put field style string
+   disabled    - for the HTML flag
+   tabindex    - for the HTML tab index
+   readonly    - for the HTML flag
+
+The javascript value of the javascript attribute is entered completely.
+
+   javascript  - for a Javascript string
+
+The following are used in rendering HTML, but are handled specially.
+
+   label       - Text label for this field. Defaults to ucfirst field name.
    css_class   - For a css class name (string; could be several classes,
                  separated by spaces or commas). Used in wrapper for input field.
    input_class - class attribute on the 'input' field. applied with
-                 '_apply_html_attribute' along with disabled/readonly/javascript
+                 '_apply_html_attribute' (also html_attr => { class => '...' } ) 
    id          - Useful for javascript (default is html_name. to prefix with
                  form name, use 'html_prefix' in your form)
-   disabled    - for the HTML flag
-   readonly    - for the HTML flag
-   javascript  - for a Javascript string
-   order       - Used for sorting errors and fields. Built automatically,
-                 but may also be explicitly set
    render_filter - Coderef for filtering fields before rendering. By default
                  changes >, <, &, " to the html entities
+
+The order attribute may be used to set the order in which fields are rendered.
+
+   order       - Used for sorting errors and fields. Built automatically,
+                 but may also be explicitly set
 
 =head2 widget
 
@@ -1341,7 +1384,7 @@ FormHandler Contributors - see HTML::FormHandler
 
 =head1 COPYRIGHT AND LICENSE
 
-This software is copyright (c) 2010 by Gerda Shank.
+This software is copyright (c) 2011 by Gerda Shank.
 
 This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.

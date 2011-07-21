@@ -47,7 +47,6 @@ sub get_class_messages  {
 sub deflate {
     my ( $self, $value ) = @_;
 
-    $value ||= $self->value;
     # if not a DateTime, assume correctly formated string and return
     return $value unless ref $value eq 'DateTime';
     my $format = $self->get_strf_format;
@@ -113,7 +112,7 @@ HTML::FormHandler::Field::Date - a date field with formats
 
 =head1 VERSION
 
-version 0.34001
+version 0.35000
 
 =head1 SUMMARY
 
@@ -161,7 +160,7 @@ FormHandler Contributors - see HTML::FormHandler
 
 =head1 COPYRIGHT AND LICENSE
 
-This software is copyright (c) 2010 by Gerda Shank.
+This software is copyright (c) 2011 by Gerda Shank.
 
 This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.

@@ -11,7 +11,7 @@ HTML::FormHandler::Manual::Rendering - how to render with FormHandler
 
 =head1 VERSION
 
-version 0.34001
+version 0.35000
 
 =head1 SYNOPSIS
 
@@ -85,6 +85,10 @@ your rendering code for a particular form in one file. You could even
 have one renderer for each form. The widgets are more atomic, so may
 make widget reuse easier.
 
+Note: if you're using a rendering role, and not using the field widgets
+(it's possible to use both) there is a flag in the form 'no_widgets' which
+will skip applying the widget roles to individual fields.
+
 =head2 Rendering with Widgets
 
 All FormHandler widgets are Moose roles.  Default widget roles are found in the
@@ -155,6 +159,12 @@ attributes in the form, or do it on new:
      widget_form => 'Table',
      widget_wrapper => 'Table'
    );
+
+=head2 HTML attributes
+
+Arbitrary HTML attributes can be specified with 'html_attr' on the field. There
+are also specific setters available for some attributes. See the documentation in
+L< HTML::FormHandler::Field >.
 
 =head2 Rendering bare html with no fieldset and no divs
 
@@ -289,7 +299,7 @@ FormHandler Contributors - see HTML::FormHandler
 
 =head1 COPYRIGHT AND LICENSE
 
-This software is copyright (c) 2010 by Gerda Shank.
+This software is copyright (c) 2011 by Gerda Shank.
 
 This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.

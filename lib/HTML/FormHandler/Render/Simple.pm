@@ -317,8 +317,12 @@ sub _add_html_attributes {
     my ( $self, $field ) = @_;
 
     my $output = q{};
-    for my $attr ( 'readonly', 'disabled', 'style' ) {
-        $output .= ( $field->$attr ? qq{ $attr="} . $field->$attr . '"' : '' );
+    my $html_attr = $field->html_attr;
+    for my $attr ( 'readonly', 'disabled', 'style', 'title', 'tabindex' ) {
+        $html_attr->{$attr} = $field->$attr if $field->$attr;
+    }
+    foreach my $attr ( sort keys %$html_attr ) {
+        $output .= qq{ $attr="} . $html_attr->{$attr} . qq{"}; 
     }
     $output .= ($field->javascript ? ' ' . $field->javascript : '');
     if( $field->input_class ) {
@@ -340,7 +344,7 @@ HTML::FormHandler::Render::Simple - simple rendering role
 
 =head1 VERSION
 
-version 0.34001
+version 0.35000
 
 =head1 SYNOPSIS
 
@@ -451,7 +455,7 @@ FormHandler Contributors - see HTML::FormHandler
 
 =head1 COPYRIGHT AND LICENSE
 
-This software is copyright (c) 2010 by Gerda Shank.
+This software is copyright (c) 2011 by Gerda Shank.
 
 This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.

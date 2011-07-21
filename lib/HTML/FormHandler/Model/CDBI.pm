@@ -293,7 +293,7 @@ HTML::FormHandler::Model::CDBI - Class::DBI model class (non-functioning)
 
 =head1 VERSION
 
-version 0.34001
+version 0.35000
 
 =head1 SYNOPSIS
 
@@ -414,7 +414,7 @@ FormHandler Contributors - see HTML::FormHandler
 
 =head1 COPYRIGHT AND LICENSE
 
-This software is copyright (c) 2010 by Gerda Shank.
+This software is copyright (c) 2011 by Gerda Shank.
 
 This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.
