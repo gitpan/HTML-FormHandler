@@ -5,7 +5,6 @@ use Moose;
 use Moose::Exporter;
 use Moose::Util::MetaRole;
 use HTML::FormHandler::Meta::Role;
-use constant HAS_MOOSE_V109_METAROLE => ($Moose::VERSION >= 1.09);
 
 
 Moose::Exporter->setup_import_methods(
@@ -18,20 +17,12 @@ sub init_meta {
 
     my %options = @_;
     Moose->init_meta(%options);
-    my $meta;
-    if (HAS_MOOSE_V109_METAROLE) {
-        $meta = Moose::Util::MetaRole::apply_metaroles(
-            for             => $options{for_class},
-            class_metaroles => {
-                class => [ 'HTML::FormHandler::Meta::Role' ]
-            }
-        );
-    } else {
-        $meta = Moose::Util::MetaRole::apply_metaclass_roles(
-            for_class       => $options{for_class},
-            metaclass_roles => ['HTML::FormHandler::Meta::Role'],
-        );
-    }
+    my $meta = Moose::Util::MetaRole::apply_metaroles(
+        for             => $options{for_class},
+        class_metaroles => {
+            class => [ 'HTML::FormHandler::Meta::Role' ]
+        }
+    );
     return $meta;
 }
 
@@ -67,7 +58,7 @@ HTML::FormHandler::Moose - to add FormHandler sugar
 
 =head1 VERSION
 
-version 0.35000
+version 0.35001
 
 =head1 SYNOPSIS
 

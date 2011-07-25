@@ -33,7 +33,7 @@ HTML::FormHandler::Widget::Field::Checkbox - HTML attributes field role
 
 =head1 VERSION
 
-version 0.35000
+version 0.35001
 
 =head1 AUTHOR
 

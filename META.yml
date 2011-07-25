@@ -35,4 +35,4 @@ requires:
 resources:
   bugtracker: https://rt.cpan.org/Public/Dist/Display.html?Name=HTML-FormHandler
   repository: git://github.com/gshank/html-formhandler.git
-version: 0.35000
+version: 0.35001
