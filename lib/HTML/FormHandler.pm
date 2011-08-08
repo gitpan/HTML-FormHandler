@@ -15,11 +15,13 @@ use Class::MOP;
 use HTML::FormHandler::Result;
 use HTML::FormHandler::Field;
 use Try::Tiny;
+use MooseX::Types::LoadableClass qw/ LoadableClass /;
+use namespace::autoclean;
 
 use 5.008;
 
 # always use 5 digits after decimal because of toolchain issues
-our $VERSION = '0.35001';
+our $VERSION = '0.35002';
 
 
 # for consistency in api with field nodes
@@ -188,21 +190,12 @@ sub all_messages {
     return { %{$self->get_class_messages}, %{$self->messages} };
 }
 
-{
-    use Moose::Util::TypeConstraints;
-
-    my $tc = subtype as 'ClassName';
-    coerce $tc, from 'Str', via { Class::MOP::load_class($_); $_ };
-
-    has 'params_class' => (
-        is      => 'ro',
-        isa     => $tc,
-        coerce  => 1,
-        default => 'HTML::FormHandler::Params',
-    );
-
-    no Moose::Util::TypeConstraints;
-}
+has 'params_class' => (
+    is      => 'ro',
+    isa     => LoadableClass,
+    coerce  => 1,
+    default => 'HTML::FormHandler::Params',
+);
 
 has 'params_args' => ( is => 'ro', isa => 'ArrayRef' );
 
@@ -570,7 +563,7 @@ HTML::FormHandler - HTML forms using Moose
 
 =head1 VERSION
 
-version 0.35001
+version 0.35002
 
 =head1 SYNOPSIS
 

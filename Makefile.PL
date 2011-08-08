@@ -29,6 +29,7 @@ my %WriteMakefileArgs = (
   'NAME' => 'HTML::FormHandler',
   'PREREQ_PM' => {
     'Carp' => '0',
+    'Class::Load' => '0.06',
     'DateTime' => '0',
     'DateTime::Format::Strptime' => '0',
     'Email::Valid' => '0',
@@ -39,11 +40,12 @@ my %WriteMakefileArgs = (
     'MooseX::Getopt' => '0.16',
     'MooseX::Types' => '0.20',
     'MooseX::Types::Common' => '0',
+    'MooseX::Types::LoadableClass' => '0.006',
     'Try::Tiny' => '0',
     'aliased' => '0',
     'namespace::autoclean' => '0.09'
   },
-  'VERSION' => '0.35001',
+  'VERSION' => '0.35002',
   'test' => {
     'TESTS' => 't/*.t'
   }

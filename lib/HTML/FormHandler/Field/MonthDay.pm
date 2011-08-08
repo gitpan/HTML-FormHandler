@@ -22,7 +22,7 @@ HTML::FormHandler::Field::MonthDay - select list 1 to 31
 
 =head1 VERSION
 
-version 0.35001
+version 0.35002
 
 =head1 DESCRIPTION
 

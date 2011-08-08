@@ -5,6 +5,8 @@ use Moose::Role;
 use File::Spec;
 use Class::MOP;
 use Try::Tiny;
+use Class::Load qw/ load_optional_class /;
+use namespace::autoclean;
 
 our $ERROR;
 
@@ -32,8 +34,7 @@ sub get_widget_role {
         push @classes,  $ns . $ldir . $widget_class;
     }
     foreach my $try (@classes) {
-        try { Class::MOP::load_class($try) } catch { die $_ unless $_ =~ /^Can't locate/; };
-        return $try if Class::MOP::is_class_loaded($try);
+        return $try if load_optional_class($try);
     }
     die "Can't find $dir widget $widget_class from " . join(", ", @name_spaces);
 }
@@ -62,7 +63,7 @@ HTML::FormHandler::Widget::ApplyRole - role to apply widgets
 
 =head1 VERSION
 
-version 0.35001
+version 0.35002
 
 =head1 AUTHOR
 
