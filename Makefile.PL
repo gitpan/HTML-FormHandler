@@ -11,43 +11,43 @@ install_share dist => "share";
 
 
 my %WriteMakefileArgs = (
-  'ABSTRACT' => 'HTML forms using Moose',
-  'AUTHOR' => 'FormHandler Contributors - see HTML::FormHandler',
-  'BUILD_REQUIRES' => {
-    'Test::Differences' => '0',
-    'Test::Exception' => '0',
-    'Test::Memory::Cycle' => '1.04',
-    'Test::More' => '0.94'
+  "ABSTRACT" => "HTML forms using Moose",
+  "AUTHOR" => "FormHandler Contributors - see HTML::FormHandler",
+  "BUILD_REQUIRES" => {
+    "Test::Differences" => 0,
+    "Test::Exception" => 0,
+    "Test::Memory::Cycle" => "1.04",
+    "Test::More" => "0.94"
   },
-  'CONFIGURE_REQUIRES' => {
-    'ExtUtils::MakeMaker' => '6.30',
-    'File::ShareDir::Install' => '0.03'
+  "CONFIGURE_REQUIRES" => {
+    "ExtUtils::MakeMaker" => "6.30",
+    "File::ShareDir::Install" => "0.03"
   },
-  'DISTNAME' => 'HTML-FormHandler',
-  'EXE_FILES' => [],
-  'LICENSE' => 'perl',
-  'NAME' => 'HTML::FormHandler',
-  'PREREQ_PM' => {
-    'Carp' => '0',
-    'Class::Load' => '0.06',
-    'DateTime' => '0',
-    'DateTime::Format::Strptime' => '0',
-    'Email::Valid' => '0',
-    'File::ShareDir' => '0',
-    'File::Spec' => '0',
-    'Locale::Maketext' => '1.09',
-    'Moose' => '2.0007',
-    'MooseX::Getopt' => '0.16',
-    'MooseX::Types' => '0.20',
-    'MooseX::Types::Common' => '0',
-    'MooseX::Types::LoadableClass' => '0.006',
-    'Try::Tiny' => '0',
-    'aliased' => '0',
-    'namespace::autoclean' => '0.09'
+  "DISTNAME" => "HTML-FormHandler",
+  "EXE_FILES" => [],
+  "LICENSE" => "perl",
+  "NAME" => "HTML::FormHandler",
+  "PREREQ_PM" => {
+    "Carp" => 0,
+    "Class::Load" => "0.06",
+    "DateTime" => 0,
+    "DateTime::Format::Strptime" => 0,
+    "Email::Valid" => 0,
+    "File::ShareDir" => 0,
+    "File::Spec" => 0,
+    "Locale::Maketext" => "1.09",
+    "Moose" => "2.0007",
+    "MooseX::Getopt" => "0.16",
+    "MooseX::Types" => "0.20",
+    "MooseX::Types::Common" => 0,
+    "MooseX::Types::LoadableClass" => "0.006",
+    "Try::Tiny" => 0,
+    "aliased" => 0,
+    "namespace::autoclean" => "0.09"
   },
-  'VERSION' => '0.35002',
-  'test' => {
-    'TESTS' => 't/*.t'
+  "VERSION" => "0.35003",
+  "test" => {
+    "TESTS" => "t/*.t"
   }
 );
 

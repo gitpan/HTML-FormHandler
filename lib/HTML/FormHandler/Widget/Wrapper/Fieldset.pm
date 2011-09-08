@@ -33,7 +33,7 @@ HTML::FormHandler::Widget::Wrapper::Fieldset - fieldset field wrapper
 
 =head1 VERSION
 
-version 0.35002
+version 0.35003
 
 =head1 SYNOPSIS
 

@@ -121,6 +121,7 @@ lib/HTML/FormHandler/Widget/Wrapper/SimpleInline.pm
 lib/HTML/FormHandler/Widget/Wrapper/Table.pm
 lib/HTML/FormHandler/Widget/Wrapper/TableInline.pm
 lib/HTML/FormHandler/Wizard.pm
+name_space.patch
 share/templates/form.tt
 share/templates/widget/button.tt
 share/templates/widget/checkbox.tt

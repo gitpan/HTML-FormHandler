@@ -101,7 +101,7 @@ HTML::FormHandler::Field::Captcha - captcha field with GD::SecurityImage
 
 =head1 VERSION
 
-version 0.35002
+version 0.35003
 
 =head1 SYNOPSIS
 

@@ -53,7 +53,7 @@ HTML::FormHandler::Field::Integer - validate an integer value
 
 =head1 VERSION
 
-version 0.35002
+version 0.35003
 
 =head1 DESCRIPTION
 
