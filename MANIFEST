@@ -89,6 +89,7 @@ lib/HTML/FormHandler/Result.pm
 lib/HTML/FormHandler/Result/Role.pm
 lib/HTML/FormHandler/TraitFor/Captcha.pm
 lib/HTML/FormHandler/TraitFor/I18N.pm
+lib/HTML/FormHandler/TraitFor/Types.pm
 lib/HTML/FormHandler/Traits.pm
 lib/HTML/FormHandler/Types.pm
 lib/HTML/FormHandler/Validate.pm
@@ -121,7 +122,6 @@ lib/HTML/FormHandler/Widget/Wrapper/SimpleInline.pm
 lib/HTML/FormHandler/Widget/Wrapper/Table.pm
 lib/HTML/FormHandler/Widget/Wrapper/TableInline.pm
 lib/HTML/FormHandler/Wizard.pm
-name_space.patch
 share/templates/form.tt
 share/templates/widget/button.tt
 share/templates/widget/checkbox.tt
@@ -161,6 +161,7 @@ t/formhandlerx.t
 t/has_field.t
 t/has_field_arrayref.t
 t/has_many.t
+t/html_attr.t
 t/inactive_fields.t
 t/input_param.t
 t/lib/BookDB/Form/Upload.pm

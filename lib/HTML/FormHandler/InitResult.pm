@@ -101,7 +101,12 @@ sub _get_value {
         @values = $item->$accessor;
     }
     elsif ( exists $item->{$accessor} ) {
-        @values = $item->{$accessor};
+        my $v = $item->{$accessor};
+        if($field->has_flag('multiple') && ref($v) eq 'ARRAY'){
+            @values = @$v;
+        } else {
+            @values = $v;
+        }
     }
     elsif ( @values = $field->get_default_value ) {
     }
@@ -133,7 +138,7 @@ HTML::FormHandler::InitResult - internal code
 
 =head1 VERSION
 
-version 0.35003
+version 0.35004
 
 =head1 SYNOPSIS
 

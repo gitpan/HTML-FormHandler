@@ -317,9 +317,9 @@ sub _add_html_attributes {
     my ( $self, $field ) = @_;
 
     my $output = q{};
-    my $html_attr = $field->html_attr;
+    my $html_attr = { %{$field->html_attr} };
     for my $attr ( 'readonly', 'disabled', 'style', 'title', 'tabindex' ) {
-        $html_attr->{$attr} = $field->$attr if $field->$attr;
+        $html_attr->{$attr} = $field->$attr if !exists $html_attr->{$attr} && $field->$attr;
     }
     foreach my $attr ( sort keys %$html_attr ) {
         $output .= qq{ $attr="} . $html_attr->{$attr} . qq{"}; 
@@ -344,7 +344,7 @@ HTML::FormHandler::Render::Simple - simple rendering role
 
 =head1 VERSION
 
-version 0.35003
+version 0.35004
 
 =head1 SYNOPSIS
 

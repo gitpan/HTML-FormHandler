@@ -21,7 +21,7 @@ use namespace::autoclean;
 use 5.008;
 
 # always use 5 digits after decimal because of toolchain issues
-our $VERSION = '0.35003';
+our $VERSION = '0.35004';
 
 
 # for consistency in api with field nodes
@@ -66,7 +66,7 @@ sub build_result {
 
 has 'field_traits' => ( is => 'ro', traits => ['Array'], isa => 'ArrayRef',
     default => sub {[]}, handles => { 'has_field_traits' => 'count' } );
-has 'widget_name_space' => ( is => 'ro', isa => 'Str|ArrayRef[Str]', default => sub {[]} );
+has 'widget_name_space' => ( is => 'ro', isa => 'HFH::ArrayRefStr', default => sub {[]}, coerce => 1 );
 has 'widget_form'       => ( is => 'ro', isa => 'Str', default => 'Simple' );
 has 'widget_wrapper'    => ( is => 'ro', isa => 'Str', default => 'Simple' );
 has 'no_widgets'        => ( is => 'ro', isa => 'Bool' );
@@ -117,6 +117,11 @@ has 'http_method'   => ( isa => 'Str',  is  => 'ro', default => 'post' );
 has 'enctype'       => ( is  => 'rw',   isa => 'Str' );
 has 'css_class' =>     ( isa => 'Str',  is => 'ro' );
 has 'style'     =>     ( isa => 'Str',  is => 'rw' );
+has 'html_attr' => ( is => 'rw', traits => ['Hash'],
+   default => sub { {} }, handles => { has_html_attr => 'count',
+   set_html_attr => 'set', delete_html_attr => 'delete' }
+);
+
 sub has_flag {
     my ( $self, $flag_name ) = @_;
     return unless $self->can($flag_name);
@@ -563,7 +568,7 @@ HTML::FormHandler - HTML forms using Moose
 
 =head1 VERSION
 
-version 0.35003
+version 0.35004
 
 =head1 SYNOPSIS
 
@@ -1211,6 +1216,9 @@ will return the form name + "." + field full_name
 
 =head2 For use in HTML
 
+   html_attr - hashref for setting arbitrary HTML attributes
+         has '+html_attr' => 
+           ( default => sub { { class => '...', method => '...' } } );
    http_method - For storing 'post' or 'get'
    action - Store the form 'action' on submission. No default value.
    enctype - Request enctype

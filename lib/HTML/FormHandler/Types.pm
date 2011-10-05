@@ -171,7 +171,7 @@ HTML::FormHandler::Types - Moose type constraints
 
 =head1 VERSION
 
-version 0.35003
+version 0.35004
 
 =head1 SYNOPSIS
 

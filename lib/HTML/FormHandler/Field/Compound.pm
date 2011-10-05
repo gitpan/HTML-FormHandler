@@ -17,7 +17,7 @@ has '+field_name_space' => (
         my $self = shift;
         return $self->form->field_name_space
             if $self->form && $self->form->field_name_space;
-        return '';
+        return [];
     },
 );
 
@@ -85,7 +85,7 @@ HTML::FormHandler::Field::Compound - field consisting of subfields
 
 =head1 VERSION
 
-version 0.35003
+version 0.35004
 
 =head1 SYNOPSIS
 
