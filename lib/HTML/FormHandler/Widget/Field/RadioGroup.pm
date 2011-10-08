@@ -5,6 +5,7 @@ use Moose::Role;
 use namespace::autoclean;
 
 with 'HTML::FormHandler::Widget::Field::Role::SelectedOption';
+with 'HTML::FormHandler::Widget::Field::Role::HTMLAttributes';
 
 sub render {
     my $self = shift;
@@ -19,6 +20,7 @@ sub render {
             . $self->html_name . qq{" id="$id.$index"};
         $output .= ' checked="checked"'
             if $self->check_selected_option($option, $result->fif);
+        $output .= $self->_add_html_attributes;
         $output .= ' />';
         $output .= $self->html_filter($option->{label}) . '</label><br />';
         $index++;
@@ -37,7 +39,7 @@ HTML::FormHandler::Widget::Field::RadioGroup - radio group rendering widget
 
 =head1 VERSION
 
-version 0.35004
+version 0.35005
 
 =head1 AUTHOR
 

@@ -54,7 +54,7 @@ sub field_index {
 }
 
 sub field {
-    my ( $self, $name, $die ) = @_;
+    my ( $self, $name, $die, $f ) = @_;
 
     my $index;
     # if this is a full_name for a compound field
@@ -62,7 +62,7 @@ sub field {
     return undef unless ( defined $name );
     if ( $name =~ /\./ ) {
         my @names = split /\./, $name;
-        my $f = $self->form || $self;
+        $f ||= $self->form || $self;
         foreach my $fname (@names) {
             $f = $f->field($fname);
             return unless $f;
@@ -200,7 +200,7 @@ HTML::FormHandler::Fields - internal role for form and compound fields
 
 =head1 VERSION
 
-version 0.35004
+version 0.35005
 
 =head1 SYNOPSIS
 

@@ -59,6 +59,7 @@ lib/HTML/FormHandler/I18N.pm
 lib/HTML/FormHandler/I18N/de_de.pm
 lib/HTML/FormHandler/I18N/en_us.pm
 lib/HTML/FormHandler/I18N/hu_hu.pm
+lib/HTML/FormHandler/I18N/ja_jp.pm
 lib/HTML/FormHandler/I18N/ru_ru.pm
 lib/HTML/FormHandler/I18N/sv_se.pm
 lib/HTML/FormHandler/I18N/tr_tr.pm
@@ -200,6 +201,7 @@ t/req_message.t
 t/result.t
 t/result_compound.t
 t/result_errors.t
+t/result_repeatable.t
 t/structured.t
 t/types.t
 t/update_fields.t

@@ -20,7 +20,7 @@ HTML::FormHandler::Field::Nested - for nested elements of compound fields
 
 =head1 VERSION
 
-version 0.35004
+version 0.35005
 
 =head1 SYNOPSIS
 

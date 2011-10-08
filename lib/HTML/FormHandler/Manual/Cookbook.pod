@@ -11,7 +11,7 @@ HTML::FormHandler::Manual::Cookbook - FormHandler use recipes
 
 =head1 VERSION
 
-version 0.35004
+version 0.35005
 
 =head1 SYNOPSIS
 
@@ -100,8 +100,9 @@ If you want to add custom attributes to the FormHandler fields but don't want
 to subclass all the fields, you can apply a role containing the new
 attributes to an L<HTML::FormHandler::Field> in your form.
 
-Use the form attribute 'field_traits' to apply a role to the base field class.
 Use 'traits' on the individual fields to apply a role to field instances.
+Use the form attribute 'field_traits' to apply a role to all field instances in
+the form.
 
     package MyApp::Form::Test;
     use HTML::FormHandler::Moose;
@@ -115,6 +116,11 @@ Or set the traits on new:
     my $form = MyApp::Form::User->new( field_traits => ['MyApp::TraitFor::Test'] );
     my $form = MyApp::Form::User->new(
              field_list => [ '+foo' => { traits => [...] } ]);
+
+To apply the role to a field base class, use 'apply_traits' on that class:
+
+    HTML::FormHandler::Field->apply_traits( 'Some::Test' );
+    HTML::FormHandler::Field::Text->apply_traits( 'Another::Trait' );
 
 =head2 Select lists
 

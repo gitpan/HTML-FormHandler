@@ -33,7 +33,7 @@ HTML::FormHandler::Field::Weekday - select list day of week strings
 
 =head1 VERSION
 
-version 0.35004
+version 0.35005
 
 =head1 DESCRIPTION
 

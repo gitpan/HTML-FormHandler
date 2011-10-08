@@ -27,7 +27,7 @@ HTML::FormHandler::Field::Boolean - a true or false field
 
 =head1 VERSION
 
-version 0.35004
+version 0.35005
 
 =head1 DESCRIPTION
 

@@ -71,6 +71,9 @@ sub create_element {
     # copy the fields from this field into the instance
     $instance->add_field( $self->all_fields );
 
+    # set required flag
+    $instance->required( $self->required );
+
     # auto_id has no way to change widgets...deprecate this?
     if ( $self->auto_id ) {
         unless ( grep $_->can('is_primary_key') && $_->is_primary_key, $instance->all_fields ) {
@@ -193,7 +196,7 @@ sub _result_from_fields {
         my $result =
             HTML::FormHandler::Field::Result->new( name => $index, parent => $self->result );
         $result = $field->_result_from_fields($result);
-        $result->add_result( $field->result ) if $result;
+        $self->result->add_result($result) if $result;
         $self->add_field($field);
         $index++;
         $count--;
@@ -242,7 +245,7 @@ HTML::FormHandler::Field::Repeatable - repeatable (array) field
 
 =head1 VERSION
 
-version 0.35004
+version 0.35005
 
 =head1 SYNOPSIS
 

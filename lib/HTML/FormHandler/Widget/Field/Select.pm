@@ -54,7 +54,7 @@ sub render {
             }
         }
         my $label = $self->localize_labels ? $self->_localize($option->{label}) : $option->{label};
-        $output .= '>' . $self->html_filter($label) . '</option>';
+        $output .= '>' . ( $self->html_filter($label) || '' ) . '</option>';
         $index++;
     }
     $output .= '</select>';
@@ -72,7 +72,7 @@ HTML::FormHandler::Widget::Field::Select - select field rendering widget
 
 =head1 VERSION
 
-version 0.35004
+version 0.35005
 
 =head1 AUTHOR
 
