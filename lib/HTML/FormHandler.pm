@@ -21,7 +21,7 @@ use namespace::autoclean;
 use 5.008;
 
 # always use 5 digits after decimal because of toolchain issues
-our $VERSION = '0.35005';
+our $VERSION = '0.36000';
 
 
 # for consistency in api with field nodes
@@ -66,7 +66,16 @@ sub build_result {
 
 has 'field_traits' => ( is => 'ro', traits => ['Array'], isa => 'ArrayRef',
     default => sub {[]}, handles => { 'has_field_traits' => 'count' } );
-has 'widget_name_space' => ( is => 'ro', isa => 'HFH::ArrayRefStr', default => sub {[]}, coerce => 1 );
+has 'widget_name_space' => (
+    is => 'ro',
+    isa => 'HFH::ArrayRefStr',
+    traits => ['Array'],
+    default => sub {[]},
+    coerce => 1,
+    handles => {
+        add_widget_name_space => 'push',
+    },
+);
 has 'widget_form'       => ( is => 'ro', isa => 'Str', default => 'Simple' );
 has 'widget_wrapper'    => ( is => 'ro', isa => 'Str', default => 'Simple' );
 has 'no_widgets'        => ( is => 'ro', isa => 'Bool' );
@@ -106,6 +115,11 @@ has 'update_field_list'   => ( is => 'rw',
         has_update_field_list => 'count',
     },
 );
+has 'defaults' => ( is => 'rw', isa => 'HashRef', default => sub {{}}, traits => ['Hash'],
+    handles => { has_defaults => 'count', clear_defaults => 'clear' },
+);
+has 'use_defaults_over_obj' => ( is => 'rw', isa => 'Bool', clearer => 'clear_use_defaults_over_obj' );
+has 'use_init_obj_over_item' => ( is => 'rw', isa => 'Bool', clearer => 'clear_use_init_obj_over_item' );
 has 'reload_after_update' => ( is => 'rw', isa     => 'Bool' );
 # flags
 has [ 'verbose', 'processed', 'did_init_obj' ] => ( isa => 'Bool', is => 'rw' );
@@ -117,10 +131,28 @@ has 'http_method'   => ( isa => 'Str',  is  => 'ro', default => 'post' );
 has 'enctype'       => ( is  => 'rw',   isa => 'Str' );
 has 'css_class' =>     ( isa => 'Str',  is => 'ro' );
 has 'style'     =>     ( isa => 'Str',  is => 'rw' );
+has 'is_html5'  => ( isa => 'Bool', is => 'ro', default => 0 );
 has 'html_attr' => ( is => 'rw', traits => ['Hash'],
    default => sub { {} }, handles => { has_html_attr => 'count',
    set_html_attr => 'set', delete_html_attr => 'delete' }
 );
+
+sub attributes {
+    my $self = shift;
+    my $attr = {};
+    $attr->{id} = $self->name;
+    $attr->{action} = $self->action if $self->action;
+    $attr->{method} = $self->http_method if $self->http_method;
+    $attr->{enctype} = $self->enctype if $self->enctype;
+    $attr->{class} = $self->css_class if $self->css_class;
+    $attr->{style} = $self->style if $self->style;
+    return {%$attr, %{$self->html_attr}};
+}
+
+sub field_html_attributes {
+    my ( $self, $field, $type, $attrs ) = @_;
+    return;
+}
 
 sub has_flag {
     my ( $self, $flag_name ) = @_;
@@ -217,8 +249,8 @@ sub BUILDARGS {
 sub BUILD {
     my $self = shift;
 
-    $self->apply_widget_role( $self, $self->widget_form, 'Form' )
-        if ( $self->widget_form && $self->widget_form ne 'Simple' );
+    $self->before_build; # hook to allow customizing forms
+    $self->apply_widget_role( $self, $self->widget_form, 'Form' ) unless $self->no_widgets;
     $self->_build_fields($self->field_traits);    # create the form fields (BuildFields.pm)
     $self->build_active if $self->has_active || $self->has_inactive || $self->has_flag('is_wizard');
     return if defined $self->item_id && !$self->item;
@@ -228,7 +260,8 @@ sub BUILD {
     # a well-behaved program that always does ->process shouldn't need
     # this preloading.
     unless( $self->no_preload ) {
-        if ( my $init_object = $self->item || $self->init_object ) {
+        if ( my $init_object = $self->use_init_obj_over_item ?
+            ($self->init_object || $self->item) : ( $self->item || $self->init_object ) ) {
             $self->_result_from_object( $self->result, $init_object );
         }
         else {
@@ -238,6 +271,8 @@ sub BUILD {
     $self->dump_fields if $self->verbose;
     return;
 }
+
+sub before_build {}
 
 sub process {
     my $self = shift;
@@ -279,6 +314,8 @@ sub clear {
     $self->processed(0);
     $self->did_init_obj(0);
     $self->clear_result;
+    $self->clear_use_defaults_over_obj;
+    $self->clear_use_init_obj_over_item;
 }
 
 sub values { shift->value }
@@ -364,9 +401,9 @@ sub setup_form {
     # will be done in _result_from_object when there's an initial object
     # in _result_from_input when there are params
     # and by _result_from_fields for empty forms
-
     if ( !$self->did_init_obj ) {
-        if ( my $init_object = $self->item || $self->init_object ) {
+        if ( my $init_object = $self->use_init_obj_over_item ?
+            ($self->init_object || $self->item) : ( $self->item || $self->init_object ) ) {
             $self->_result_from_object( $self->result, $init_object );
         }
         elsif ( !$self->has_params ) {
@@ -538,20 +575,34 @@ sub _can_deflate { }
 
 sub update_fields {
     my $self = shift;
-    return unless $self->has_update_field_list;
-    my $fields = $self->update_field_list;
-    foreach my $key ( keys %$fields ) {
-        my $field = $self->field($key);
-        unless( $field ) {
-            die "Field $key is not found and cannot be updated by update_fields";
+    if( $self->has_update_field_list ) {
+        my $updates = $self->update_field_list;
+        foreach my $field_name ( keys %{$updates} ) {
+            $self->update_field($field_name, $updates->{$field_name} );
         }
-        while ( my ( $attr_name, $attr_value ) = each %{$fields->{$key}} ) {
-            confess "invalid attribute '$attr_name' passed to update_field_list"
-                unless $field->can($attr_name);
-            $field->$attr_name($attr_value);
-        }
+        $self->clear_update_field_list;
     }
-    $self->clear_update_field_list;
+    if( $self->has_defaults ) {
+        my $defaults = $self->defaults;
+        foreach my $field_name ( keys %{$defaults} ) {
+            $self->update_field($field_name, { default => $defaults->{$field_name} } );
+        }
+        $self->clear_defaults;
+    }
+}
+
+sub update_field {
+    my ( $self, $field_name, $updates ) = @_;
+
+    my $field = $self->field($field_name);
+    unless( $field ) {
+        die "Field $field_name is not found and cannot be updated by update_fields";
+    }
+    while ( my ( $attr_name, $attr_value ) = each %{$updates} ) {
+        confess "invalid attribute '$attr_name' passed to update_field"
+            unless $field->can($attr_name);
+        $field->$attr_name($attr_value);
+    }
 }
 
 
@@ -568,7 +619,7 @@ HTML::FormHandler - HTML forms using Moose
 
 =head1 VERSION
 
-version 0.35005
+version 0.36000
 
 =head1 SYNOPSIS
 
@@ -607,6 +658,7 @@ field declaration sugar):
 
     use HTML::FormHandler::Moose;
     extends 'HTML::FormHandler';
+    use Moose::Util::TypeConstraints;
 
     has '+item_class' => ( default => 'User' );
 
@@ -770,8 +822,13 @@ but a 'field_list' argument must be passed in on 'new' since the
 fields are built at construction time.
 
 If you want to update field attributes on the 'process' call, you can
-use an 'update_field_list' hashref attribute, or subclass
-update_fields in your form.
+use an 'update_field_list' or 'defaults' hashref attribute , or subclass
+update_fields in your form. The 'defaults' attribute will update only
+the 'default' attribute in the field. The 'update_field_list' hashref
+can be used to set any field attribute:
+
+   $form->process( defaults => { foo => 'foo_def', bar => 'bar_def' } );
+   $form->process( update_field_list => { foo => { label => 'New Label' } });
 
 Field results are built on the 'new' call, but will then be re-built
 on the process call. If you always use 'process' before rendering the form,
@@ -857,7 +914,7 @@ parameter if unselected (checkboxes and select lists), then the form
 will not be validated if everything is unselected. For this case you
 can either add a hidden field, or use the 'posted' flag:
 
-   $form->process( posted => ($c->req->method eq 'POST', params => ... );
+   $form->process( posted => ($c->req->method eq 'POST'), params => ... );
 
 The corollary is that you will confuse FormHandler if you add extra params.
 It's often a better idea to add Moose attributes to the form rather than
@@ -963,6 +1020,14 @@ which can also be used in a form to do specific field updates:
 field's 'value' directly here, since it will
 be overwritten by the validation process. Set the value in a field
 validation method.)
+
+=head3 defaults
+
+This is a more specialized version of the 'update_field_list'. It can be
+used to provide 'default' settings for fields, in a shorthand way (you don't
+have to say 'default' for every field).
+
+   $form->process( defaults => { foo => 'this_foo', bar => 'this_bar' }, ... );
 
 =head3 active/inactive
 
@@ -1156,6 +1221,9 @@ not map to an existing or database object in an automatic way, and you need
 to create a different type of object for initialization. (You might also
 want to do 'update_model' yourself.)
 
+Also see the 'use_init_obj_over_item' flag, if you want to provide both an
+item and an init_object, and use the values from the init_object.
+
 =head3 ctx
 
 Place to store application context for your use in your form's methods.
@@ -1192,10 +1260,14 @@ Flag to indicate that validation has been run. This flag will be
 false when the form is initially loaded and displayed, since
 validation is not run until FormHandler has params to validate.
 
-=head3 verbose
+=head3 verbose, dump, peek
 
 Flag to dump diagnostic information. See 'dump_fields' and
-'dump_validated'.
+'dump_validated'. 'Peek' can be useful in diagnosing bugs.
+It will dump a brief listing of the fields and results.
+
+   $form->process( ... );
+   $form->peek;
 
 =head3 html_prefix
 
@@ -1214,20 +1286,47 @@ would be just "borrower".
 Also see the Field attribute "html_name", a convenience function which
 will return the form name + "." + field full_name
 
+=head3 is_html5
+
+Flag to indicate the fields will render using specialized attributes for html5.
+Set to 0 by default.
+
+=head3 use_defaults_over_obj
+
+The 'normal' precedence is that if there is an accessor in the item/init_object
+that value is used and not the 'default'. This flag makes the defaults of higher
+precedence. Mainly useful if providing an empty row on create.
+
+=head3 use_init_obj_over_item
+
+If you are providing both an item and an init_object, and want the init_object
+to be used for defaults instead of the item.
+
 =head2 For use in HTML
 
    html_attr - hashref for setting arbitrary HTML attributes
-         has '+html_attr' => 
+         has '+html_attr' =>
            ( default => sub { { class => '...', method => '...' } } );
    http_method - For storing 'post' or 'get'
    action - Store the form 'action' on submission. No default value.
-   enctype - Request enctype
    uuid - generates a string containing an HTML field with UUID
+
+Deprecated (use html_attr instead):
+
    css_class - adds a 'class' attribute to the form tag
    style - adds a 'style' attribute to the form tag
+   enctype - Request enctype
 
 Note that the form tag contains an 'id' attribute which is set to the
-form name.
+form name. The standards have been flip-flopping over whether a 'name'
+attribute is valid. It can be set with 'html_attr'.
+
+The rendering of the HTML attributes is done using the 'process_attrs'
+function and the 'attributes' method, which munges the 'html_attr' hash
+for backward compatibility, etc.
+
+For field HTML attributes, there is a form method hook, 'field_html_attributes',
+which can be used to customize/modify/localize field HTML attributes.
 
 =head1 SUPPORT
 
@@ -1321,6 +1420,8 @@ ijw: Ian Wells
 
 amiri: Amiri Barksdale
 
+ozum: Ozum Eldogan
+
 Initially based on the source code of L<Form::Processor> by Bill Moseley
 
 =head1 AUTHOR
@@ -1329,7 +1430,7 @@ FormHandler Contributors - see HTML::FormHandler
 
 =head1 COPYRIGHT AND LICENSE
 
-This software is copyright (c) 2011 by Gerda Shank.
+This software is copyright (c) 2012 by Gerda Shank.
 
 This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.

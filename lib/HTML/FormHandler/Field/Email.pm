@@ -9,6 +9,7 @@ our $VERSION = '0.02';
 our $class_messages = {
     'email_format' => 'Email should be of the format [_1]',
 };
+has '+html5_type_attr' => ( default => 'email' );
 
 sub get_class_messages  {
     my $self = shift;
@@ -47,12 +48,15 @@ HTML::FormHandler::Field::Email - validates email using Email::Valid
 
 =head1 VERSION
 
-version 0.35005
+version 0.36000
 
 =head1 DESCRIPTION
 
 Validates that the input looks like an email address uisng L<Email::Valid>.
 Widget type is 'text'.
+
+If form has 'is_html5' flag active it will render <input type="email" ... />
+instead of type="text"
 
 =head1 DEPENDENCIES
 
@@ -64,7 +68,7 @@ FormHandler Contributors - see HTML::FormHandler
 
 =head1 COPYRIGHT AND LICENSE
 
-This software is copyright (c) 2011 by Gerda Shank.
+This software is copyright (c) 2012 by Gerda Shank.
 
 This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.

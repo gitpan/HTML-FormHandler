@@ -47,7 +47,14 @@ sub _build_fields {
 
     $self->_process_field_array( $meta_flist, 0 ) if $meta_flist;
     my $flist = $self->has_field_list;
-    $self->_process_field_list($flist) if $flist;
+    if( $flist ) {
+        if( ref($flist) eq 'ARRAY' && ref( $flist->[0] ) eq 'HASH' ) {
+            $self->_process_field_array( $flist );
+        }
+        else {
+            $self->_process_field_list( $flist );
+        }
+    }
     my $mlist = $self->model_fields if $self->fields_from_model;
     $self->_process_field_list( $mlist ) if $mlist;
     return unless $self->has_fields;
@@ -185,7 +192,6 @@ sub _make_field {
     die "Could not load field class '$type' for field '$name'"
        unless $class;
 
-
     $field_attr->{form} = $self->form if $self->form;
     # parent and name correction for names with dots
     if ( $field_attr->{name} =~ /\./ ) {
@@ -193,7 +199,7 @@ sub _make_field {
         my $simple_name = pop @names;
         my $parent_name = join '.', @names;
         # use special 'field' method call that starts from
-        # $self, because names aren't always starting from 
+        # $self, because names aren't always starting from
         # the form
         my $parent      = $self->field($parent_name, undef, $self);
         if ($parent) {
@@ -262,15 +268,13 @@ sub new_field_with_traits {
         my $widget = $field_attr->{widget};
         unless( $widget ) {
             my $attr = $class->meta->find_attribute_by_name( 'widget' );
-            if ( $attr ) {
-                $widget = $attr->default;
-            }
+            $widget = $attr->default if $attr;
         }
         my $widget_wrapper = $field_attr->{widget_wrapper};
-        $widget_wrapper ||= $field_attr->{form}->widget_wrapper if $field_attr->{form};
         unless( $widget_wrapper ) {
             my $attr = $class->meta->get_attribute('widget_wrapper');
-            $widget_wrapper = $class->meta->get_attribute('widget')->default if $attr;
+            $widget_wrapper = $attr->default if $attr;
+            $widget_wrapper ||= $field_attr->{form}->widget_wrapper if $field_attr->{form};
             $widget_wrapper ||= 'Simple';
         }
         if( $widget ) {
@@ -304,7 +308,7 @@ HTML::FormHandler::BuildFields - role to build field array
 
 =head1 VERSION
 
-version 0.35005
+version 0.36000
 
 =head1 SYNOPSIS
 
@@ -319,7 +323,7 @@ FormHandler Contributors - see HTML::FormHandler
 
 =head1 COPYRIGHT AND LICENSE
 
-This software is copyright (c) 2011 by Gerda Shank.
+This software is copyright (c) 2012 by Gerda Shank.
 
 This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.

@@ -97,6 +97,8 @@ sub _get_value {
     if( defined $field->default_over_obj ) {
         @values = $field->default_over_obj;
     }
+    elsif( $field->form && $field->form->use_defaults_over_obj && ( @values = $field->get_default_value )  ) {
+    }
     elsif ( blessed($item) && $item->can($accessor) ) {
         @values = $item->$accessor;
     }
@@ -138,7 +140,7 @@ HTML::FormHandler::InitResult - internal code
 
 =head1 VERSION
 
-version 0.35005
+version 0.36000
 
 =head1 SYNOPSIS
 
@@ -150,7 +152,7 @@ FormHandler Contributors - see HTML::FormHandler
 
 =head1 COPYRIGHT AND LICENSE
 
-This software is copyright (c) 2011 by Gerda Shank.
+This software is copyright (c) 2012 by Gerda Shank.
 
 This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.

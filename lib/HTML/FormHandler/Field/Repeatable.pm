@@ -15,6 +15,7 @@ has 'contains' => (
 );
 
 has 'num_when_empty' => ( isa => 'Int',  is => 'rw', default => 1 );
+has 'num_extra'      => ( isa => 'Int',  is => 'rw', default => 0 );
 has 'index'          => ( isa => 'Int',  is => 'rw', default => 0 );
 has 'auto_id'        => ( isa => 'Bool', is => 'rw', default => 0 );
 has '+reload_after_update' => ( default => 1 );
@@ -40,6 +41,7 @@ sub init_state {
     # must clear out instances built last time
     unless ( $self->has_contains ) {
         if ( $self->num_fields == 1 && $self->field('contains') ) {
+            $self->field('contains')->is_contains(1);
             $self->contains( $self->field('contains') );
         }
         else {
@@ -59,6 +61,7 @@ sub create_element {
         parent => $self,
         form   => $self->form,
         type   => 'Repeatable::Instance',
+        is_contains => 1,
     };
     if( $self->form ) {
         $instance = $self->form->new_field_with_traits(
@@ -128,9 +131,9 @@ sub _result_from_input {
     $self->_set_result($result);
     # if Repeatable has array input, need to build instances
     $self->fields( [] );
+    my $index = 0;
     if ( ref $input eq 'ARRAY' ) {
         # build appropriate instance array
-        my $index = 0;
         foreach my $element ( @{$input} ) {
             next if not defined $element; # skip empty slots
             my $field  = $self->clone_element($index);
@@ -143,13 +146,13 @@ sub _result_from_input {
             $self->add_field($field);
             $index++;
         }
-        $self->index($index);
     }
+    $self->index($index);
     $self->result->_set_field_def($self);
     return $self->result;
 }
 
-# this is called when there is an init_object or an db item with values
+# this is called when there is an init_object or a db item with values
 sub _result_from_object {
     my ( $self, $result, $values ) = @_;
 
@@ -174,11 +177,41 @@ sub _result_from_object {
         $self->result->add_result( $field->result );
         $index++;
     }
+    if( my $num_extra = $self->num_extra ) {
+        while ($num_extra ) {
+            $self->_add_extra($index);
+            $num_extra--;
+            $index++;
+        }
+    }
     $self->index($index);
     $values = \@new_values if scalar @new_values;
     $self->_set_value($values);
     $self->result->_set_field_def($self);
     return $self->result;
+}
+
+sub _add_extra {
+    my ($self, $index) = @_;
+
+    my $field = $self->clone_element($index);
+    my $result =
+        HTML::FormHandler::Field::Result->new( name => $index, parent => $self->result );
+    $result = $field->_result_from_fields($result);
+    $self->result->add_result($result) if $result;
+    $self->add_field($field);
+}
+
+sub add_extra {
+    my ( $self, $count ) = @_;
+    $count = 1 if not defined $count;
+    my $index = $self->index;
+    while ( $count ) {
+        $self->_add_extra($index);
+        $count--;
+        $index++;
+    }
+    $self->index($index);
 }
 
 # create an empty form
@@ -245,7 +278,7 @@ HTML::FormHandler::Field::Repeatable - repeatable (array) field
 
 =head1 VERSION
 
-version 0.35005
+version 0.36000
 
 =head1 SYNOPSIS
 
@@ -332,6 +365,23 @@ This attribute (default 1) indicates how many empty fields to present
 in an empty form which hasn't been filled from parameters or database
 rows.
 
+=item num_extra
+
+When the field results are built from an existing object (item or init_object)
+an additional number of repeatable elements will be created equal to this
+number. Default is 0.
+
+=item add_extra
+
+When a form is submitted and the field results are built from the input
+parameters, it's not clear when or if an additional repeatable element might
+be wanted. The method 'add_extra' will add an empty repeatable element.
+
+    $form->process( params => {....} );
+    $form->field('my_repeatable')->add_extra(1);
+
+This might be useful if the form is being re-presented to the user.
+
 =back
 
 =head1 AUTHOR
@@ -340,7 +390,7 @@ FormHandler Contributors - see HTML::FormHandler
 
 =head1 COPYRIGHT AND LICENSE
 
-This software is copyright (c) 2011 by Gerda Shank.
+This software is copyright (c) 2012 by Gerda Shank.
 
 This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.

@@ -42,7 +42,7 @@ HTML::FormHandler::TraitFor::I18N - localization
 
 =head1 VERSION
 
-version 0.35005
+version 0.36000
 
 =head3 language_handle, _build_language_handle
 
@@ -78,13 +78,23 @@ If you don't want a particular error message to go through localization,
 you can use 'push_errors' and 'push_form_errors' instead of 'add_error' and
 'add_form_errors'.
 
+Example of getting the language handle from the Catalyst context (where the Catalyst
+context is passed in with 'ctx'):
+
+    has '+language_handle' => ( builder => 'get_language_handle_from_ctx' );
+    sub get_language_handle_from_ctx {
+        my $self = shift;
+        return MyApp::I18N->get_handle(
+            @{ $self->ctx->languages } );
+    }
+
 =head1 AUTHOR
 
 FormHandler Contributors - see HTML::FormHandler
 
 =head1 COPYRIGHT AND LICENSE
 
-This software is copyright (c) 2011 by Gerda Shank.
+This software is copyright (c) 2012 by Gerda Shank.
 
 This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.

@@ -6,6 +6,7 @@ extends 'HTML::FormHandler::Field::Text';
 our $VERSION = '0.01';
 
 has '+widget' => ( default => 'hidden' );
+has '+widget_wrapper' => ( default => 'None' );
 
 
 __PACKAGE__->meta->make_immutable;
@@ -21,7 +22,7 @@ HTML::FormHandler::Field::Hidden - hidden field
 
 =head1 VERSION
 
-version 0.35005
+version 0.36000
 
 =head1 DESCRIPTION
 
@@ -34,7 +35,7 @@ FormHandler Contributors - see HTML::FormHandler
 
 =head1 COPYRIGHT AND LICENSE
 
-This software is copyright (c) 2011 by Gerda Shank.
+This software is copyright (c) 2012 by Gerda Shank.
 
 This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.

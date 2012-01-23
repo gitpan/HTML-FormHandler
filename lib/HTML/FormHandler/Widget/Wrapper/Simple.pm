@@ -3,6 +3,7 @@ package HTML::FormHandler::Widget::Wrapper::Simple;
 
 use Moose::Role;
 use namespace::autoclean;
+use HTML::FormHandler::Render::Util ('process_attrs');
 
 with 'HTML::FormHandler::Widget::Wrapper::Base';
 
@@ -11,17 +12,19 @@ has 'auto_fieldset' => ( isa => 'Bool', is => 'rw', lazy => 1, default => 1 );
 
 sub wrap_field {
     my ( $self, $result, $rendered_widget ) = @_;
-    my $t;
-    my $start_tag = defined($t = $self->get_tag('wrapper_start')) ?
-        $t : '<div<%class%>>';
-    my $is_compound = $self->has_flag('is_compound');
-    my $class  = $self->render_class($result);
+
     my $output = "\n";
 
-    $start_tag =~ s/<%class%>/$class/g;
-    $output .= $start_tag;
+    my $tag = $self->wrapper_tag;
+    my $start_tag = $self->get_tag('wrapper_start');
+    if( defined $start_tag ) {
+        $output .= $start_tag;
+    }
+    else {
+        $output .= "<$tag" . process_attrs( $self->wrapper_attributes($result) ) . ">";
+    }
 
-    if ( $is_compound ) {
+    if ( $self->has_flag('is_compound') ) {
         if( $self->auto_fieldset ) {
             $output .= '<fieldset class="' . $self->html_name . '">';
             $output .= '<legend>' . $self->loc_label . '</legend>';
@@ -35,9 +38,10 @@ sub wrap_field {
     $output .= qq{\n<span class="error_message">$_</span>}
         for $result->all_errors;
     $output .= '</fieldset>'
-        if ( $is_compound && $self->auto_fieldset );
+        if ( $self->has_flag('is_compound') && $self->auto_fieldset );
 
-    $output .= defined($t = $self->get_tag('wrapper_end')) ? $t : '</div>';
+    my $end_tag = $self->get_tag('wrapper_end');
+    $output .= defined $end_tag ? $end_tag : "</$tag>";
 
     return "$output\n";
 }
@@ -53,7 +57,7 @@ HTML::FormHandler::Widget::Wrapper::Simple - simple field wrapper
 
 =head1 VERSION
 
-version 0.35005
+version 0.36000
 
 =head1 SYNOPSIS
 
@@ -71,13 +75,18 @@ in paragraph tags instead:
       wrapper_end   => '</p>' }
    );
 
+Alternatively, 'wrapper_tag' can be set to switch to a tag besides 'div',
+but still use the the wrapper attribute processing:
+
+   has '+widget_tags' => ( default => sub { { wrapper_tag => 'p' } } );
+
 =head1 AUTHOR
 
 FormHandler Contributors - see HTML::FormHandler
 
 =head1 COPYRIGHT AND LICENSE
 
-This software is copyright (c) 2011 by Gerda Shank.
+This software is copyright (c) 2012 by Gerda Shank.
 
 This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.

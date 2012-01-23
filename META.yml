@@ -3,6 +3,7 @@ abstract: 'HTML forms using Moose'
 author:
   - 'FormHandler Contributors - see HTML::FormHandler'
 build_requires:
+  HTML::TreeBuilder: 3.23
   Test::Differences: 0
   Test::Exception: 0
   Test::Memory::Cycle: 1.04
@@ -11,7 +12,7 @@ configure_requires:
   ExtUtils::MakeMaker: 6.30
   File::ShareDir::Install: 0.03
 dynamic_config: 0
-generated_by: 'Dist::Zilla version 4.300000, CPAN::Meta::Converter version 2.112150'
+generated_by: 'Dist::Zilla version 4.300005, CPAN::Meta::Converter version 2.112150'
 license: perl
 meta-spec:
   url: http://module-build.sourceforge.net/META-spec-v1.4.html
@@ -31,10 +32,11 @@ requires:
   MooseX::Types: 0.20
   MooseX::Types::Common: 0
   MooseX::Types::LoadableClass: 0.006
+  Sub::Exporter: 0
   Try::Tiny: 0
   aliased: 0
   namespace::autoclean: 0.09
 resources:
   bugtracker: https://rt.cpan.org/Public/Dist/Display.html?Name=HTML-FormHandler
   repository: git://github.com/gshank/html-formhandler.git
-version: 0.35005
+version: 0.36000

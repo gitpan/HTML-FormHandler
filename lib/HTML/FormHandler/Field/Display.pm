@@ -6,7 +6,7 @@ extends 'HTML::FormHandler::Field::NoValue';
 use namespace::autoclean;
 
 
-has 'html' => ( is => 'rw', isa => 'Str', builder => 'build_html' );
+has 'html' => ( is => 'rw', isa => 'Str', builder => 'build_html', lazy => 1 );
 sub build_html {''}
 has 'set_html' => ( isa => 'Str', is => 'ro');
 sub _set_html_meth {
@@ -73,7 +73,7 @@ HTML::FormHandler::Field::Display - display only field
 
 =head1 VERSION
 
-version 0.35005
+version 0.36000
 
 =head1 SYNOPSIS
 
@@ -119,7 +119,7 @@ FormHandler Contributors - see HTML::FormHandler
 
 =head1 COPYRIGHT AND LICENSE
 
-This software is copyright (c) 2011 by Gerda Shank.
+This software is copyright (c) 2012 by Gerda Shank.
 
 This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.

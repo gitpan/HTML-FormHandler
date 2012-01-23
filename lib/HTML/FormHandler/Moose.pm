@@ -30,6 +30,16 @@ sub has_field {
     my ( $meta, $name, %options ) = @_;
     my $names = ( ref($name) eq 'ARRAY' ) ? $name : [ ($name) ];
 
+    unless ($meta->found_hfh) {
+        my @linearized_isa = $meta->linearized_isa;
+        if( grep { $_ eq 'HTML::FormHandler' || $_ eq 'HTML::FormHandler::Field' } @linearized_isa ) {
+            $meta->found_hfh(1);
+        }
+        else {
+            die "Package uses HTML::FormHandler::Moose without extending HTML::FormHandler[::Field]";
+        }
+    }
+
     $meta->add_to_field_list( { name => $_, %options } ) for @$names;
 }
 
@@ -58,7 +68,7 @@ HTML::FormHandler::Moose - to add FormHandler sugar
 
 =head1 VERSION
 
-version 0.35005
+version 0.36000
 
 =head1 SYNOPSIS
 
@@ -81,7 +91,7 @@ FormHandler Contributors - see HTML::FormHandler
 
 =head1 COPYRIGHT AND LICENSE
 
-This software is copyright (c) 2011 by Gerda Shank.
+This software is copyright (c) 2012 by Gerda Shank.
 
 This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.

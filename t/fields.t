@@ -426,6 +426,10 @@ ok( $field, 'get TextArea field');
 $field->_set_input("Testing, testing, testing... This is a test");
 $field->validate_field;
 ok( !$field->has_errors, 'field has no errors');
+$field->maxlength( 10 );
+$field->validate_field;
+ok( $field->has_errors, 'field has errors');
+is( $field->errors->[0], 'Field should not exceed 10 characters. You entered 43',  'Test for too long' );
 
 # text
 
@@ -504,5 +508,27 @@ ok ( !$field->has_errors, 'Now is just a fine year' );
 $field->_set_input( 2100 );
 $field->validate_field;
 ok( $field->has_errors, '2100 makes the author really old' );
+
+# float
+
+$class = 'HTML::FormHandler::Field::Float';
+use_ok( $class );
+$field = $class->new( name => 'foat_test' );
+ok( defined $field, 'field built' );
+$field->_set_input( '2.0' );
+$field->validate_field;
+ok( !$field->has_errors, 'accepted 2.0 value' );
+$field->_set_input( '2.000' );
+$field->validate_field;
+ok( $field->has_errors, 'error for 3 decimal places' );
+is( $field->errors->[0], 'May have a maximum of 2 digits after the decimal point, but has 3', 'error message correct' );
+$field->size(4);
+$field->_set_input( '12345.00' );
+$field->validate_field;
+ok( $field->has_errors, 'error for size' );
+is( $field->errors->[0], 'Total size of number must be less than or equal to 4, but is 7', 'error message correct' );
+$field->_set_input( '12.30' );
+$field->validate_field;
+ok( $field->validated, 'field validated' );
 
 done_testing;

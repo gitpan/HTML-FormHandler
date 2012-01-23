@@ -2,8 +2,8 @@ package HTML::FormHandler::Field::TextArea;
 # ABSTRACT: textarea input
 
 use Moose;
-extends 'HTML::FormHandler::Field';
-our $VERSION = '0.01';
+extends 'HTML::FormHandler::Field::Text';
+our $VERSION = '0.02';
 
 has '+widget' => ( default => 'textarea' );
 has 'cols'    => ( isa     => 'Int', is => 'rw' );
@@ -23,11 +23,11 @@ HTML::FormHandler::Field::TextArea - textarea input
 
 =head1 VERSION
 
-version 0.35005
+version 0.36000
 
 =head1 Summary
 
-For HTML textarea. Uses 'textarea' widget. Set cols/row.
+For HTML textarea. Uses 'textarea' widget. Set cols/row/minlength/maxlength.
 
 =head1 AUTHOR
 
@@ -35,7 +35,7 @@ FormHandler Contributors - see HTML::FormHandler
 
 =head1 COPYRIGHT AND LICENSE
 
-This software is copyright (c) 2011 by Gerda Shank.
+This software is copyright (c) 2012 by Gerda Shank.
 
 This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.

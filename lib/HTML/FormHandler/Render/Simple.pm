@@ -5,7 +5,8 @@ use Moose::Role;
 
 requires( 'sorted_fields', 'field' );
 
-with 'HTML::FormHandler::Widget::Form::Role::HTMLAttributes';
+use HTML::FormHandler::Render::Util ('process_attrs');
+
 our $VERSION = 0.01;
 
 
@@ -94,21 +95,13 @@ sub render_field {
     else {
         die "No widget method found for '" . $field->widget . "' in H::F::Render::Simple";
     }
-    my $class = '';
-    if ( $field->css_class || $field->has_errors ) {
-        my @css_class;
-        push( @css_class, split( /[ ,]+/, $field->css_class ) ) if $field->css_class;
-        push( @css_class, 'error' ) if $field->has_errors;
-        $class .= ' class="';
-        $class .= join( ' ' => @css_class );
-        $class .= '"';
-    }
-    return $self->render_field_struct( $field, $rendered_field, $class );
+    my $wrapper_attrs = process_attrs($field->wrapper_attributes);
+    return $self->render_field_struct( $field, $rendered_field, $wrapper_attrs );
 }
 
 sub render_field_struct {
-    my ( $self, $field, $rendered_field, $class ) = @_;
-    my $output = qq{\n<div$class>};
+    my ( $self, $field, $rendered_field, $wrapper_attrs ) = @_;
+    my $output = qq{\n<div$wrapper_attrs>};
     my $l_type =
         defined $self->get_label_type( $field->widget ) ?
         $self->get_label_type( $field->widget ) :
@@ -134,13 +127,13 @@ sub render_field_struct {
 
 sub render_text {
     my ( $self, $field ) = @_;
-    my $output = '<input type="text" name="';
+    my $output = '<input type="' . $field->input_type . '" name="';
     $output .= $field->html_name . '"';
     $output .= ' id="' . $field->id . '"';
     $output .= ' size="' . $field->size . '"' if $field->size;
     $output .= ' maxlength="' . $field->maxlength . '"' if $field->maxlength;
     $output .= ' value="' . $field->html_filter($field->fif) . '"';
-    $output .= $self->_add_html_attributes( $field );
+    $output .= process_attrs($field->attributes);
     $output .= ' />';
     return $output;
 }
@@ -153,7 +146,7 @@ sub render_password {
     $output .= ' size="' . $field->size . '"' if $field->size;
     $output .= ' maxlength="' . $field->maxlength . '"' if $field->maxlength;
     $output .= ' value="' . $field->html_filter($field->fif) . '"';
-    $output .= $self->_add_html_attributes( $field );
+    $output .= process_attrs($field->attributes);
     $output .= ' />';
     return $output;
 }
@@ -164,7 +157,7 @@ sub render_hidden {
     $output .= $field->html_name . '"';
     $output .= ' id="' . $field->id . '"';
     $output .= ' value="' . $field->html_filter($field->fif) . '"';
-    $output .= $self->_add_html_attributes( $field );
+    $output .= process_attrs($field->attributes);
     $output .= ' />';
     return $output;
 }
@@ -172,43 +165,42 @@ sub render_hidden {
 sub render_select {
     my ( $self, $field ) = @_;
 
+    my $multiple = $field->multiple;
+    my $id = $field->id;
     my $output = '<select name="' . $field->html_name . '"';
-    $output .= ' id="' . $field->id . '"';
-    $output .= ' multiple="multiple"' if $field->multiple == 1;
+    $output .= qq{ id="$id"};
+    $output .= ' multiple="multiple"' if $multiple == 1;
     $output .= ' size="' . $field->size . '"' if $field->size;
-    $output .= $self->_add_html_attributes( $field );
+    my $html_attributes = process_attrs($field->attributes);
+    $output .= $html_attributes;
     $output .= '>';
     my $index = 0;
     if( defined $field->empty_select ) {
         $output .= '<option value="">' . $field->_localize($field->empty_select) . '</option>';
     }
-    foreach my $option ( @{ $field->options } ) {
-        $output .= '<option value="' . $field->html_filter($option->{value}) . '" ';
-        $output .= 'id="' . $field->id . ".$index\" ";
+    my $fif = $field->fif;
+    my %fif_lookup;
+    @fif_lookup{@$fif} = () if $multiple;
+    foreach my $option ( @{ $field->{options} } ) {
+        my $value = $option->{value};
+        $output .= '<option value="'
+            . $field->html_filter($value)
+            . qq{" id="$id.$index"};
         if( defined $option->{disabled} && $option->{disabled} ) {
-            $output .= 'disabled="disabled" ';
+            $output .= ' disabled="disabled"';
         }
-        if ( $field->fif ) {
-            if ( $field->multiple == 1 ) {
-                my @fif;
-                if ( ref $field->fif ) {
-                    @fif = @{ $field->fif };
-                }
-                else {
-                    @fif = ( $field->fif );
-                }
-                foreach my $optval (@fif) {
-                    $output .= 'selected="selected"'
-                        if $optval eq $option->{value};
-                }
+        if ( defined $fif ) {
+            if ( $multiple && exists $fif_lookup{$value} ) {
+                $output .= ' selected="selected"';
             }
-            else {
-                $output .= 'selected="selected"'
-                    if $option->{value} eq $field->fif;
+            elsif ( $fif eq $value ) {
+                $output .= ' selected="selected"';
             }
         }
-        my $label = $field->localize_labels ? $field->_localize($option->{label}) : $option->{label};
-        $output .= '>' . $field->html_filter($label) . '</option>';
+        $output .= $html_attributes;
+        my $label = $option->{label};
+        $label = $field->_localize($label) if $field->localize_labels;
+        $output .= '>' . ( $field->html_filter($label) || '' ) . '</option>';
         $index++;
     }
     $output .= '</select>';
@@ -222,7 +214,7 @@ sub render_checkbox {
     $output .= ' id="' . $field->id . '"';
     $output .= ' value="' . $field->html_filter($field->checkbox_value) . '"';
     $output .= ' checked="checked"' if $field->fif eq $field->checkbox_value;
-    $output .= $self->_add_html_attributes( $field );
+    $output .= process_attrs($field->attributes);
     $output .= ' />';
     return $output;
 }
@@ -254,7 +246,7 @@ sub render_textarea {
 
     my $output =
         qq(<textarea name="$name" id="$id" )
-        . $self->_add_html_attributes($field)
+        . process_attrs($field->attributes)
         . qq(rows="$rows" cols="$cols">)
         . $field->html_filter($fif)
         . q(</textarea>);
@@ -269,16 +261,18 @@ sub render_upload {
     $output = '<input type="file" name="';
     $output .= $field->html_name . '"';
     $output .= ' id="' . $field->id . '"';
-    $output .= $self->_add_html_attributes( $field );
+    $output .= process_attrs($field->attributes);
     $output .= ' />';
     return $output;
 }
 
 sub _label {
     my ( $self, $field ) = @_;
-    return '<label class="label" for="' . $field->id . '">' .
-        $field->html_filter($field->loc_label)
-        . ': </label>';
+
+    my $attrs = process_attrs( $field->label_attributes );
+    my $label = $field->html_filter($field->loc_label);
+    $label .= ": " unless $field->get_tag('label_no_colon');
+    return qq{<label$attrs for="} . $field->id . qq{">$label</label>};
 }
 
 sub render_compound {
@@ -297,7 +291,7 @@ sub render_submit {
     my $output = '<input type="submit" name="';
     $output .= $field->html_name . '"';
     $output .= ' id="' . $field->id . '"';
-    $output .= $self->_add_html_attributes( $field );
+    $output .= process_attrs($field->attributes);
     $output .= ' value="' . $field->html_filter($field->_localize($field->value)) . '" />';
     return $output;
 }
@@ -308,26 +302,8 @@ sub render_reset {
     my $output = '<input type="reset" name="';
     $output .= $field->html_name . '"';
     $output .= ' id="' . $field->id . '"';
-    $output .= $self->_add_html_attributes( $field );
+    $output .= process_attrs($field->attributes);
     $output .= ' value="' . $field->html_filter($field->value) . '" />';
-    return $output;
-}
-
-sub _add_html_attributes {
-    my ( $self, $field ) = @_;
-
-    my $output = q{};
-    my $html_attr = { %{$field->html_attr} };
-    for my $attr ( 'readonly', 'disabled', 'style', 'title', 'tabindex' ) {
-        $html_attr->{$attr} = $field->$attr if !exists $html_attr->{$attr} && $field->$attr;
-    }
-    foreach my $attr ( sort keys %$html_attr ) {
-        $output .= qq{ $attr="} . $html_attr->{$attr} . qq{"}; 
-    }
-    $output .= ($field->javascript ? ' ' . $field->javascript : '');
-    if( $field->input_class ) {
-        $output .= ' class="' . $field->input_class . '"';
-    }
     return $output;
 }
 
@@ -344,7 +320,7 @@ HTML::FormHandler::Render::Simple - simple rendering role
 
 =head1 VERSION
 
-version 0.35005
+version 0.36000
 
 =head1 SYNOPSIS
 
@@ -455,7 +431,7 @@ FormHandler Contributors - see HTML::FormHandler
 
 =head1 COPYRIGHT AND LICENSE
 
-This software is copyright (c) 2011 by Gerda Shank.
+This software is copyright (c) 2012 by Gerda Shank.
 
 This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.

@@ -38,9 +38,13 @@ sub num_error_fields { shift->result->num_error_results }
 has 'field_name_space' => (
     isa     => 'HFH::ArrayRefStr',
     is      => 'rw',
+    traits  => ['Array'],
     lazy    => 1,
     default => '',
     coerce  => 1,
+    handles => {
+        add_field_name_space => 'push',
+    },
 );
 
 sub field_index {
@@ -200,7 +204,7 @@ HTML::FormHandler::Fields - internal role for form and compound fields
 
 =head1 VERSION
 
-version 0.35005
+version 0.36000
 
 =head1 SYNOPSIS
 
@@ -245,7 +249,7 @@ FormHandler Contributors - see HTML::FormHandler
 
 =head1 COPYRIGHT AND LICENSE
 
-This software is copyright (c) 2011 by Gerda Shank.
+This software is copyright (c) 2012 by Gerda Shank.
 
 This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.

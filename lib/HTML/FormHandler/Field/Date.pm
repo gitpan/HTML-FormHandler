@@ -8,6 +8,7 @@ use DateTime::Format::Strptime;
 our $VERSION = '0.03';
 
 
+has '+html5_type_attr' => ( default => 'date' );
 has 'format' => ( is => 'rw', isa => 'Str', default => "%Y-%m-%d" );
 has 'locale'     => ( is => 'rw', isa => 'Str' );                                  # TODO
 has 'time_zone'  => ( is => 'rw', isa => 'Str' );                                  # TODO
@@ -112,7 +113,7 @@ HTML::FormHandler::Field::Date - a date field with formats
 
 =head1 VERSION
 
-version 0.35005
+version 0.36000
 
 =head1 SUMMARY
 
@@ -154,13 +155,16 @@ Customize error messages 'date_early' and 'date_late':
        messages => { date_early => 'Pick a later date',
                      date_late  => 'Pick an earlier date', } );
 
+If form has 'is_html5' flag active it will render <input type="date" ... />
+instead of type="text"
+
 =head1 AUTHOR
 
 FormHandler Contributors - see HTML::FormHandler
 
 =head1 COPYRIGHT AND LICENSE
 
-This software is copyright (c) 2011 by Gerda Shank.
+This software is copyright (c) 2012 by Gerda Shank.
 
 This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.

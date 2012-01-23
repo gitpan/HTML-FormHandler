@@ -6,14 +6,6 @@ use Moose;
 extends 'HTML::FormHandler::Field::Compound';
 
 
-# this class does not have a 'real' accessor
-sub full_accessor {
-    my $field = shift;
-
-    my $parent = $field->parent || return '';
-    return $parent->full_accessor;
-}
-
 __PACKAGE__->meta->make_immutable;
 use namespace::autoclean;
 1;
@@ -27,7 +19,7 @@ HTML::FormHandler::Field::Repeatable::Instance - used internally by repeatable f
 
 =head1 VERSION
 
-version 0.35005
+version 0.36000
 
 =head1 SYNOPSIS
 
@@ -40,7 +32,7 @@ FormHandler Contributors - see HTML::FormHandler
 
 =head1 COPYRIGHT AND LICENSE
 
-This software is copyright (c) 2011 by Gerda Shank.
+This software is copyright (c) 2012 by Gerda Shank.
 
 This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.

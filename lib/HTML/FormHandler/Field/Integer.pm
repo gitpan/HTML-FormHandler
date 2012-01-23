@@ -6,6 +6,7 @@ extends 'HTML::FormHandler::Field::Text';
 our $VERSION = '0.02';
 
 has '+size' => ( default => 8 );
+has '+html5_type_attr' => ( default => 'number' );
 
 our $class_messages = {
     'integer_needed' => 'Value must be an integer',
@@ -53,7 +54,7 @@ HTML::FormHandler::Field::Integer - validate an integer value
 
 =head1 VERSION
 
-version 0.35005
+version 0.36000
 
 =head1 DESCRIPTION
 
@@ -61,13 +62,16 @@ This accpets a positive or negative integer.  Negative integers may
 be prefixed with a dash.  By default a max of eight digits are accepted.
 Widget type is 'text'.
 
+If form has 'is_html5' flag active it will render <input type="number" ... />
+instead of type="text"
+
 =head1 AUTHOR
 
 FormHandler Contributors - see HTML::FormHandler
 
 =head1 COPYRIGHT AND LICENSE
 
-This software is copyright (c) 2011 by Gerda Shank.
+This software is copyright (c) 2012 by Gerda Shank.
 
 This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.

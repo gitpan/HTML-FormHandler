@@ -74,7 +74,7 @@ sub input {
     my $self = shift;
 
     # allow testing fields individually by creating result if no form
-    return undef unless $self->has_result || !$self->form; 
+    return undef unless $self->has_result || !$self->form;
     my $result = $self->result;
     return $result->_set_input(@_) if @_;
     return $result->input;
@@ -84,8 +84,9 @@ sub value {
     my $self = shift;
 
     # allow testing fields individually by creating result if no form
-    return undef unless $self->has_result || !$self->form; 
+    return undef unless $self->has_result || !$self->form;
     my $result = $self->result;
+    return undef unless $result;
     return $result->_set_value(@_) if @_;
     return $result->value;
 }
@@ -150,6 +151,7 @@ has 'accessor' => (
         return $accessor;
     }
 );
+has 'is_contains' => ( is => 'rw', isa => 'Bool' );
 has 'temp' => ( is => 'rw' );
 
 sub has_flag {
@@ -159,7 +161,7 @@ sub has_flag {
 }
 
 has 'label' => (
-    isa     => 'Str',
+    isa     => 'Maybe[Str]',
     is      => 'rw',
     lazy    => 1,
     builder => 'build_label',
@@ -200,29 +202,36 @@ sub build_html_name {
 }
 has 'widget'            => ( isa => 'Str',  is => 'rw' );
 has 'widget_wrapper'    => ( isa => 'Str',  is => 'rw' );
+sub wrapper { lc( shift->widget_wrapper || '' ) || 'simple' }
 has 'widget_tags'         => (
     traits => ['Hash'],
     isa => 'HashRef',
     is => 'ro',
-    default => sub {{}},
+    builder => 'build_widget_tags',
     handles => {
       get_tag => 'get',
       set_tag => 'set',
       tag_exists => 'exists',
     },
 );
+sub build_widget_tags {{}}
 has 'widget_name_space' => (
     isa => 'HFH::ArrayRefStr',
     is => 'rw',
+    traits => ['Array'],
     default => sub {[]},
     coerce => 1,
+    handles => {
+        push_widget_name_space => 'push',
+    },
 );
+
 sub add_widget_name_space {
     my ( $self, @ns ) = @_;
     @ns = @{$ns[0]}if( scalar @ns && ref $ns[0] eq 'ARRAY' );
-    my $widget_ns = $self->widget_name_space;
-    push @{$self->widget_name_space}, @ns;
+    $self->push_widget_name_space(@ns);
 }
+
 has 'order'             => ( isa => 'Int',  is => 'rw', default => 0 );
 # 'inactive' is set in the field declaration, and is static. Default status.
 has 'inactive'          => ( isa => 'Bool', is => 'rw', clearer => 'clear_inactive' );
@@ -246,10 +255,111 @@ has 'writeonly'  => ( isa => 'Bool', is => 'rw' );
 has 'disabled'   => ( isa => 'Bool', is => 'rw' );
 has 'readonly'   => ( isa => 'Bool', is => 'rw' );
 has 'tabindex' => ( is => 'rw', isa => 'Int' );
+has 'type_attr' => ( is => 'rw', isa => 'Str', default => 'text' );
+has 'html5_type_attr' => ( isa => 'Str', is => 'ro', default => 'text' );
+sub input_type {
+    my $self = shift;
+    return $self->html5_type_attr if ( $self->form && $self->form->has_flag('is_html5') );
+    return $self->type_attr;
+}
+
 has 'html_attr' => ( is => 'rw', traits => ['Hash'],
-   default => sub { {} }, handles => { has_html_attr => 'count',
+   builder => 'build_html_attr', handles => { has_html_attr => 'count',
    set_html_attr => 'set', delete_html_attr => 'delete' }
 );
+sub build_html_attr {{}}
+has 'label_attr' => ( is => 'rw', traits => ['Hash'],
+   builder => 'build_label_attr', handles => { has_label_attr => 'count',
+   set_label_attr => 'set', delete_label_attr => 'delete' }
+);
+sub build_label_attr {{}}
+has 'wrapper_attr' => ( is => 'rw', traits => ['Hash'],
+   builder => 'build_wrapper_attr', handles => { has_wrapper_attr => 'count',
+   set_wrapper_attr => 'set', delete_wrapper_attr => 'delete' }
+);
+sub build_wrapper_attr {{}}
+
+sub attributes {
+    my $self = shift;
+
+    # copy html_attr, with deep copy of 'class' if it's an array
+    my $html_attr = {%{$self->html_attr}};
+    $html_attr->{class} = [@{$html_attr->{class}}]
+        if ( exists $html_attr->{class} && ref( $html_attr->{class} eq 'ARRAY' ) );
+    my $attrs = {};
+    # handle html5 attributes
+    if ($self->form && $self->form->has_flag('is_html5')) {
+        $attrs->{required} = 'required' if $self->required;
+        $attrs->{min} = $self->range_start if defined $self->range_start;
+        $attrs->{max} = $self->range_end if defined $self->range_end;
+    }
+    # pull in deprecated attributes for backward compatibility
+    for my $attr ( 'readonly', 'disabled', 'style', 'title', 'tabindex' ) {
+        $attrs->{$attr} = $self->$attr if $self->$attr;
+    }
+    $attrs->{class} = $self->input_class if $self->input_class;
+    my $all_attrs = {%$attrs, %{$self->html_attr}};
+    # call form hook
+    $self->form->field_html_attributes($self, 'input', $all_attrs) if $self->form;
+    return $all_attrs;
+}
+
+sub label_attributes {
+    my $self = shift;
+    # copy label_attr, with deep copy of 'class' if it's an array
+    my $attr = {%{$self->label_attr}};
+    $attr->{class} = [@{$attr->{class}}]
+        if ( exists $attr->{class} && ref( $attr->{class} eq 'ARRAY' ) );
+    if( ! exists $attr->{class} && $self->form && ! $self->form->can('no_label_class')  ) {
+        $attr->{class} = 'label';
+    }
+    # call form hook
+    $self->form->field_html_attributes($self, 'label', $attr) if $self->form;
+    return $attr;
+}
+
+sub wrapper_attributes {
+    my ( $self, $result ) = @_;
+    $result ||= $self->result;
+    # copy wrapper_attr, with deep copy of 'class' if it's an array
+    my $attr = {%{$self->wrapper_attr}};
+    $attr->{class} = [@{$attr->{class}}]
+        if ( exists $attr->{class} && ref( $attr->{class} eq 'ARRAY' ) );
+    # pull in deprecated css_class
+    if( ! exists $attr->{class} && defined $self->css_class ) {
+        $attr->{class} = $self->css_class;
+    }
+    # add 'error' to class
+    if( $result->has_errors ) {
+        if( ref $attr->{class} eq 'ARRAY' ) {
+            push @{$attr->{class}}, 'error';
+        }
+        else {
+            $attr->{class} .= $attr->{class} ? ' error' : 'error';
+        }
+    }
+    # call form hook
+    $self->form->field_html_attributes($self, 'wrapper', $attr) if $self->form;
+    return $attr;
+}
+
+sub wrapper_tag {
+    my $self = shift;
+    return $self->get_tag('wrapper_tag') || 'div';
+}
+
+#=====================
+# these may be temporary
+sub field_filename {
+    my $self = shift;
+    return 'checkbox_tag.tt' if $self->input_type eq 'checkbox';
+    return 'input_tag.tt';
+}
+sub label_tag {
+    my $self = shift;
+    return $self->get_tag('label_tag') || 'label';
+}
+#===================
 
 has 'noupdate'   => ( isa => 'Bool', is => 'rw' );
 has 'set_validate' => ( isa => 'Str', is => 'ro',);
@@ -470,11 +580,7 @@ sub all_messages {
 sub BUILDARGS {
     my $class = shift;
 
-    # for compatibility, change 'set_init' to 'set_default'
-    my @new;
-    push @new, ('set_default', {@_}->{set_init} )
-        if( exists {@_}->{set_init} );
-    return $class->SUPER::BUILDARGS(@_, @new);
+    return $class->SUPER::BUILDARGS(@_);
 }
 
 sub BUILD {
@@ -483,16 +589,13 @@ sub BUILD {
     $self->_set_default( $self->_comp_default_meth )
         if( $self->form && $self->form->can( $self->_comp_default_meth ) );
     $self->add_widget_name_space( $self->form->widget_name_space ) if $self->form;
-    # widgets will already have been applied by BuildFields, but this allows
-    # testing individual fields
-#   $self->apply_rendering_widgets unless ($self->can('render') );
     $self->add_action( $self->trim ) if $self->trim;
     $self->_build_apply_list;
     $self->add_action( @{ $params->{apply} } ) if $params->{apply};
 }
 
 # this is the recursive routine that is used
-# to initial fields if there is no initial object and no params
+# to initialize field results if there is no initial object and no params
 sub _result_from_fields {
     my ( $self, $result ) = @_;
 
@@ -551,8 +654,13 @@ sub full_name {
 sub full_accessor {
     my $field = shift;
 
+    my $parent = $field->parent;
+    if( $field->is_contains ) {
+        return '' unless $parent;
+        return $parent->full_accessor;
+    }
     my $accessor = $field->accessor;
-    my $parent = $field->parent || return $accessor;
+    return $accessor unless $parent;
     return $parent->full_accessor . '.' . $accessor;
 }
 
@@ -725,7 +833,7 @@ HTML::FormHandler::Field - base class for fields
 
 =head1 VERSION
 
-version 0.35005
+version 0.36000
 
 =head1 SYNOPSIS
 
@@ -941,20 +1049,13 @@ Compound fields will have an array of errors from the subfields.
 =head2 Attributes for creating HTML
 
 There's a generic 'html_attr' hashref attribute that can be used to set
-arbitrary HTML attributes on a field.
+arbitrary HTML attributes on a field's input tag.
 
    has_field 'foo' => ( html_attr => { readonly => 1, my_attr => 'abc' } );
 
-Some attributes also have specific setters
-(readonly', 'disabled', 'style', 'title', 'tabindex).
-
-   has_field 'bar' => ( readonly => 1 ); 
-         
-   title       - Place to put title for field.
-   style       - Place to put field style string
-   disabled    - for the HTML flag
-   tabindex    - for the HTML tab index
-   readonly    - for the HTML flag
+The 'label_attr' hashref is for label attributes, and the 'wrapper_attr'
+is for attributes on the wrapping element (a 'div' for the standard 'simple'
+wrapper).
 
 The javascript value of the javascript attribute is entered completely.
 
@@ -963,10 +1064,6 @@ The javascript value of the javascript attribute is entered completely.
 The following are used in rendering HTML, but are handled specially.
 
    label       - Text label for this field. Defaults to ucfirst field name.
-   css_class   - For a css class name (string; could be several classes,
-                 separated by spaces or commas). Used in wrapper for input field.
-   input_class - class attribute on the 'input' field. applied with
-                 '_apply_html_attribute' (also html_attr => { class => '...' } ) 
    id          - Useful for javascript (default is html_name. to prefix with
                  form name, use 'html_prefix' in your form)
    render_filter - Coderef for filtering fields before rendering. By default
@@ -976,6 +1073,40 @@ The order attribute may be used to set the order in which fields are rendered.
 
    order       - Used for sorting errors and fields. Built automatically,
                  but may also be explicitly set
+
+The following are deprecated. Use 'html_attr', 'label_attr', and 'wrapper_attr'
+instead.
+
+   css_class   - instead use wrapper_attr => { class => '...' }
+   input_class - instead use html_attr => { class => '...' }
+   title       - instead use html_attr => { title => '...' }
+   style       - instead use html_attr => { style => '...' }
+   disabled    - instead use html_attr => { disabled => 'disabled' }
+   tabindex    - instead use html_attr => { tabindex => 1 }
+   readonly    - instead use html_attr => { readonly => 'readonly' }
+
+Rendering of the various HTML attributes is done by calling the 'process_attrs'
+function (from HTML::FormHandler::Render::Util) and passing in a method that
+adds in error classes, provides backward compatibility with the deprecated
+attributes, etc.
+
+    attribute hashref            wrapping method
+    =================            ================
+    html_attr                    attributes
+    label_attr                   label_attributes
+    wrapper_attr                 wrapper_attributes
+
+In addition, these 'wrapping method' call a hook method in the form class,
+'field_html_attributes' which you can use to customize and localize the various
+attributes.
+
+The 'process_attrs' function will handle an array of strings, such as for the
+'class' attribute.
+
+=head2 html5_type_attr [string]
+
+This string is used when rendering the input tag as the value for the type attribute.
+It is used when the form has the is_html5 flag on.
 
 =head2 widget
 
@@ -1078,14 +1209,17 @@ the other. Now 'default' does *not* override.
 If you pass in a model object with C<< item => $row >> or an initial object
 with C<< init_object => {....} >> the values in that object will be used instead
 of values provided in the field definition with 'default' or 'default_fieldname'.
+If you want defaults that override the item/init_object, you can use the form
+flags 'use_defaults_over_obj' and 'use_init_obj_over_item'.
 
-If you *want* values that override the item/init_object, you can use the field
-attribute 'default_over_obj'.
+You could also put your defaults into your row or init_object instead.
 
-However you might want to consider putting your defaults into your row or init_object
-instead.
+See also L<HTML::FormHandler::Manual::Intro#Defaults>.
 
 =item default_over_obj
+
+This is deprecated; look into using 'use_defaults_over_obj' or 'use_init_obj_over_item'
+flags instead. They allow using the standard 'default' attribute.
 
 Allows setting defaults which will override values provided with an item/init_object.
 
@@ -1381,7 +1515,7 @@ FormHandler Contributors - see HTML::FormHandler
 
 =head1 COPYRIGHT AND LICENSE
 
-This software is copyright (c) 2011 by Gerda Shank.
+This software is copyright (c) 2012 by Gerda Shank.
 
 This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.

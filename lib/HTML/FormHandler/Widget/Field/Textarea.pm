@@ -3,13 +3,12 @@ package HTML::FormHandler::Widget::Field::Textarea;
 
 use Moose::Role;
 use namespace::autoclean;
-
-with 'HTML::FormHandler::Widget::Field::Role::HTMLAttributes';
+use HTML::FormHandler::Render::Util ('process_attrs');
 
 sub render {
     my $self = shift;
     my $result = shift || $self->result;
-    my $fif  = $self->html_filter($result->fif) || '';
+    my $fif  = $self->html_filter($result->fif);
     my $id   = $self->id;
     my $cols = $self->cols || 10;
     my $rows = $self->rows || 5;
@@ -17,7 +16,7 @@ sub render {
 
     my $output =
         qq(<textarea name="$name" id="$id")
-        . $self->_add_html_attributes
+        . process_attrs($self->attributes)
         . qq( rows="$rows" cols="$cols">$fif</textarea>);
 
     return $self->wrap_field( $result, $output );
@@ -34,7 +33,7 @@ HTML::FormHandler::Widget::Field::Textarea - textarea rendering widget
 
 =head1 VERSION
 
-version 0.35005
+version 0.36000
 
 =head1 AUTHOR
 
@@ -42,7 +41,7 @@ FormHandler Contributors - see HTML::FormHandler
 
 =head1 COPYRIGHT AND LICENSE
 
-This software is copyright (c) 2011 by Gerda Shank.
+This software is copyright (c) 2012 by Gerda Shank.
 
 This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.

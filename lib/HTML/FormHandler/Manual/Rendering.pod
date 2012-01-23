@@ -11,7 +11,7 @@ HTML::FormHandler::Manual::Rendering - how to render with FormHandler
 
 =head1 VERSION
 
-version 0.35005
+version 0.36000
 
 =head1 SYNOPSIS
 
@@ -33,9 +33,6 @@ HFH has a number of different rendering methods:
    1. Handcoded html with no assist from HFH at all
    2. Use templates and the field 'widget' to determine the template snippet
    3. Use a rendering role in your form class, like Render::Simple
-
-and now:
-
    4. Automatically installed rendering widgets using a combination of
       rendering roles, which can easily be customized by the user.
 
@@ -60,7 +57,7 @@ FormHandler to display the field elements:
    [% form.field('title').render %]
 
 If you wish to loop through the fields yourself, use the 'sorted_fields'
-method.
+method, since it skips inactive fields and handles the 'order' attribute.
 
 FormHandler is not a template system, so unless your form is very simple,
 rendering the entire form page only with FormHandler may not be the best solution.
@@ -162,9 +159,10 @@ attributes in the form, or do it on new:
 
 =head2 HTML attributes
 
-Arbitrary HTML attributes can be specified with 'html_attr' on the field. There
-are also specific setters available for some attributes. See the documentation in
-L< HTML::FormHandler::Field >.
+Arbitrary HTML attributes on form elements (such as 'input' elements) can be specified
+with 'html_attr' on the field. You can also set html attributes for the label with
+'label_attr' and html attributes for the wrapper with 'wrapper_attr'. See the
+documentation in L<HTML::FormHandler::Field#Attributes_for_creating_HTML>.
 
 =head2 Rendering bare html with no fieldset and no divs
 
@@ -241,10 +239,11 @@ Your rendering widgets will be applied into your field classes.
 
 The 'widget_tags' hashref attribute has been provided to allow customizing
 rendering behavior on a per-field basis. They can be used to switch the Simple
-wrapper from divs to using paragraphs instead:
+wrapper from divs to using paragraphs instead, or to suppress the colon in
+label formatting:
 
-   has_field 'my_field' => ( widget_tags => {wrapper_start => '<p>',
-       wrapper_end => '</p>' } );
+   has_field 'my_field' => ( 
+       widget_tags => {wrapper_tag => 'p', label_no_colon => 1  } );
 
 If you want just the plain html (including the label) with no wrapping div or
 other element, you can set the wrapper_start and wrapper_end to ''.
@@ -264,8 +263,8 @@ widget_tags in a form to apply them to all the fields:
 
 =head2 Creating Widgets
 
-The new widgets are designed to be used with either the original FormHandler
-form objects or the new L<HTML::FormHandler::Result> objects. For that reason,
+The new widgets are designed to be used with either the FormHandler
+form/field objects or the L<HTML::FormHandler::Result> objects. For that reason,
 you should use C<< $field->result >> to access the current value, errors and
 'fif' (fill-in-form) in field widgets, so that they will work
 for both form and result rendering.
@@ -299,7 +298,7 @@ FormHandler Contributors - see HTML::FormHandler
 
 =head1 COPYRIGHT AND LICENSE
 
-This software is copyright (c) 2011 by Gerda Shank.
+This software is copyright (c) 2012 by Gerda Shank.
 
 This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.

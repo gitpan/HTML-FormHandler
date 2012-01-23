@@ -3,9 +3,19 @@ package HTML::FormHandler::Widget::Field::Role::HTMLAttributes;
 
 use Moose::Role;
 
+# TODO: replace some of this with the eqivalent of the template process_attrs(field.attributes)
 sub _add_html_attributes {
     my $self = shift;
-
+    if ($self->form->has_flag('is_html5')) {
+        $self->set_html_attr('required' => 'required') if ($self->required);
+        my %attributes = (
+            range_start => 'min',
+            range_end => 'max',
+        );
+        foreach my $attr (keys %attributes) {
+            $self->set_html_attr($attributes{$attr} => $self->$attr) if ($self->meta->find_attribute_by_name($attr) && defined $self->$attr);
+        }
+    }
     my $output = q{};
     my $html_attr = { %{$self->html_attr} };
     for my $attr ( 'readonly', 'disabled', 'style', 'title', 'tabindex' ) {
@@ -32,7 +42,7 @@ HTML::FormHandler::Widget::Field::Role::HTMLAttributes - apply HTML attributes
 
 =head1 VERSION
 
-version 0.35005
+version 0.36000
 
 =head1 AUTHOR
 
@@ -40,7 +50,7 @@ FormHandler Contributors - see HTML::FormHandler
 
 =head1 COPYRIGHT AND LICENSE
 
-This software is copyright (c) 2011 by Gerda Shank.
+This software is copyright (c) 2012 by Gerda Shank.
 
 This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.

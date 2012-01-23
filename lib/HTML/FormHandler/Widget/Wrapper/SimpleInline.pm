@@ -14,14 +14,15 @@ sub wrap_field {
 
     return $rendered_widget if $self->has_flag('is_compound');
 
-    my $t;
-    my $output = '';
-    my $start_tag = defined($t = $self->get_tag('wrapper_start')) ?
-        $t : '<div<%class%>>';
-    my $class  = $self->render_class($result);
-    $output .= "\n";
-    $start_tag =~ s/<%class%>/$class/g;
-    $output .= $start_tag;
+    my $output = "\n";
+    my $tag = $self->wrapper_tag;
+    my $start_tag = $self->get_tag('wrapper_start');
+    if( defined $start_tag ) {
+        $output .= $start_tag;
+    }
+    else {
+        $output .= "<$tag" . process_attrs( $self->wrapper_attributes($result) ) . ">";
+    }
 
     if ( !$self->has_flag('no_render_label') && length( $self->label ) > 0 ) {
         $output .= $self->render_label;
@@ -31,7 +32,8 @@ sub wrap_field {
     $output .= qq{\n<span class="error_message">$_</span>}
         for $result->all_errors;
 
-    $output .= defined($t = $self->get_tag('wrapper_end')) ? $t : '</div>';
+    my $end_tag = $self->get_tag('wrapper_end');
+    $output .= defined $end_tag ? $end_tag : "</$tag>";
 
     return "$output\n";
 }
@@ -47,7 +49,7 @@ HTML::FormHandler::Widget::Wrapper::SimpleInline - simple field wrapper
 
 =head1 VERSION
 
-version 0.35005
+version 0.36000
 
 =head1 SYNOPSIS
 
@@ -60,7 +62,7 @@ FormHandler Contributors - see HTML::FormHandler
 
 =head1 COPYRIGHT AND LICENSE
 
-This software is copyright (c) 2011 by Gerda Shank.
+This software is copyright (c) 2012 by Gerda Shank.
 
 This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.

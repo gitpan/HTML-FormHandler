@@ -3,44 +3,40 @@ package HTML::FormHandler::Widget::Field::CheckboxGroup;
 
 use Moose::Role;
 use namespace::autoclean;
-
-with 'HTML::FormHandler::Widget::Field::Role::SelectedOption';
-with 'HTML::FormHandler::Widget::Field::Role::HTMLAttributes';
+use HTML::FormHandler::Render::Util ('process_attrs');
 
 sub render {
     my $self = shift;
     my $result = shift || $self->result;
     my $output = " <br />";
     my $index  = 0;
+    my $multiple = $self->multiple;
     my $id = $self->id;
-    my $html_attributes = $self->_add_html_attributes;
+    my $html_attributes = process_attrs($self->attributes);
 
-    foreach my $option ( @{ $self->options } ) {
+    my $fif = $result->fif;
+    my %fif_lookup;
+    @fif_lookup{@$fif} = () if $multiple;
+    foreach my $option ( @{ $self->{options} } ) {
+        my $value = $option->{value};
         $output .= '<input type="checkbox" value="'
-            . $self->html_filter($option->{value}) . '" name="'
+            . $self->html_filter($value) . '" name="'
             . $self->html_name . qq{" id="$id.$index"};
-        if ( my $ffif = $result->fif ) {
-            if ( $self->multiple == 1 ) {
-                my @fif;
-                if ( ref $ffif ) {
-                    @fif = @{$ffif};
-                }
-                else {
-                    @fif = ($ffif);
-                }
-                foreach my $optval (@fif) {
-                    $output .= ' checked="checked"'
-                        if $self->check_selected_option($option, $optval);
-                }
+        if( defined $option->{disabled} && $option->{disabled} ) {
+            $output .= 'disabled="disabled" ';
+        }
+        if ( defined $fif ) {
+            if ( $multiple && exists $fif_lookup{$value} ) {
+                $output .= ' checked="checked"';
             }
-            else {
-                $output .= ' checked="checked"'
-                    if $self->check_selected_option($option, $ffif);
+            elsif ( $fif eq $value ) {
+                $output .= ' checked="checked"';
             }
         }
         $output .= $html_attributes;
-        $output .= ' />';
-        $output .= $self->html_filter($option->{label}) . '<br />';
+        my $label = $option->{label};
+        $label = $self->_localize($label) if $self->localize_labels;
+        $output .= ' />' . ( $self->html_filter($label) || '' ) . '<br />';
         $index++;
     }
     return $self->wrap_field( $result, $output );
@@ -57,7 +53,7 @@ HTML::FormHandler::Widget::Field::CheckboxGroup - checkbox group field role
 
 =head1 VERSION
 
-version 0.35005
+version 0.36000
 
 =head1 AUTHOR
 
@@ -65,7 +61,7 @@ FormHandler Contributors - see HTML::FormHandler
 
 =head1 COPYRIGHT AND LICENSE
 
-This software is copyright (c) 2011 by Gerda Shank.
+This software is copyright (c) 2012 by Gerda Shank.
 
 This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.

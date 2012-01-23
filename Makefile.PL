@@ -14,6 +14,7 @@ my %WriteMakefileArgs = (
   "ABSTRACT" => "HTML forms using Moose",
   "AUTHOR" => "FormHandler Contributors - see HTML::FormHandler",
   "BUILD_REQUIRES" => {
+    "HTML::TreeBuilder" => "3.23",
     "Test::Differences" => 0,
     "Test::Exception" => 0,
     "Test::Memory::Cycle" => "1.04",
@@ -41,11 +42,12 @@ my %WriteMakefileArgs = (
     "MooseX::Types" => "0.20",
     "MooseX::Types::Common" => 0,
     "MooseX::Types::LoadableClass" => "0.006",
+    "Sub::Exporter" => 0,
     "Try::Tiny" => 0,
     "aliased" => 0,
     "namespace::autoclean" => "0.09"
   },
-  "VERSION" => "0.35005",
+  "VERSION" => "0.36000",
   "test" => {
     "TESTS" => "t/*.t"
   }

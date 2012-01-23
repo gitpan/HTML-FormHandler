@@ -9,6 +9,7 @@ our $VERSION = '0.04';
 has '+widget'           => ( default => 'password' );
 has '+password'         => ( default => 1 );
 has 'ne_username'       => ( isa     => 'Str', is => 'rw' );
+has '+type_attr'        => ( default => 'password' );
 
 our $class_messages = {
     'required' => 'Please enter a password in this field',
@@ -64,7 +65,7 @@ HTML::FormHandler::Field::Password - password field
 
 =head1 VERSION
 
-version 0.35005
+version 0.36000
 
 =head1 DESCRIPTION
 
@@ -102,7 +103,7 @@ FormHandler Contributors - see HTML::FormHandler
 
 =head1 COPYRIGHT AND LICENSE
 
-This software is copyright (c) 2011 by Gerda Shank.
+This software is copyright (c) 2012 by Gerda Shank.
 
 This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.
