@@ -204,7 +204,7 @@ HTML::FormHandler::Fields - internal role for form and compound fields
 
 =head1 VERSION
 
-version 0.36000
+version 0.36001
 
 =head1 SYNOPSIS
 

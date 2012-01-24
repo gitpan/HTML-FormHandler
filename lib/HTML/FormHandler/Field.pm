@@ -310,9 +310,6 @@ sub label_attributes {
     my $attr = {%{$self->label_attr}};
     $attr->{class} = [@{$attr->{class}}]
         if ( exists $attr->{class} && ref( $attr->{class} eq 'ARRAY' ) );
-    if( ! exists $attr->{class} && $self->form && ! $self->form->can('no_label_class')  ) {
-        $attr->{class} = 'label';
-    }
     # call form hook
     $self->form->field_html_attributes($self, 'label', $attr) if $self->form;
     return $attr;
@@ -833,7 +830,7 @@ HTML::FormHandler::Field - base class for fields
 
 =head1 VERSION
 
-version 0.36000
+version 0.36001
 
 =head1 SYNOPSIS
 
@@ -1099,6 +1096,11 @@ attributes, etc.
 In addition, these 'wrapping method' call a hook method in the form class,
 'field_html_attributes' which you can use to customize and localize the various
 attributes.
+
+   sub field_html_attributes {
+       my ( $self, $field, $type, $attr ) = @_;
+       $attr->{class} = 'label' if $type eq 'label';
+   }
 
 The 'process_attrs' function will handle an array of strings, such as for the
 'class' attribute.

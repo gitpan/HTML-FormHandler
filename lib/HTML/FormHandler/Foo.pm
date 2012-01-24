@@ -32,8 +32,6 @@ has 'config' => ( isa => 'HashRef', is => 'rw' );
 
 sub submitted_and_valid { shift->validated }
 
-sub no_label_class { 1 }
-
 sub process_config_file {
     my $self = shift;
     return unless $self->config_file;
@@ -72,7 +70,7 @@ HTML::FormHandler::Foo - Experiment in loading form from config file
 
 =head1 VERSION
 
-version 0.36000
+version 0.36001
 
 =head1 AUTHOR
 

@@ -21,7 +21,7 @@ use namespace::autoclean;
 use 5.008;
 
 # always use 5 digits after decimal because of toolchain issues
-our $VERSION = '0.36000';
+our $VERSION = '0.36001';
 
 
 # for consistency in api with field nodes
@@ -619,7 +619,7 @@ HTML::FormHandler - HTML forms using Moose
 
 =head1 VERSION
 
-version 0.36000
+version 0.36001
 
 =head1 SYNOPSIS
 
@@ -1327,6 +1327,15 @@ for backward compatibility, etc.
 
 For field HTML attributes, there is a form method hook, 'field_html_attributes',
 which can be used to customize/modify/localize field HTML attributes.
+
+   sub field_html_attributes {
+       my ( $self, $field, $type, $attr ) = @_;
+       $attr->{class} = 'label' if $type eq 'label';
+       $attr->{placeholder} = $self->_localize($attr->{placeholder})
+           if exists $attr->{placeholder};
+   }
+
+Also see the documentation in L<HTML::FormHandler::Field>.
 
 =head1 SUPPORT
 

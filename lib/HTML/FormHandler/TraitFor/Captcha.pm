@@ -13,7 +13,8 @@ has_field 'captcha' => ( type => 'Captcha', label => 'Verification' );
 sub get_captcha {
     my $self = shift;
     return unless $self->ctx;
-    my $captcha = $self->ctx->{session}->{captcha};
+    my $captcha;
+    $captcha = $self->ctx->session->{captcha};
     return $captcha;
 }
 
@@ -21,22 +22,12 @@ sub get_captcha {
 sub set_captcha {
     my ( $self, $captcha ) = @_;
     return unless $self->ctx;
-    $self->ctx->{session}->{captcha} = $captcha;
+    $self->ctx->session( captcha => $captcha );
 }
 
-sub render_captcha {
-    my ( $self, $field ) = @_;
-
-    my $output = $self->_label($field);
-    $output .= '<img src="' . $self->captcha_image_url . '"/>';
-    $output .= '<input id="' . $field->id . '" name="';
-    $output .= $field->name . '">';
-    return $output;
-}
 
 sub captcha_image_url {
-    my $self = shift;
-    return '/captcha/test';
+    return '/captcha/image';
 }
 
 use namespace::autoclean;
@@ -51,7 +42,7 @@ HTML::FormHandler::TraitFor::Captcha - generate and validate captchas
 
 =head1 VERSION
 
-version 0.36000
+version 0.36001
 
 =head1 SYNOPSIS
 
@@ -79,6 +70,25 @@ Get a captcha stored in C<< $form->ctx->{session} >>
 =head1 set_captcha
 
 Set a captcha in C<< $self->ctx->{session} >>
+
+=head2 captcha_image_url
+
+Default is '/captcha/image'. Override in a form to change.
+
+   sub captcha_image_url { '/my/image/url/' }
+
+Example of a Catalyst action to handle the image:
+
+    sub image : Local {
+        my ( $self, $c ) = @_;
+        my $captcha = $c->session->{captcha};
+        $c->response->body($captcha->{image});
+        $c->response->content_type('image/'. $captcha->{type});
+        $c->res->headers->expires( time() );
+        $c->res->headers->header( 'Last-Modified' => HTTP::Date::time2str );
+        $c->res->headers->header( 'Pragma'        => 'no-cache' );
+        $c->res->headers->header( 'Cache-Control' => 'no-cache' );
+    }
 
 =head1 AUTHOR
 

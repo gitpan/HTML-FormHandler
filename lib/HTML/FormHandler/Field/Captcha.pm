@@ -14,6 +14,7 @@ has 'lines'    => ( isa => 'Int', is => 'rw', default => '2' );
 has 'gd_font'  => ( isa => 'Str', is => 'rw', default => 'Large' );
 has 'image'    => ( is  => 'rw' );
 has '+css_class' => ( default => 'captcha' );
+has '+widget' => ( default => 'captcha' );
 
 has '+noupdate' => ( default => 1 );
 
@@ -101,7 +102,7 @@ HTML::FormHandler::Field::Captcha - captcha field with GD::SecurityImage
 
 =head1 VERSION
 
-version 0.36000
+version 0.36001
 
 =head1 SYNOPSIS
 

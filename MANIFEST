@@ -99,6 +99,7 @@ lib/HTML/FormHandler/Types.pm
 lib/HTML/FormHandler/Validate.pm
 lib/HTML/FormHandler/Widget/ApplyRole.pm
 lib/HTML/FormHandler/Widget/Field/Button.pm
+lib/HTML/FormHandler/Widget/Field/Captcha.pm
 lib/HTML/FormHandler/Widget/Field/Checkbox.pm
 lib/HTML/FormHandler/Widget/Field/CheckboxGroup.pm
 lib/HTML/FormHandler/Widget/Field/Compound.pm
@@ -214,6 +215,7 @@ t/render_html5_attributes.t
 t/render_html_attributes.t
 t/render_result.t
 t/render_table.t
+t/render_widget_tags.t
 t/render_widgets.t
 t/render_withtt.t
 t/rep_nest.t
@@ -236,6 +238,7 @@ util/messages
 xt/02pod.t
 xt/add_field.t
 xt/captcha.t
+xt/captcha2.t
 xt/chbox_group.t
 xt/check_selected_option.t
 xt/custom_fields.t
@@ -245,6 +248,9 @@ xt/eol.t
 xt/field_list.t
 xt/form_errors.t
 xt/init.t
+xt/lib/MyCatalystApp.pm
+xt/lib/MyCatalystApp/Controller/Captcha.pm
+xt/lib/MyCatalystApp/Controller/Root.pm
 xt/load_field.t
 xt/locale.t
 xt/locale_data_localize.t

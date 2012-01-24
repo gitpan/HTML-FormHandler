@@ -26,6 +26,7 @@ has 'label_types' => (
             radio_group => 'label',
             compound    => 'legend',
             upload      => 'label',
+            captcha     => 'label',
         };
     },
     handles   => { get_label_type => 'get' },
@@ -50,8 +51,10 @@ sub render_start {
 
     my $output = $self->html_form_tag;
 
+    my $auto_fieldset = $self->tag_exists('no_auto_fieldset') ?
+         not( $self->get_tag('no_auto_fieldset') ) : $self->auto_fieldset;
     $output .= '<fieldset class="main_fieldset">'
-        if $self->form->auto_fieldset;
+        if $auto_fieldset;
 
     return $output
 }
@@ -69,8 +72,11 @@ sub render_form_errors {
 
 sub render_end {
     my $self = shift;
+
+    my $auto_fieldset = $self->tag_exists('no_auto_fieldset') ?
+         not( $self->get_tag('no_auto_fieldset') ) : $self->auto_fieldset;
     my $output;
-    $output .= '</fieldset>' if $self->auto_fieldset;
+    $output .= '</fieldset>' if $auto_fieldset;
     $output .= "</form>\n";
     return $output;
 }
@@ -307,6 +313,16 @@ sub render_reset {
     return $output;
 }
 
+sub render_captcha {
+    my ( $self, $field ) = @_;
+
+    my $output .= '<img src="' . $self->captcha_image_url . '"/>';
+    $output .= '<input id="' . $field->id . '" name="';
+    $output .= $field->html_name . '">';
+    return $output;
+}
+
+
 use namespace::autoclean;
 1;
 
@@ -320,7 +336,7 @@ HTML::FormHandler::Render::Simple - simple rendering role
 
 =head1 VERSION
 
-version 0.36000
+version 0.36001
 
 =head1 SYNOPSIS
 
