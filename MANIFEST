@@ -214,6 +214,7 @@ t/render_form_errors.t
 t/render_html5_attributes.t
 t/render_html_attributes.t
 t/render_result.t
+t/render_roles.t
 t/render_table.t
 t/render_widget_tags.t
 t/render_widgets.t

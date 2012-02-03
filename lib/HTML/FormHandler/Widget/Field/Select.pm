@@ -65,7 +65,7 @@ HTML::FormHandler::Widget::Field::Select - select field rendering widget
 
 =head1 VERSION
 
-version 0.36001
+version 0.36002
 
 =head1 AUTHOR
 

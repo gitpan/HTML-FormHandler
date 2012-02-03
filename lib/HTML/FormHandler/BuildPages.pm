@@ -231,7 +231,7 @@ HTML::FormHandler::BuildPages - used in Wizard
 
 =head1 VERSION
 
-version 0.36001
+version 0.36002
 
 =head1 AUTHOR
 
