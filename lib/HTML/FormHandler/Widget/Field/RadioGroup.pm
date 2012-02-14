@@ -39,7 +39,7 @@ HTML::FormHandler::Widget::Field::RadioGroup - radio group rendering widget
 
 =head1 VERSION
 
-version 0.36002
+version 0.36003
 
 =head1 AUTHOR
 
