@@ -6,13 +6,6 @@ with 'HTML::FormHandler::Render::WithTT';
 
 use Config::Any;
 
-use 5.010;
-
-#use overload (
-#    '""' => sub { return shift->render },
-#    '==' => sub { return blessed($b) ? ( refaddr($a) eq refaddr($b) ) : undef }
-#);
-
 has 'form_error_message' => ( isa => 'Str', is => 'rw' );
 has 'javascript_src' => ( isa => 'Str', is => 'rw' );
 has 'javascript' => ( isa => 'Str', is => 'rw' );
@@ -59,6 +52,8 @@ sub process_config {
     }
 }
 
+__PACKAGE__->meta->make_immutable;
+use namespace::autoclean;
 1;
 
 __END__
@@ -70,7 +65,7 @@ HTML::FormHandler::Foo - Experiment in loading form from config file
 
 =head1 VERSION
 
-version 0.36003
+version 0.40000
 
 =head1 AUTHOR
 

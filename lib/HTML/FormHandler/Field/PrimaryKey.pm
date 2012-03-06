@@ -6,8 +6,8 @@ extends 'HTML::FormHandler::Field';
 
 
 has 'is_primary_key' => ( isa => 'Bool', is => 'ro', default => '1' );
-has '+widget' => ( default => 'hidden' );
-has 'no_render_label' => ( is => 'ro', isa => 'Bool', default => 1 );
+has '+widget' => ( default => 'Hidden' );
+has '+do_label' => ( default => 0 );
 
 __PACKAGE__->meta->make_immutable;
 use namespace::autoclean;
@@ -22,7 +22,7 @@ HTML::FormHandler::Field::PrimaryKey - primary key field
 
 =head1 VERSION
 
-version 0.36003
+version 0.40000
 
 =head1 SYNOPSIS
 

@@ -21,6 +21,12 @@ has 'fields' => (
         set_field_at => 'set',
     }
 );
+# This is for updates applied via roles or compound field classes; allows doing
+# both updates on the process call and updates from class applied roles
+has 'update_subfields' => ( is => 'rw', isa => 'HashRef', builder => 'build_update_subfields',
+    traits => ['Hash'], handles => { clear_update_subfields => 'clear',
+    has_update_subfields => 'count' }, init_arg => undef );
+sub build_update_subfields {{}}
 
 # compatibility wrappers for result errors
 sub error_fields {
@@ -64,6 +70,12 @@ sub field {
     # if this is a full_name for a compound field
     # walk through the fields to get to it
     return undef unless ( defined $name );
+    if( $self->form && $self == $self->form &&
+        exists $self->index->{$name} ) {
+        return $self->index->{$name};
+    }
+    return $self->form->index->{$name}
+        if $self->form && exists $self->form->index->{$name};
     if ( $name =~ /\./ ) {
         my @names = split /\./, $name;
         $f ||= $self->form || $self;
@@ -204,7 +216,7 @@ HTML::FormHandler::Fields - internal role for form and compound fields
 
 =head1 VERSION
 
-version 0.36003
+version 0.40000
 
 =head1 SYNOPSIS
 

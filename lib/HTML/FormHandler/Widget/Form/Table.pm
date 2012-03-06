@@ -4,15 +4,19 @@ package HTML::FormHandler::Widget::Form::Table;
 use Moose::Role;
 with 'HTML::FormHandler::Widget::Form::Simple' =>
     { -excludes => [ 'render_start', 'render_end', 'render_form_errors' ] };
+use HTML::FormHandler::Render::Util ('process_attrs');
 
 
 sub render_start {
-    my $self   = shift;
-    return $self->html_form_tag . "<table>\n";
+    my ( $self, $result ) = @_;
+    $result ||= $self->result;
+    my $fattrs = process_attrs($self->attributes($result));
+    my $wattrs = process_attrs($self->form_wrapper_attributes($result));
+    return qq{<form$fattrs><table$wattrs>\n};
 }
 
 sub render_form_errors {
-    my ( $self, $form, $result ) = @_;
+    my ( $self, $result ) = @_;
 
     return '' unless $result->has_form_errors;
     my $output = "\n<tr class=\"form_errors\"><td colspan=\"2\">";
@@ -42,7 +46,7 @@ HTML::FormHandler::Widget::Form::Table - render a form with a table layout
 
 =head1 VERSION
 
-version 0.36003
+version 0.40000
 
 =head1 SYNOPSIS
 

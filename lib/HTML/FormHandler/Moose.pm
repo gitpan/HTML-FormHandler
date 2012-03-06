@@ -8,7 +8,7 @@ use HTML::FormHandler::Meta::Role;
 
 
 Moose::Exporter->setup_import_methods(
-    with_meta => [ 'has_field', 'has_page', 'apply' ],
+    with_meta => [ 'has_field', 'has_page', 'has_block', 'apply' ],
     also        => 'Moose',
 );
 
@@ -50,6 +50,11 @@ sub has_page {
     $meta->add_to_page_list( { name => $_, %options } ) for @$names;
 }
 
+sub has_block {
+    my ( $meta, $name, %options ) = @_;
+    $meta->add_to_block_list( { name => $name, %options } );
+}
+
 sub apply {
     my ( $meta, $arrayref ) = @_;
 
@@ -68,7 +73,7 @@ HTML::FormHandler::Moose - to add FormHandler sugar
 
 =head1 VERSION
 
-version 0.36003
+version 0.40000
 
 =head1 SYNOPSIS
 

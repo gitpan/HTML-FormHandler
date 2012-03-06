@@ -5,6 +5,9 @@ use HTML::FormHandler::Moose;
 use HTML::FormHandler::Field::Result;
 use Try::Tiny;
 use Moose::Util::TypeConstraints;
+use HTML::FormHandler::Merge ('merge');
+use HTML::FormHandler::Render::Util('cc_widget', 'ucc_widget');
+use Sub::Name;
 
 with 'HTML::FormHandler::Traits';
 with 'HTML::FormHandler::Validate';
@@ -39,7 +42,8 @@ has 'result' => (
     handles   => [
         '_set_input',   '_clear_input', '_set_value', '_clear_value',
         'errors',       'all_errors',   'push_errors',  'num_errors', 'has_errors',
-        'clear_errors', 'validated',
+        'clear_errors', 'validated', 'add_warning', 'all_warnings', 'num_warnings',
+        'has_warnings', 'warnings',
     ],
 );
 has '_pin_result' => ( is => 'ro', reader => '_get_pin_result', writer => '_set_pin_result' );
@@ -125,7 +129,7 @@ sub fif {
         return defined $lresult->input ? $lresult->input : '';
     }
     if ( defined $lresult->value ) {
-        if( $self->deflate_to eq 'fif' && $self->_can_deflate ) {
+        if( $self->_can_deflate ) {
             return $self->_apply_deflation($lresult->value);
         }
         else {
@@ -166,7 +170,7 @@ has 'label' => (
     lazy    => 1,
     builder => 'build_label',
 );
-has 'no_render_label' => ( isa => 'Bool', is => 'rw' );
+has 'do_label' => ( isa => 'Bool', is => 'rw', default => 1 );
 sub build_label {
     my $self = shift;
     my $label = $self->name;
@@ -178,10 +182,20 @@ sub loc_label {
     my $self = shift;
     return $self->_localize($self->label);
 }
-has 'title'     => ( isa => 'Str',               is => 'rw' );
-has 'style'     => ( isa => 'Str',               is => 'rw' );
-has 'css_class' => ( isa => 'Str',               is => 'rw' );
-has 'input_class' => ( isa => 'Str',             is => 'rw' );
+has 'title'     => ( isa => 'Str', is => 'rw' );
+has 'style'     => ( isa => 'Str', is => 'rw' );
+# deprecated; remove in six months.
+has 'css_class' => ( isa => 'Str', is => 'rw', trigger => \&_css_class_set );
+sub _css_class_set {
+    my ( $self, $value ) = @_;
+    $self->add_wrapper_class($value);
+}
+# deprecated; remove in six months;
+has 'input_class' => ( isa => 'Str', is => 'rw', trigger => \&_input_class_set );
+sub _input_class_set {
+    my ( $self, $value ) = @_;
+    $self->add_element_class($value);
+}
 has 'form'      => (
     isa => 'HTML::FormHandler',
     is => 'rw',
@@ -202,19 +216,53 @@ sub build_html_name {
 }
 has 'widget'            => ( isa => 'Str',  is => 'rw' );
 has 'widget_wrapper'    => ( isa => 'Str',  is => 'rw' );
-sub wrapper { lc( shift->widget_wrapper || '' ) || 'simple' }
-has 'widget_tags'         => (
+has 'do_wrapper'    => ( is => 'rw', default => 1 );
+sub wrapper { shift->widget_wrapper || '' }
+sub uwrapper { ucc_widget( shift->widget_wrapper || '' ) || 'simple' }
+sub twrapper { shift->uwrapper . ".tt" }
+sub uwidget { ucc_widget( shift->widget || '' ) || 'simple' }
+sub twidget { shift->uwidget . ".tt" }
+# deprecated. use 'tags' instead.
+has 'widget_tags' => (
+    isa => 'HashRef',
+    traits => ['Hash'],
+    is => 'rw',
+    default => sub {{}},
+    handles => {
+        has_widget_tags => 'count'
+    }
+);
+has 'tags'         => (
     traits => ['Hash'],
     isa => 'HashRef',
-    is => 'ro',
-    builder => 'build_widget_tags',
+    is => 'rw',
+    builder => 'build_tags',
     handles => {
-      get_tag => 'get',
+      _get_tag => 'get',
       set_tag => 'set',
+      has_tag => 'exists',
       tag_exists => 'exists',
+      delete_tag => 'delete',
     },
 );
-sub build_widget_tags {{}}
+sub build_tags {{}}
+sub merge_tags {
+    my ( $self, $new ) = @_;
+    my $old = $self->tags;
+    $self->tags( merge($new, $old) );
+}
+sub get_tag {
+    my ( $self, $name ) = @_;
+    return '' unless $self->tag_exists($name);
+    my $tag = $self->_get_tag($name);
+    return $self->$tag if ref $tag eq 'CODE';
+    return $tag unless $tag =~ /^%/;
+    ( my $block_name = $tag ) =~ s/^%//;
+    return $self->form->block($block_name)->render
+        if ( $self->form && $self->form->block_exists($block_name) );
+    return '';
+}
+
 has 'widget_name_space' => (
     isa => 'HFH::ArrayRefStr',
     is => 'rw',
@@ -246,15 +294,17 @@ sub is_inactive {
     return (($self->inactive && !$self->_active) || (!$self->inactive && $self->has__active && $self->_active == 0 ) );
 }
 has 'id'                => ( isa => 'Str',  is => 'rw', lazy => 1, builder => 'build_id' );
-sub build_id { shift->html_name }
+has 'build_id_method' => ( is => 'rw', isa => 'CodeRef', traits => ['Code'],
+    default => sub { sub { shift->html_name } },
+    handles => { build_id => 'execute_method' },
+);
 
 # html attributes
-has 'javascript' => ( isa => 'Str',  is => 'rw' );
 has 'password'   => ( isa => 'Bool', is => 'rw' );
-has 'writeonly'  => ( isa => 'Bool', is => 'rw' );
 has 'disabled'   => ( isa => 'Bool', is => 'rw' );
 has 'readonly'   => ( isa => 'Bool', is => 'rw' );
 has 'tabindex' => ( is => 'rw', isa => 'Int' );
+
 has 'type_attr' => ( is => 'rw', isa => 'Str', default => 'text' );
 has 'html5_type_attr' => ( isa => 'Str', is => 'ro', default => 'text' );
 sub input_type {
@@ -262,82 +312,115 @@ sub input_type {
     return $self->html5_type_attr if ( $self->form && $self->form->has_flag('is_html5') );
     return $self->type_attr;
 }
+# temporary methods for compatibility after name change
+sub html_attr { shift->element_attr(@_) }
+sub has_html_attr { shift->has_element_attr(@_) }
+sub get_html_attr { shift->get_element_attr(@_) }
+sub set_html_attr { shift->set_element_attr(@_) }
 
-has 'html_attr' => ( is => 'rw', traits => ['Hash'],
-   builder => 'build_html_attr', handles => { has_html_attr => 'count',
-   set_html_attr => 'set', delete_html_attr => 'delete' }
-);
-sub build_html_attr {{}}
-has 'label_attr' => ( is => 'rw', traits => ['Hash'],
-   builder => 'build_label_attr', handles => { has_label_attr => 'count',
-   set_label_attr => 'set', delete_label_attr => 'delete' }
-);
-sub build_label_attr {{}}
-has 'wrapper_attr' => ( is => 'rw', traits => ['Hash'],
-   builder => 'build_wrapper_attr', handles => { has_wrapper_attr => 'count',
-   set_wrapper_attr => 'set', delete_wrapper_attr => 'delete' }
-);
-sub build_wrapper_attr {{}}
+{
+    # create the attributes and methods for
+    # element_attr, build_element_attr, element_class,
+    # label_attr, build_label_attr, label_class,
+    # wrapper_attr, build_wrapper_atrr, wrapper_class
+    no strict 'refs';
+    foreach my $attr ('wrapper', 'element', 'label' ) {
+        # trigger to move 'class' set via _attr to the class slot
+        my $add_meth = "add_${attr}_class";
+        my $trigger_sub = sub {
+            my ( $self, $value ) = @_;
+            if( my $class = delete $self->{"${attr}_attr"}->{class} ) {
+                $self->$add_meth($class);
+            }
+        };
+        has "${attr}_attr" => ( is => 'rw', traits => ['Hash'],
+            builder => "build_${attr}_attr",
+            handles => {
+                "has_${attr}_attr" => 'count',
+                "get_${attr}_attr" => 'get',
+                "set_${attr}_attr" => 'set',
+                "delete_${attr}_attr" => 'delete',
+                "exists_${attr}_attr" => 'exists',
+            },
+            trigger => $trigger_sub,
+        );
+        # create builders fo _attrs
+        my $attr_builder = __PACKAGE__ . "::build_${attr}_attr";
+        *$attr_builder = subname $attr_builder, sub {{}};
+        # create the 'class' slots
+        has "${attr}_class" => ( is => 'rw', isa => 'HFH::ArrayRefStr',
+            traits => ['Array'],
+            coerce => 1,
+            builder => "build_${attr}_class",
+            handles => {
+                "has_${attr}_class" => 'count',
+                "_add_${attr}_class" => 'push',
+           },
+        );
+        # create builders for classes
+        my $class_builder = __PACKAGE__ . "::build_${attr}_class";
+        *$class_builder = subname $class_builder, sub {[]};
+        # create wrapper for add_to_ to accept arrayref
+        my $add_to_class = __PACKAGE__ . "::add_${attr}_class";
+        my $_add_meth = __PACKAGE__ . "::_add_${attr}_class";
+        *$add_to_class = subname $add_to_class, sub { shift->$_add_meth((ref $_[0] eq 'ARRAY' ? @{$_[0]} : @_)); }
+    }
+}
 
-sub attributes {
-    my $self = shift;
-
-    # copy html_attr, with deep copy of 'class' if it's an array
-    my $html_attr = {%{$self->html_attr}};
-    $html_attr->{class} = [@{$html_attr->{class}}]
-        if ( exists $html_attr->{class} && ref( $html_attr->{class} eq 'ARRAY' ) );
-    my $attrs = {};
+sub attributes { shift->element_attributes(@_) }
+sub element_attributes {
+    my ( $self, $result ) = @_;
+    $result ||= $self->result;
+    my $attr = {};
     # handle html5 attributes
     if ($self->form && $self->form->has_flag('is_html5')) {
-        $attrs->{required} = 'required' if $self->required;
-        $attrs->{min} = $self->range_start if defined $self->range_start;
-        $attrs->{max} = $self->range_end if defined $self->range_end;
+        $attr->{required} = 'required' if $self->required;
+        $attr->{min} = $self->range_start if defined $self->range_start;
+        $attr->{max} = $self->range_end if defined $self->range_end;
     }
     # pull in deprecated attributes for backward compatibility
-    for my $attr ( 'readonly', 'disabled', 'style', 'title', 'tabindex' ) {
-        $attrs->{$attr} = $self->$attr if $self->$attr;
+    for my $dep_attr ( 'readonly', 'disabled' ) {
+        $attr->{$dep_attr} = $dep_attr if $self->$dep_attr;
     }
-    $attrs->{class} = $self->input_class if $self->input_class;
-    my $all_attrs = {%$attrs, %{$self->html_attr}};
+    for my $dep_attr ( 'style', 'title', 'tabindex' ) {
+        $attr->{$dep_attr} = $self->$dep_attr if defined $self->$dep_attr;
+    }
+    $attr = {%$attr, %{$self->element_attr}};
+    my $class = [@{$self->element_class}];
+    push @$class, 'error' if $result->has_errors;
+    push @$class, 'warning' if $result->has_warnings;
+    push @$class, 'disabled' if $self->disabled;
+    $attr->{class} = $class if @$class;
     # call form hook
-    $self->form->field_html_attributes($self, 'input', $all_attrs) if $self->form;
-    return $all_attrs;
+    my $mod_attr = $self->form->html_attributes($self, 'input', $attr, $result) if $self->form;
+    return ref($mod_attr) eq 'HASH' ? $mod_attr : $attr;
 }
 
 sub label_attributes {
-    my $self = shift;
-    # copy label_attr, with deep copy of 'class' if it's an array
+    my ( $self, $result ) = @_;
+    $result ||= $self->result;
+    # local copy of label_attr
     my $attr = {%{$self->label_attr}};
-    $attr->{class} = [@{$attr->{class}}]
-        if ( exists $attr->{class} && ref( $attr->{class} eq 'ARRAY' ) );
+    my $class = [@{$self->label_class}];
+    $attr->{class} = $class if @$class;
     # call form hook
-    $self->form->field_html_attributes($self, 'label', $attr) if $self->form;
-    return $attr;
+    my $mod_attr = $self->form->html_attributes($self, 'label', $attr, $result) if $self->form;
+    return ref($mod_attr) eq 'HASH' ? $mod_attr : $attr;
 }
 
 sub wrapper_attributes {
     my ( $self, $result ) = @_;
     $result ||= $self->result;
-    # copy wrapper_attr, with deep copy of 'class' if it's an array
+    # copy wrapper
     my $attr = {%{$self->wrapper_attr}};
-    $attr->{class} = [@{$attr->{class}}]
-        if ( exists $attr->{class} && ref( $attr->{class} eq 'ARRAY' ) );
-    # pull in deprecated css_class
-    if( ! exists $attr->{class} && defined $self->css_class ) {
-        $attr->{class} = $self->css_class;
-    }
+    my $class = [@{$self->wrapper_class}];
     # add 'error' to class
-    if( $result->has_errors ) {
-        if( ref $attr->{class} eq 'ARRAY' ) {
-            push @{$attr->{class}}, 'error';
-        }
-        else {
-            $attr->{class} .= $attr->{class} ? ' error' : 'error';
-        }
-    }
+    push @$class, 'error' if ( $result->has_error_results || $result->has_errors );
+    push @$class, 'warning' if $result->has_warnings;
+    $attr->{class} = $class if @$class;
     # call form hook
-    $self->form->field_html_attributes($self, 'wrapper', $attr) if $self->form;
-    return $attr;
+    my $mod_attr = $self->form->html_attributes($self, 'wrapper', $attr, $result) if $self->form;
+    return ref($mod_attr) eq 'HASH' ? $mod_attr : $attr;
 }
 
 sub wrapper_tag {
@@ -358,77 +441,83 @@ sub label_tag {
 }
 #===================
 
+has 'writeonly'  => ( isa => 'Bool', is => 'rw' );
 has 'noupdate'   => ( isa => 'Bool', is => 'rw' );
+
+#==============
+sub convert_full_name {
+    my $full_name = shift;
+    $full_name =~ s/\.\d+\./_/g;
+    $full_name =~ s/\./_/g;
+    return $full_name;
+}
+has 'validate_method' => (
+     traits => ['Code'],
+     is     => 'ro',
+     isa    => 'CodeRef',
+     lazy   => 1,
+     builder => 'build_validate_method',
+     handles => { '_validate' => 'execute_method' },
+);
 has 'set_validate' => ( isa => 'Str', is => 'ro',);
-sub _can_validate {
+sub build_validate_method {
     my $self = shift;
-    my $set_validate = $self->_set_validate_meth;
-    return
-        unless $self->form &&
-            $set_validate &&
-            $self->form->can( $set_validate );
-    return $set_validate;
+    my $set_validate = $self->set_validate;
+    $set_validate ||= "validate_" . convert_full_name($self->full_name);
+    return sub { $self = shift; $self->form->$set_validate($self); }
+        if ( $self->form && $self->form->can($set_validate) );
+    return sub { };
 }
-sub _set_validate_meth {
-    my $self = shift;
-    return $self->set_validate if $self->set_validate;
-    my $name = $self->full_name;
-    if( $name =~ /\./ ) {
-        $name =~ s/\.\d+\./_/g;
-        $name =~ s/\./_/g;
-    }
-    return 'validate_' . $name;
-}
-sub _validate {
-    my $self = shift;
-    return unless (my $meth = $self->_can_validate);
-    $self->form->$meth($self);
-}
+
+has 'default_method' => (
+     traits => ['Code'],
+     is     => 'ro',
+     isa    => 'CodeRef',
+     writer => '_set_default_method',
+     predicate => 'has_default_method',
+     handles => { '_default' => 'execute_method' },
+);
 has 'set_default' => ( isa => 'Str', is => 'ro', writer => '_set_default');
-sub _can_default {
+# this is not a "true" builder, because sometimes 'default_method' is not set
+sub build_default_method {
     my $self = shift;
-    my $set_default = $self->_set_default_meth;
-    return
-        unless $self->form &&
-            $set_default &&
-            $self->form->can( $set_default );
-    return $set_default;
-}
-sub _comp_default_meth {
-    my $self = shift;
-    my $name = $self->full_name;
-    if( $name =~ /\./ ) {
-        $name =~ s/\.\d+\./_/g;
-        $name =~ s/\./_/g;
+    my $set_default = $self->set_default;
+    $set_default ||= "default_" . convert_full_name($self->full_name);
+    if ( $self->form && $self->form->can($set_default) ) {
+        $self->_set_default_method(
+            sub { $self = shift; return $self->form->$set_default($self, $self->form->item); }
+        );
     }
-    return 'init_value_' . $name;
 }
-sub _set_default_meth {
-    my $self = shift;
-    return $self->set_default if $self->set_default;
-    my $name = $self->full_name;
-    if( $name =~ /\./ ) {
-        $name =~ s/\.\d+\./_/g;
-        $name =~ s/\./_/g;
-    }
-    return 'default_' . $name;
-}
+
 sub get_default_value {
     my $self = shift;
-    if ( my $meth = $self->_can_default ) {
-        return $self->form->$meth( $self, $self->form->item );
+    if ( $self->has_default_method ) {
+        return $self->_default;
     }
     elsif ( defined $self->default ) {
         return $self->default;
     }
     return;
 }
+{
+    # create inflation/deflation methods
+    foreach my $type ( 'inflate_default', 'deflate_value', 'inflate', 'deflate' ) {
+        has "${type}_method" => ( is => 'ro', traits => ['Code'],
+            isa => 'CodeRef',
+            writer => "_set_${type}_method",
+            predicate => "has_${type}_method",
+            handles => {
+                $type => 'execute_method',
+            },
+        );
+    }
+}
+
 has 'deflation' => (
     is        => 'rw',
     predicate => 'has_deflation',
 );
-# deflate_to either 'value' or 'fif'
-has 'deflate_to' => ( is => 'rw', default => 'value' );
 has 'trim' => (
     is      => 'rw',
     default => sub { { transform => \&default_trim } }
@@ -577,15 +666,28 @@ sub all_messages {
 sub BUILDARGS {
     my $class = shift;
 
-    return $class->SUPER::BUILDARGS(@_);
+    # for backwards compatibility; these will be removed eventually
+    my @new;
+    push @new, ('element_attr', {@_}->{html_attr} )
+        if( exists {@_}->{html_attr} );
+    push @new, ('do_label', !{@_}->{no_render_label} )
+        if( exists {@_}->{no_render_label} );
+    return $class->SUPER::BUILDARGS(@_, @new);
 }
 
 sub BUILD {
     my ( $self, $params ) = @_;
 
-    $self->_set_default( $self->_comp_default_meth )
-        if( $self->form && $self->form->can( $self->_comp_default_meth ) );
+    # temporary, for compatibility. move widget_tags to tags
+    $self->merge_tags($self->widget_tags) if $self->has_widget_tags;
+    # run default method builder
+    $self->build_default_method;
+    # build validate_method; needs to happen before validation
+    # in order to have the "real" repeatable field names, not the instances
+    $self->validate_method;
+    # merge form widget_name_space
     $self->add_widget_name_space( $self->form->widget_name_space ) if $self->form;
+    # handle apply actions
     $self->add_action( $self->trim ) if $self->trim;
     $self->_build_apply_list;
     $self->add_action( @{ $params->{apply} } ) if $params->{apply};
@@ -597,8 +699,8 @@ sub _result_from_fields {
     my ( $self, $result ) = @_;
 
     if ( my @values = $self->get_default_value ) {
-        if ( $self->_can_deflate && $self->deflate_to eq 'value' ) {
-            @values = $self->_apply_deflation(@values);
+        if ( $self->has_inflate_default_method ) {
+            @values = $self->inflate_default(@values);
         }
         my $value = @values > 1 ? \@values : shift @values;
         $self->init_value($value)   if defined $value;
@@ -686,14 +788,14 @@ sub _apply_deflation {
     if ( $self->has_deflation ) {
         $value = $self->deflation->($value);
     }
-    elsif ( $self->can('deflate') ) {
+    elsif ( $self->has_deflate_method ) {
         $value = $self->deflate($value);
     }
     return $value;
 }
 sub _can_deflate {
     my $self = shift;
-    return $self->has_deflation || $self->can('deflate');
+    return $self->has_deflation || $self->has_deflate_method;
 }
 
 # use Class::MOP to clone
@@ -830,13 +932,14 @@ HTML::FormHandler::Field - base class for fields
 
 =head1 VERSION
 
-version 0.36003
+version 0.40000
 
 =head1 SYNOPSIS
 
 Instances of Field subclasses are generally built by L<HTML::FormHandler>
 from 'has_field' declarations or the field_list, but they can also be constructed
-using new (usually for test purposes).
+using new for test purposes (since there's no standard way to add a field to a form
+after construction).
 
     use HTML::FormHandler::Field::Text;
     my $field = HTML::FormHandler::Field::Text->new( name => $name, ... );
@@ -858,60 +961,11 @@ In your custom field class:
 
 This is the base class for form fields. The 'type' of a field class
 is used in the FormHandler field_list or has_field to identify which field class to
-load. If the type is not specified, it defaults to Text.
+load from the 'field_name_space' (or directly, when prefixed with '+').
+If the type is not specified, it defaults to Text.
 
-There are two rough categories of Field classes: those that do extra processing
-and those that are simple validators. The 'Compound', 'Repeatable', and
-'Select' fields are fields that are functional.
-
-A number of field classes are provided by the distribution. The basic
-for-validation (as opposed to 'functional') field types are:
-
-   Text
-   Integer
-   Boolean
-
-These field types alone would be enough for most applications, since
-the equivalent of the others could be defined using field attributes,
-custom validation methods, and applied actions.  There is some benefit
-to having descriptive names, of course, and if you have multiple fields
-requiring the same validation, defining a custom field class may be a
-good idea.
-
-Inheritance hierarchy of the distribution's field classes:
-
-   Compound
-      Repeatable
-   Text
-      Money
-      Password
-      Integer
-         PosInteger
-   TextArea
-      HtmlArea
-   Select
-      Multiple
-      IntRange
-         Hour
-         Minute
-         MonthDay
-         Month
-         Second
-         Year
-      MonthName
-      Weekday
-   Boolean
-      Checkbox
-   DateMDY
-   DateTime
-   Email
-   PrimaryKey
-
-See the documentation or source for the individual fields.
-
-Many field classes contain only a list of constraints and transformations
-to apply. Some use the 'validate' method, which is called after the actions
-are applied. Some build a custom select list using 'build_options'.
+See L<HTML::FormHandler::Manual::Fields> for a list of the fields and brief
+descriptions of their structure.
 
 =head1 ATTRIBUTES
 
@@ -979,15 +1033,16 @@ The input string from the parameters passed in.
 =item value
 
 The value as it would come from or go into the database, after being
-acted on by transforms. Used to construct the C<< $form->values >>
-hash. Validation and constraints act on 'value'.
+acted on by inflations/deflations and transforms. Used to construct the
+C<< $form->values >> hash. Validation and constraints act on 'value'.
+
+See also L<HTML::FormHandler::Manual::InflationDeflation>.
 
 =item fif
 
 Values used to fill in the form. Read only. Use a deflation to get
-from 'value' to 'fif' if an inflator was used. (Deflations can be
-done in two different places. Set 'deflate_to' => 'fif' to deflate
-in fillinform'.)
+from 'value' to 'fif' if an inflator was used. Use 'fif_from_value'
+attribute if you want to use the field 'value' to fill in the form.
 
    [% form.field('title').fif %]
 
@@ -998,8 +1053,9 @@ has changed by comparing 'init_value' and 'value'. Read only.
 
 =item input_without_param
 
-Input for this field if there is no param. Needed for checkbox,
-since an unchecked checkbox does not return a parameter.
+Input for this field if there is no param. Set by default for Checkbox,
+and Select, since an unchecked checkbox or unselected pulldown
+does not return a parameter.
 
 =back
 
@@ -1031,9 +1087,9 @@ want to use a MakeText language handle. Default is an empty list.
 
 =item add_error
 
-Add an error to the list of errors.  If $field->form
-is defined then process error message as Maketext input.
-See $form->language_handle for details. Returns undef.
+Add an error to the list of errors. Field will be localized
+using '_localize' method.
+See also L<HTML::FormHandler::TraitFor::I18N>.
 
     return $field->add_error( 'bad data' ) if $bad;
 
@@ -1041,22 +1097,25 @@ See $form->language_handle for details. Returns undef.
 
 Compound fields will have an array of errors from the subfields.
 
+=item localize_meth
+
+Set the method used to localize.
+
 =back
 
 =head2 Attributes for creating HTML
 
-There's a generic 'html_attr' hashref attribute that can be used to set
+The 'element_attr' hashref attribute can be used to set
 arbitrary HTML attributes on a field's input tag.
 
-   has_field 'foo' => ( html_attr => { readonly => 1, my_attr => 'abc' } );
+   has_field 'foo' => ( element_attr => { readonly => 1, my_attr => 'abc' } );
 
 The 'label_attr' hashref is for label attributes, and the 'wrapper_attr'
 is for attributes on the wrapping element (a 'div' for the standard 'simple'
 wrapper).
 
-The javascript value of the javascript attribute is entered completely.
-
-   javascript  - for a Javascript string
+A 'javascript' key in one of the '_attr' hashes will be inserted into the
+element as-is.
 
 The following are used in rendering HTML, but are handled specially.
 
@@ -1065,45 +1124,59 @@ The following are used in rendering HTML, but are handled specially.
                  form name, use 'html_prefix' in your form)
    render_filter - Coderef for filtering fields before rendering. By default
                  changes >, <, &, " to the html entities
+   disabled    - Boolean to set field disabled
 
 The order attribute may be used to set the order in which fields are rendered.
 
    order       - Used for sorting errors and fields. Built automatically,
                  but may also be explicitly set
 
-The following are deprecated. Use 'html_attr', 'label_attr', and 'wrapper_attr'
+The following are discouraged. Use 'element_attr', 'label_attr', and 'wrapper_attr'
 instead.
 
    css_class   - instead use wrapper_attr => { class => '...' }
-   input_class - instead use html_attr => { class => '...' }
-   title       - instead use html_attr => { title => '...' }
-   style       - instead use html_attr => { style => '...' }
-   disabled    - instead use html_attr => { disabled => 'disabled' }
-   tabindex    - instead use html_attr => { tabindex => 1 }
-   readonly    - instead use html_attr => { readonly => 'readonly' }
+   input_class - instead use element_attr => { class => '...' }
+   title       - instead use element_attr => { title => '...' }
+   style       - instead use element_attr => { style => '...' }
+   tabindex    - instead use element_attr => { tabindex => 1 }
+   readonly    - instead use element_attr => { readonly => 'readonly' }
 
 Rendering of the various HTML attributes is done by calling the 'process_attrs'
 function (from HTML::FormHandler::Render::Util) and passing in a method that
 adds in error classes, provides backward compatibility with the deprecated
 attributes, etc.
 
-    attribute hashref            wrapping method
-    =================            ================
-    html_attr                    attributes
-    label_attr                   label_attributes
-    wrapper_attr                 wrapper_attributes
+    attribute hashref  class attribute       wrapping method
+    =================  =================     ================
+    element_attr       element_class         element_attributes
+    label_attr         label_class           label_attributes
+    wrapper_attr       wrapper_class         wrapper_attributes
 
-In addition, these 'wrapping method' call a hook method in the form class,
-'field_html_attributes' which you can use to customize and localize the various
-attributes.
+The slots for the class attributes are arrayrefs; they will coerce a
+string into an arrayref.
+In addition, these 'wrapping methods' call a hook method in the form class,
+'html_attributes' which you can use to customize and localize the various
+attributes. (Field types: 'element', 'wrapper', 'label')
 
-   sub field_html_attributes {
+   sub html_attributes {
        my ( $self, $field, $type, $attr ) = @_;
        $attr->{class} = 'label' if $type eq 'label';
+       return $attr;
    }
 
-The 'process_attrs' function will handle an array of strings, such as for the
+The 'process_attrs' function will also handle an array of strings, such as for the
 'class' attribute.
+
+=head2 tags
+
+A hashref containing flags and string for use in the rendering code.
+The value of a tag can be a string, a coderef (accessed as a method on the
+field) or a block specified with a percent followed by the blockname
+('%blockname').
+
+Retrieve a tag with 'get_tag'. It returns a '' if the tag doesn't exist.
+
+This attribute used to be named 'widget_tags', which is deprecated.
 
 =head2 html5_type_attr [string]
 
@@ -1114,47 +1187,43 @@ It is used when the form has the is_html5 flag on.
 
 The 'widget' attribute is used in rendering, so if you are
 not using FormHandler's rendering facility, you don't need this
-attribute.
-It is intended for use in generating HTML, in templates and the
-rendering roles, and is used in L<HTML::FormHandler::Render::Simple>.
-Fields of different type can use the same widget.
+attribute.  It is used in generating HTML, in templates and the
+rendering roles. Fields of different type can use the same widget.
 
 This attribute is set in the field classes, or in the fields
-defined in the form. If you want a new widget type, use a new
-name and provide a C<< 'widget_<name>' >> method in your copy
-of Render::Simple or in your form class.
+defined in the form. If you want a new widget type, create a
+widget role, such as MyApp::Form::Widget::Field::MyWidget. Provide
+the name space in the 'widget_name_space' attribute, and set
+the 'widget' of your field to the package name after the
+Field/Form/Wrapper:
+
+   has_field 'my_field' => ( widget => 'MyWidget' );
 
 If you are using a template based rendering system you will want
 to create a widget template.
 (see L<HTML::FormHandler::Manual::Templates>)
 
-If you are using the widget roles, you can specify the widget
-with the short class name instead.
-
-Widget types for the provided field classes:
+Widget types for some of the provided field classes:
 
     Widget         : Field classes
     ---------------:-----------------------------------
-    text (Text)            : Text, Integer
-    checkbox (Checkbox)    : Checkbox, Boolean
-    radio_group
-       (RadioGroup)        : Select, Multiple, IntRange (etc)
-    select (Select)        : Select, Multiple, IntRange (etc)
-    checkbox_group
-       (CheckboxGroup)     : Multiple select
-    textarea (Textarea)    : TextArea, HtmlArea
-    compound (Compound)    : Compound, Repeatable, DateTime
-    password (Password)    : Password
-    hidden (Hidden)        : Hidden
-    submit (Submit)        : Submit
-    reset (Reset)          : Reset
-    no_render (NoRender)   :
-    upload (Upload)        : Upload
+    Text                   : Text, Integer
+    Checkbox               : Checkbox, Boolean
+    RadioGroup             : Select, Multiple, IntRange (etc)
+    Select                 : Select, Multiple, IntRange (etc)
+    CheckboxGroup          : Multiple select
+    TextArea               : TextArea, HtmlArea
+    Compound               : Compound, Repeatable, DateTime
+    Password               : Password
+    Hidden                 : Hidden
+    Submit                 : Submit
+    Reset                  : Reset
+    NoRender               :
+    Upload                 : Upload
 
 Widget roles are automatically applied to field classes
-unless they already have a 'render' method. Render::Simple
-will fall back to doing C<< $field->render >> if the corresponding
-widget method does not exist.
+unless they already have a 'render' method, and if the
+'no_widgets' flag in the form is not set.
 
 You can create your own widget roles and specify the namespace
 in 'widget_name_space'. In the form:
@@ -1174,27 +1243,16 @@ For more about widgets, see L<HTML::FormHandler::Manual::Rendering>.
    writeonly - The initial value is not taken from the database
    noupdate  - Do not update this field in the database (does not appear in $form->value)
 
-=head2 Form methods for fields
+=head2 Defaults
 
-These provide the name of a method in a form (not the field ) which will act
-on a particular field.
+See also the section in L<HTML::FormHandler::Manual::Intro#Defaults>.
 
-=over
+=item default_method, set_default
 
-=item set_validate
-
-Specify a form method to be used to validate this field.
-The default is C<< 'validate_' . $field->name >>. Periods in field names
-will be replaced by underscores, so that the field 'addresses.city' will
-use the 'validate_addresses_city' method for validation.
-
-   has_field 'title' => ( isa => 'Str', set_validate => 'check_title' );
-   has_field 'subtitle' => ( isa => 'Str', set_validate => 'check_title' );
-
-=item set_default
-
-The name of the method in the form that provides a field's default value.
-Default is C<< 'default_' . $field->name >>. Periods replaced by underscores.
+Supply a coderef (which will be a method on the field) with 'default_method'
+or the name of a form method with 'set_default' (which will be a method on
+the form). If not specified and a form method with a name of
+C<< default_<field_name> >> exists, it will be used.
 
 =item default
 
@@ -1216,14 +1274,13 @@ flags 'use_defaults_over_obj' and 'use_init_obj_over_item'.
 
 You could also put your defaults into your row or init_object instead.
 
-See also L<HTML::FormHandler::Manual::Intro#Defaults>.
-
 =item default_over_obj
 
 This is deprecated; look into using 'use_defaults_over_obj' or 'use_init_obj_over_item'
 flags instead. They allow using the standard 'default' attribute.
 
 Allows setting defaults which will override values provided with an item/init_object.
+(And only those. Will not be used for defaults without an item/init_object.)
 
    has_field 'quux' => ( default_over_obj => 'default quux' );
 
@@ -1235,6 +1292,8 @@ see tests in the distribution.
 =back
 
 =head1 Constraints and Validations
+
+See also L<HTML::FormHandler::Manual::Validation>.
 
 =head2 Constraints set in attributes
 
@@ -1258,8 +1317,6 @@ hashref. Some field subclasses have additional settable messages.
 
 required:  Error message text added to errors if required field is not present
 The default is "Field <field label> is required".
-
-unique: message for when 'unique' is set, but field is not unique
 
 =item range_start
 
@@ -1308,137 +1365,7 @@ be executed on the field at validate_field time.
                ],
    );
 
-In general the action can be of three types: a Moose type (which is
-represented by its name), a transformation (which is a callback called on
-the value of the field), or a constraint ('check') which performs a 'smart match'
-on the value of the field.  Currently we implement the smart match
-in our code - but in the future when Perl 5.10 is more widely used we'll switch
-to the core
-L<http://search.cpan.org/~rgarcia/perl-5.10.0/pod/perlsyn.pod#Smart_matching_in_detail>
-smart match operator.
-
-The Moose type action first tries to coerce the value -
-then it checks the result, so you can use it instead of both constraints and
-tranformations - TIMTOWTDI.  For most constraints and transformations it is
-your choice as to whether you use a Moose type or use a 'check' or 'transform'.
-
-All three types define a message to be presented to the user in the case of
-failure. Messages are passed to L<Locale::MakeText>, and can either be simple
-strings or an array suitable for MakeText, such as:
-
-     message => ['Email should be of the format [_1]',
-                 'someuser@example.com' ]
-
-Transformations and coercions are called in an eval
-to catch the errors. Warnings are trapped in a sigwarn handler.
-
-All the actions are called in the order that they are defined, so that you can
-check constraints after transformations and vice versa. You can weave all three
-types of actions in any order you need. The actions specified with 'apply' will
-be stored in an 'actions' array.
-
-To declare actions inside a field class use L<HTML::FormHandler::Moose> and
-'apply' sugar:
-
-   package MyApp::Field::Test;
-   use HTML::FormHandler::Moose;
-   extends 'HTML::FormHandler::Field;
-
-   apply [ 'SomeConstraint', { check => ..., message => .... } ];
-
-   1;
-
-Actions specified with apply are cumulative. Actions may be specified in
-field classes and additional actions added in the 'has_field' declaration.
-
-In addition to being a string, Messages may be arrayrefs, for localization,
-or coderefs, which will be passed a reference to the field and the original value.
-
-   apply [ { check => ['abc'], message => \&err_message } ];
-   sub err_message {
-      my ( $value, $field ) = @_;
-      return $field->name . ": must .... ";
-   }
-
-You can see examples of field classes with 'apply' actions in the source for
-L<HTML::FormHandler::Field::Money> and L<HTML::FormHandler::Field::Email>, and
-in t/constraints.t.
-
-=head2 Moose types for constraints and transformations
-
-Moose types can be used to do both constraints and transformations. If a coercion
-exists it will be applied, resulting in a transformation. You can use type
-constraints form L<MooseX::Types>> libraries or defined using
-L<Moose::Util::TypeConstraints>.
-
-A Moose type defined with L<Moose::Util::TypeConstraints>:
-  subtype 'MyStr'
-      => as 'Str'
-      => where { /^a/ };
-
-This is a simple constraint checking if the value string starts with the letter 'a'.
-
-Another Moose type:
-  subtype 'MyInt'
-      => as 'Int';
-  coerce 'MyInt'
-      => from 'MyStr'
-      => via { return $1 if /(\d+)/ };
-
-This type contains a coercion.
-
-You can use them in a field like this (types defined with L<MooseX::Types>
-would not be quoted):
-
-   has_field 'some_text_to_int' => (
-       apply => [ 'MyStr', 'MyInt' ]
-   );
-
-This will check if the field contains a string starting with 'a' - and then
-coerce it to an integer by extracting the first continuous string of digits.
-
-If the error message returned by the Moose type is not suitable for displaying
-in a form, you can define a different error message by using the 'type' and
-'message' keys in a hashref:
-
-   apply => [ { type => 'MyStr', message => 'Not a valid value' } ];
-
-=head2 Non-Moose checks and transforms
-
-A simple 'check' constraint uses the 'check' keyword pointing to a coderef,
-a regular expression, or an array of valid values, plus a message.
-
-A 'check' coderef will be passed the current value of the field. It should
-return true or false:
-
-  has_field 'this_num' => (
-      apply => [
-         {
-             check => sub { if ( $_[0] =~ /(\d+)/ ) { return $1 > 10 } },
-             message => 'Must contain number greater than 10',
-         }
-      ]
-  );
-
-A 'check' regular expression:
-
-  has_field 'some_text' => (
-      apply => [ { check => qr/aaa/, message => 'Must contain aaa' } ],
-  );
-
-A 'check' array of valid values:
-
-  has_field 'more_text' => (
-      apply => [ { check => ['aaa', 'bbb'], message => 'Must be aaa or bbb' } ]
-  );
-
-A simple transformation uses the 'transform' keyword and a coderef.
-The coderef will be passed the current value of the field and should return
-a transformed value.
-
-  has_field 'sprintf_filter' => (
-      apply => [ { transform => sub{ sprintf '<%.1g>', $_[0] } } ]
-  );
+See more documentation in L<HTML::FormHandler::Manual::Validation>.
 
 =head2 trim
 
@@ -1457,37 +1384,45 @@ transform.
 
 Trimming is performed before any other defined actions.
 
-=head2 deflation, deflate
+=head2 Inflation/deflation
 
-A 'deflation' is a coderef that will convert from an inflated value back to a
-flat data representation suitable for displaying in an HTML field.
-If deflation is defined for a field it is automatically used for data that is
-taken from the database.
+There are a number of methods to provide finely tuned inflation and deflation:
 
-   has_field 'my_date_time' => (
-      type => 'Compound',
-      apply => [ { transform => sub{ DateTime->new( $_[0] ) } } ],
-      deflation => sub { { year => $_[0]->year, month => $_[0]->month, day => $_[0]->day } },
-      fif_from_value => 1,
-   );
-   has_field 'my_date_time.year';
-   has_field 'my_date_time.month';
-   has_field 'my_date_time.day';
+=over 4
 
-You can also use a 'deflate' method in a custom field class. See the Date field
-for an example. If the deflation requires data that may vary (such as a format)
-string and thus needs access to 'self', you would need to use the deflate method
-since the deflation coderef is only passed the current value of the field
+=item inflate_method
 
-Normally if you have a deflation, you will need a matching inflation, which can be
-supplied via a 'transform' action. When using a 'transform', the 'value' hash only
-contains reliably inflated values after validation has been performed, since
-inflation is performed at validation time.
+Inflate to a data format desired for validation.
 
-Deflation can be done at two different places: transforming the value that's saved
-from the initial_object/item, or when retrieving the 'fif' (fill-in-form) value that's
-displayed in the HTML form. The default is C<< deflate_to => 'value' >>. To deflate
-when getting the 'fif' value set 'deflate_to' to 'fif'. (See t/deflate.t for examples.)
+=item deflate_method
+
+Deflate to a string format for presenting in HTML.
+
+=item inflate_default_method
+
+Modify the 'default' provided by an 'item' or 'init_object'
+
+=item deflate_value_method
+
+Modify the value return by C<< $form->value >>.
+
+=item deflation
+
+Another way of providing a deflation method.
+
+=item transform
+
+Another way of providing an inflation method.
+
+=back 4
+
+Normally if you have a deflation, you will need a matching inflation.
+There are two different flavors of inflation/deflation: one for inflating values
+to a format needed for validation and deflating for output, the other for
+inflating the initial provided values (usually from a database row) and deflating
+them for the 'values' returned.
+
+See L<HTML::FormHandler::Manual::InflationDeflation>.
 
 =head1 Processing and validating the field
 
@@ -1510,6 +1445,20 @@ errors with C<< $field->add_error >>.
         my $value = $field->value;
         return $field->add_error( ... ) if ( ... );
     }
+
+=head2 validate_method, set_validate
+
+Supply a coderef (which will be a method on the field) with 'validate_method'
+or the name of a form method with 'set_validate' (which will be a method on
+the form). If not specified and a form method with a name of
+C<< validate_<field_name> >> exists, it will be used.
+
+Periods in field names will be replaced by underscores, so that the field
+'addresses.city' will use the 'validate_addresses_city' method for validation.
+
+   has_field 'my_foo' => ( validate_method => \&my_foo_validation );
+   sub my_foo_validation { ... }
+   has_field 'title' => ( isa => 'Str', set_validate => 'check_title' );
 
 =head1 AUTHOR
 

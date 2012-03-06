@@ -19,6 +19,7 @@ sub render {
     foreach my $subfield ( $self->sorted_fields ) {
         $output .= $self->render_subfield( $result, $subfield );
     }
+    $output =~ s/^\n//; # remove newlines so they're not duplicated
     return $self->wrap_field( $result, $output );
 }
 
@@ -34,7 +35,7 @@ HTML::FormHandler::Widget::Field::Compound - compound field widget
 
 =head1 VERSION
 
-version 0.36003
+version 0.40000
 
 =head1 AUTHOR
 

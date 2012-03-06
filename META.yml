@@ -3,7 +3,6 @@ abstract: 'HTML forms using Moose'
 author:
   - 'FormHandler Contributors - see HTML::FormHandler'
 build_requires:
-  HTML::TreeBuilder: 3.23
   Test::Differences: 0
   Test::Exception: 0
   Test::Memory::Cycle: 1.04
@@ -21,11 +20,13 @@ name: HTML-FormHandler
 requires:
   Carp: 0
   Class::Load: 0.06
+  Data::Clone: 0
   DateTime: 0
   DateTime::Format::Strptime: 0
   Email::Valid: 0
   File::ShareDir: 0
   File::Spec: 0
+  HTML::TreeBuilder: 3.23
   Locale::Maketext: 1.09
   Moose: 2.0007
   MooseX::Getopt: 0.16
@@ -33,10 +34,11 @@ requires:
   MooseX::Types::Common: 0
   MooseX::Types::LoadableClass: 0.006
   Sub::Exporter: 0
+  Sub::Name: 0
   Try::Tiny: 0
   aliased: 0
   namespace::autoclean: 0.09
 resources:
   bugtracker: https://rt.cpan.org/Public/Dist/Display.html?Name=HTML-FormHandler
   repository: git://github.com/gshank/html-formhandler.git
-version: 0.36003
+version: 0.40000

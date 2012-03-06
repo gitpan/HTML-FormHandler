@@ -6,7 +6,7 @@ extends 'HTML::FormHandler::Field::Text';
 our $VERSION = '0.03';
 
 
-has '+widget'           => ( default => 'password' );
+has '+widget'           => ( default => 'Password' );
 has '+password'         => ( default => 1 );
 has '+required'         => ( default => 1 );
 has 'password_field'    => ( isa     => 'Str', is => 'rw', default => 'password' );
@@ -33,7 +33,7 @@ sub validate {
     my $self = shift;
 
     my $value    = $self->value;
-    my $password = $self->form->field( $self->password_field )->value;
+    my $password = $self->form->field( $self->password_field )->value || '';
     if ( $password ne $self->value ) {
         $self->add_error( $self->get_message('pass_conf_not_matched') );
         return;
@@ -54,7 +54,7 @@ HTML::FormHandler::Field::PasswordConf - password confirmation
 
 =head1 VERSION
 
-version 0.36003
+version 0.40000
 
 =head1 DESCRIPTION
 

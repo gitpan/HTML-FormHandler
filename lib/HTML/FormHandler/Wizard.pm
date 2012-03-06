@@ -97,6 +97,8 @@ sub save_page {
     }
 }
 
+__PACKAGE__->meta->make_immutable;
+use namespace::autoclean;
 1;
 
 __END__
@@ -108,7 +110,7 @@ HTML::FormHandler::Wizard - create a multi-page form
 
 =head1 VERSION
 
-version 0.36003
+version 0.40000
 
 =head1 SYNOPSIS
 

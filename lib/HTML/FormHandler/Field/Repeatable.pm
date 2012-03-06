@@ -6,12 +6,17 @@ extends 'HTML::FormHandler::Field::Compound';
 
 use aliased 'HTML::FormHandler::Field::Repeatable::Instance';
 use HTML::FormHandler::Field::PrimaryKey;
+use HTML::FormHandler::Merge ('merge');
 
 
 has 'contains' => (
     isa       => 'HTML::FormHandler::Field',
     is        => 'rw',
-    predicate => 'has_contains'
+    predicate => 'has_contains',
+);
+has 'init_contains' => ( is => 'ro', isa => 'HashRef', traits => ['Hash'],
+    default => sub {{}},
+    handles => { has_init_contains => 'count' },
 );
 
 has 'num_when_empty' => ( isa => 'Int',  is => 'rw', default => 1 );
@@ -20,7 +25,7 @@ has 'index'          => ( isa => 'Int',  is => 'rw', default => 0 );
 has 'auto_id'        => ( isa => 'Bool', is => 'rw', default => 0 );
 has '+reload_after_update' => ( default => 1 );
 has 'is_repeatable'        => ( is      => 'ro', default => 1 );
-has '+widget'              => ( default => 'repeatable' );
+has '+widget'              => ( default => 'Repeatable' );
 
 sub _fields_validate {
     my $self = shift;
@@ -55,16 +60,18 @@ sub create_element {
     my ($self) = @_;
 
     my $instance;
-    # TODO - instance has no way to change widgets
     my $instance_attr = {
         name   => 'contains',
         parent => $self,
-        form   => $self->form,
         type   => 'Repeatable::Instance',
         is_contains => 1,
     };
+    if( $self->has_init_contains ) {
+        $instance_attr = merge( $self->init_contains, $instance_attr );
+    }
     if( $self->form ) {
-        $instance = $self->form->new_field_with_traits(
+        $instance_attr->{form} = $self->form;
+        $instance = $self->form->_make_adhoc_field(
             'HTML::FormHandler::Field::Repeatable::Instance',
             $instance_attr );
     }
@@ -81,9 +88,10 @@ sub create_element {
     if ( $self->auto_id ) {
         unless ( grep $_->can('is_primary_key') && $_->is_primary_key, $instance->all_fields ) {
             my $field;
-            my $field_attr = { name => 'id', parent => $instance, form => $self->form };
+            my $field_attr = { name => 'id', parent => $instance };
             if ( $self->form ) { # this will pull in the widget role
-                $field = $self->form->new_field_with_traits(
+                $field_attr->{form} = $self->form;
+                $field = $self->form->_make_adhoc_field(
                     'HTML::FormHandler::Field::PrimaryKey', $field_attr );
             }
             else { # the following won't have a widget role applied
@@ -278,7 +286,7 @@ HTML::FormHandler::Field::Repeatable - repeatable (array) field
 
 =head1 VERSION
 
-version 0.36003
+version 0.40000
 
 =head1 SYNOPSIS
 
@@ -308,6 +316,12 @@ or use 'contains' with single fields which are compound fields:
 If the MyAddress field contains fields 'address_id', 'street', 'city', and
 'state', then this syntax is functionally equivalent to the first method
 where the fields are declared with dots ('addresses.city');
+
+You can pass attributes to the 'contains' field by supplying a 'contains' hashref.
+
+    has_field 'addresses' => ( type => 'Repeatable,
+       init_contains => { wrapper_attr => { class => ['hfh', 'repinst'] } },
+    );
 
 =head1 DESCRIPTION
 

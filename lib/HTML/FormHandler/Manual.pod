@@ -13,7 +13,7 @@ HTML::FormHandler::Manual - index of the manual
 
 =head1 VERSION
 
-version 0.36003
+version 0.40000
 
 =head1 DESCRIPTION
 
@@ -29,13 +29,42 @@ data from the database.
 Creating FormHandler forms and interfacing them
 with your controllers.
 
+=head2 L<HTML::FormHandler::Manual::Fields>
+
+Organized list of FormHandler fields, with links to specific
+documentation.
+
+=head2 L<HTML::FormHandler::Manual::Defaults>
+
+Description of the various ways of setting defaults.
+
+=head2 L<HTML::FormHandler::Manual::InflationDeflation>
+
+Inflation and deflation of fields
+
+=head2 L<HTML::FormHandler::Manual::Validation>
+
+Validation of fields
+
+=head2 L<HTML::FormHandler::Manual::Errors>
+
+Errors: setting them, getting them.
+
 =head2 L<HTML::FormHandler::Manual::Rendering>
 
 Rendering options, particularly rendering with widgets
 
+=head2 L<HTML::FormHandler::Manual::Database>
+
+Issues and setup for database forms.
+
 =head2 L<HTML::FormHandler::Manual::Tutorial>
 
 Builds on the Catalyst tutorial. Step-by-step guide.
+
+=head2 L<HMLT::FormHandler::Manual::Testing>
+
+Test your forms
 
 =head2 L<HTML::FormHandler::Manual::Cookbook>
 

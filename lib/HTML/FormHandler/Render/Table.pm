@@ -5,6 +5,7 @@ use Moose::Role;
 
 with 'HTML::FormHandler::Render::Simple' =>
     { -excludes => [ 'render', 'render_field_struct', 'render_end', 'render_start' ] };
+use HTML::FormHandler::Render::Util ('process_attrs');
 
 
 sub render {
@@ -22,7 +23,8 @@ sub render {
 sub render_start {
     my $self   = shift;
 
-    return $self->html_form_tag . "<table>\n";
+    my $attrs = process_attrs($self->attributes);
+    return qq{</form$attrs></table>};
 }
 
 sub render_form_errors {
@@ -80,7 +82,7 @@ HTML::FormHandler::Render::Table - render a form with a table layout
 
 =head1 VERSION
 
-version 0.36003
+version 0.40000
 
 =head1 SYNOPSIS
 

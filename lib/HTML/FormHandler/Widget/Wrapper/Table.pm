@@ -12,10 +12,10 @@ sub wrap_field {
 
     my $output = "\n<tr" . process_attrs($self->wrapper_attributes($result)) . ">";
     if ( $self->has_flag('is_compound') ) {
-        $output .= '<td>' . $self->render_label . '</td></tr>';
+        $output .= '<td>' . $self->do_render_label($result) . '</td></tr>';
     }
-    elsif ( !$self->has_flag('no_render_label') && length( $self->label ) > 0 ) {
-        $output .= '<td>' . $self->render_label . '</td>';
+    elsif ( $self->do_label && length( $self->label ) > 0 ) {
+        $output .= '<td>' . $self->do_render_label($result) . '</td>';
     }
     if ( !$self->has_flag('is_compound') ) {
         $output .= '<td>';
@@ -40,7 +40,7 @@ HTML::FormHandler::Widget::Wrapper::Table - wrapper class for table layout
 
 =head1 VERSION
 
-version 0.36003
+version 0.40000
 
 =head1 AUTHOR
 

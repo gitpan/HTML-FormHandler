@@ -15,18 +15,18 @@ sub html_form_tag {
         [ style   => 'style' ],
     );
 
-    my $html_attr = { %{$self->html_attr} };
+    my $element_attr = { %{$self->element_attr} };
     foreach my $attr_pair (@attr_accessors) {
         my $attr = $attr_pair->[0];
         my $accessor = $attr_pair->[1];
-        if ( !exists $html_attr->{$attr} && defined( my $value = $self->$accessor ) ) {
-            $html_attr->{$attr} = $self->$accessor;
+        if ( !exists $element_attr->{$attr} && defined( my $value = $self->$accessor ) ) {
+            $element_attr->{$attr} = $self->$accessor;
         }
     }
 
     my $output = '<form';
-    foreach my $attr ( sort keys %$html_attr ) {
-        $output .= qq{ $attr="} . $html_attr->{$attr} . qq{"};
+    foreach my $attr ( sort keys %$element_attr ) {
+        $output .= qq{ $attr="} . $element_attr->{$attr} . qq{"};
     }
 
     $output .= " >\n";
@@ -45,7 +45,7 @@ HTML::FormHandler::Widget::Form::Role::HTMLAttributes - set HTML attributes on t
 
 =head1 VERSION
 
-version 0.36003
+version 0.40000
 
 =head1 AUTHOR
 

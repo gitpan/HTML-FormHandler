@@ -5,21 +5,23 @@ use Moose::Role;
 use namespace::autoclean;
 
 with 'HTML::FormHandler::Widget::Wrapper::Base';
+use HTML::FormHandler::Render::Util ('process_attrs');
 
 
 sub wrap_field {
     my ( $self, $result, $rendered_widget ) = @_;
 
-    my $output .= '<fieldset class="' . $self->html_name . '">';
-    $output .= '<legend>' . $self->loc_label . '</legend>';
+    my $wattrs = process_attrs($self->wrapper_attributes);
+    my $output .= qq{\n<fieldset$wattrs>};
+    $output .= qq{\n<legend>} . $self->loc_label . '</legend>';
 
-    $output .= $rendered_widget;
+    $output .= "\n$rendered_widget";
 
     $output .= qq{\n<span class="error_message">$_</span>}
         for $result->all_errors;
-    $output .= '</fieldset>';
+    $output .= "\n</fieldset>";
 
-    return "$output\n";
+    return $output;
 }
 
 1;
@@ -33,7 +35,7 @@ HTML::FormHandler::Widget::Wrapper::Fieldset - fieldset field wrapper
 
 =head1 VERSION
 
-version 0.36003
+version 0.40000
 
 =head1 SYNOPSIS
 

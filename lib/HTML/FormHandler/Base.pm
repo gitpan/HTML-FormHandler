@@ -4,6 +4,13 @@ use Moose;
 
 with 'HTML::FormHandler::Widget::Form::Simple';
 
+# here to make it possible to combine the Blocks role with a role
+# setting the render_list without an 'excludes'
+sub has_render_list { }
+sub build_render_list {[]}
+
+__PACKAGE__->meta->make_immutable;
+use namespace::autoclean;
 1;
 
 __END__
@@ -15,7 +22,7 @@ HTML::FormHandler::Base - stub
 
 =head1 VERSION
 
-version 0.36003
+version 0.40000
 
 =head1 AUTHOR
 

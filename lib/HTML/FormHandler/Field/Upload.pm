@@ -9,9 +9,10 @@ extends 'HTML::FormHandler::Field';
 our $VERSION = '0.02';
 
 
-has '+widget' => ( default => 'upload', );
+has '+widget' => ( default => 'Upload', );
 has min_size   => ( is      => 'rw', isa => 'Maybe[Int]', default => 1 );
 has max_size   => ( is      => 'rw', isa => 'Maybe[Int]', default => 1048576 );
+has '+type_attr' => ( default => 'file' );
 
 our $class_messages = {
         'upload_file_not_found' => 'File not found for upload field',
@@ -87,7 +88,7 @@ HTML::FormHandler::Field::Upload - file upload field
 
 =head1 VERSION
 
-version 0.36003
+version 0.40000
 
 =head1 DESCRIPTION
 

@@ -7,12 +7,12 @@ use warnings;
 our $VERSION = '0.01';
 
 use MooseX::Types -declare => [
-    'PositiveNum',    'PositiveInt', 'NegativeNum',       'NegativeInt',
-    'SingleDigit',    'SimpleStr',   'NonEmptySimpleStr', 'Password',
-    'StrongPassword', 'NonEmptyStr', 'Email',             'State',
-    'Zip',            'IPAddress',   'NoSpaces',          'WordChars',
-    'NotAllDigits',   'Printable',   'SingleWord',
-    'Collapse',       'Upper',       'Lower',             'Trim',
+    'PositiveNum',    'PositiveInt', 'NegativeNum',         'NegativeInt',
+    'SingleDigit',    'SimpleStr',   'NonEmptySimpleStr',   'Password',
+    'StrongPassword', 'NonEmptyStr', 'Email',               'State',
+    'Zip',            'IPAddress',   'NoSpaces',            'WordChars',
+    'NotAllDigits',   'Printable',   'PrintableAndNewline', 'SingleWord',
+    'Collapse',       'Upper',       'Lower',               'Trim',
 ];
 
 our $class_messages = {
@@ -34,6 +34,7 @@ our $class_messages = {
     WordChars => 'Must be made up of letters, digits, and underscores',
     NotAllDigits => 'Must not be all digits',
     Printable => 'Field contains non-printable characters',
+    PrintableAndNewline => 'Field contains non-printable characters',
     SingleWord => 'Field must contain a single word',
 };
 
@@ -119,6 +120,11 @@ subtype Printable,
     where { /^\p{IsPrint}*\z/ },
     message { $class_messages->{Printable} };
 
+subtype PrintableAndNewline,
+    as Str,
+    where { /^[\p{IsPrint}\n]*\z/ },
+    message { $class_messages->{PrintableAndNewline} };
+
 subtype SingleWord,
     as Str,
     where { /^\w*\z/ },
@@ -171,7 +177,7 @@ HTML::FormHandler::Types - Moose type constraints
 
 =head1 VERSION
 
-version 0.36003
+version 0.40000
 
 =head1 SYNOPSIS
 

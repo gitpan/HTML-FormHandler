@@ -3,7 +3,7 @@ package HTML::FormHandler::Widget::Wrapper::None;
 
 use Moose::Role;
 
-sub wrap_field { $_[2] }
+sub wrap_field { "\n" . $_[2] }
 
 use namespace::autoclean;
 1;
@@ -17,7 +17,7 @@ HTML::FormHandler::Widget::Wrapper::None - wrapper that doesn't wrap
 
 =head1 VERSION
 
-version 0.36003
+version 0.40000
 
 =head1 AUTHOR
 

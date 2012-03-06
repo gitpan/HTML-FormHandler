@@ -8,14 +8,17 @@ sub render {
     my ( $self, $result ) = @_;
 
     $result ||= $self->result;
-    my $output = "\n";
-    $output .= '<input type="hidden" name="';
+    my $output .= '<input type="hidden" name="';
     $output .= $self->html_name . '"';
     $output .= ' id="' . $self->id . '"';
     $output .= ' value="' . $self->html_filter($result->fif) . '"';
-    $output .= process_attrs($self->attributes);
-    $output .= " />\n";
+    $output .= process_attrs($self->element_attributes($result));
+    $output .= " />";
 
+    # wrap field unless do_label is set, which would cause unwanted
+    # labels to be displayed
+    return $self->wrap_field( $result, $output ) if !$self->do_label;
+    return $output;
 }
 
 use namespace::autoclean;
@@ -30,7 +33,7 @@ HTML::FormHandler::Widget::Field::Hidden - hidden field rendering widget
 
 =head1 VERSION
 
-version 0.36003
+version 0.40000
 
 =head1 AUTHOR
 

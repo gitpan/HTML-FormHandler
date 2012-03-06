@@ -33,7 +33,8 @@ sub field {
     return $self->form->field($field_name);
 }
 
-
+__PACKAGE__->meta->make_immutable;
+use namespace::autoclean;
 1;
 
 __END__
@@ -45,7 +46,7 @@ HTML::FormHandler::Page - used in Wizard
 
 =head1 VERSION
 
-version 0.36003
+version 0.40000
 
 =head1 AUTHOR
 

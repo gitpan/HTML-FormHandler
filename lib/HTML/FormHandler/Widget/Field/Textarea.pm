@@ -16,7 +16,7 @@ sub render {
 
     my $output =
         qq(<textarea name="$name" id="$id")
-        . process_attrs($self->attributes)
+        . process_attrs($self->element_attributes($result))
         . qq( rows="$rows" cols="$cols">$fif</textarea>);
 
     return $self->wrap_field( $result, $output );
@@ -33,7 +33,7 @@ HTML::FormHandler::Widget::Field::Textarea - textarea rendering widget
 
 =head1 VERSION
 
-version 0.36003
+version 0.40000
 
 =head1 AUTHOR
 

@@ -5,8 +5,6 @@ use Moose::Role;
 use namespace::autoclean;
 use HTML::FormHandler::Render::Util ('process_attrs');
 
-has 'no_render_label' => ( is => 'ro', isa => 'Bool', default => 1 );
-
 sub render {
     my ( $self, $result ) = @_;
 
@@ -15,7 +13,7 @@ sub render {
     $output .= $self->html_name . '"';
     $output .= ' id="' . $self->id . '"';
     $output .= ' value="' . $self->html_filter($self->_localize($self->value)) . '"';
-    $output .= process_attrs($self->attributes);
+    $output .= process_attrs($self->element_attributes($result));
     $output .= ' />';
     return $self->wrap_field( $result, $output );
 }
@@ -31,7 +29,7 @@ HTML::FormHandler::Widget::Field::Submit - submit field rendering widget
 
 =head1 VERSION
 
-version 0.36003
+version 0.40000
 
 =head1 AUTHOR
 

@@ -8,45 +8,51 @@ use HTML::FormHandler::Render::Util ('process_attrs');
 with 'HTML::FormHandler::Widget::Wrapper::Base';
 
 
-has 'auto_fieldset' => ( isa => 'Bool', is => 'rw', lazy => 1, default => 1 );
 
 sub wrap_field {
     my ( $self, $result, $rendered_widget ) = @_;
 
-    return $rendered_widget if ( $self->has_flag('is_compound') && $self->get_tag('no_compound_wrapper') );
-
-    my $output = "\n";
-
-    my $tag = $self->wrapper_tag;
-    my $start_tag = $self->get_tag('wrapper_start');
-    if( defined $start_tag ) {
-        $output .= $start_tag;
+    my $output;
+    # get wrapper tag if set
+    my $label_tag = $self->label_tag || '';
+    my $wrapper_tag;
+    if( $self->do_wrapper ) {
+        $wrapper_tag = $self->get_tag('wrapper_tag');
+        # default wrapper tags
+        $wrapper_tag ||= $self->has_flag('is_repeatable') ? 'fieldset' : 'div';
+        # get attribute string
+        my $attrs = process_attrs( $self->wrapper_attributes($result) );
+        # write wrapper tag
+        $output .= qq{\n<$wrapper_tag$attrs>};
+        $label_tag = 'legend' if $wrapper_tag eq 'fieldset';
     }
-    else {
-        $output .= "<$tag" . process_attrs( $self->wrapper_attributes($result) ) . ">";
+    # write label; special processing for checkboxes
+    $rendered_widget = $self->wrap_checkbox($result, $rendered_widget, $label_tag)
+        if ( lc $self->widget eq 'checkbox' );
+    $output .= "\n" . $self->do_render_label($result, $label_tag )
+        if $self->do_label;
+    # append 'before_element'
+    $output .= $self->get_tag('before_element');
+    # the input element itself
+    $output .= "\n$rendered_widget";
+    # the 'after_element'
+    $output .= $self->get_tag('after_element');
+    # the error messages
+    unless( $self->get_tag('no_errors') ) {
+        my $error_class = $self->get_tag('error_class') || 'error_message';
+        $output .= qq{\n<span class="$error_class">$_</span>}
+            for $result->all_errors;
+        # warnings (incompletely implemented - only on field itself)
+        my $warning_class = $self->get_tag('warning_class') || 'warning_message';
+        $output .= qq{\n<span class="warning_message">$_</span>}
+            for $result->all_warnings;
     }
-
-    if ( $self->has_flag('is_compound') ) {
-        if( $self->auto_fieldset ) {
-            $output .= '<fieldset class="' . $self->html_name . '">';
-            $output .= '<legend>' . $self->loc_label . '</legend>';
-        }
+    if( $self->do_wrapper ) {
+        $output .= "\n</$wrapper_tag>";
     }
-    elsif ( !$self->has_flag('no_render_label') && length( $self->label ) > 0 ) {
-        $output .= $self->render_label;
-    }
-
-    $output .= $rendered_widget;
-    $output .= qq{\n<span class="error_message">$_</span>}
-        for $result->all_errors;
-    $output .= '</fieldset>'
-        if ( $self->has_flag('is_compound') && $self->auto_fieldset );
-
-    my $end_tag = $self->get_tag('wrapper_end');
-    $output .= defined $end_tag ? $end_tag : "</$tag>";
-
-    return "$output\n";
+    return "$output";
 }
+
 
 1;
 
@@ -59,7 +65,7 @@ HTML::FormHandler::Widget::Wrapper::Simple - simple field wrapper
 
 =head1 VERSION
 
-version 0.36003
+version 0.40000
 
 =head1 SYNOPSIS
 
@@ -67,20 +73,27 @@ This is the default wrapper role. It will be installed if
 no other wrapper is specified and widget_wrapper is not set to
 'none'.
 
-It used the 'widget_tags' keys 'wrapper_start' and 'wrapper_end',
-so that the default C<< '<div<%class>>' >> and C<< '</div>' >> tags
-may be replaced. The following will cause the fields to be wrapped
-in paragraph tags instead:
+Relevant field flags:
 
-   has '+widget_tags' => ( default => sub { {
-      wrapper_start => '<p>',
-      wrapper_end   => '</p>' }
-   );
+   do_wrapper
+   do_label
 
-Alternatively, 'wrapper_tag' can be set to switch to a tag besides 'div',
-but still use the the wrapper attribute processing:
+If 'do_label' is set and not 'do_wrapper', only the label plus
+the form element will be rendered.
 
-   has '+widget_tags' => ( default => sub { { wrapper_tag => 'p' } } );
+Supported 'tags':
+
+    wrapper_tag    -- the tag to use in the wrapper, default 'div'
+
+    label_tag      -- tag to use for label (default 'label')
+    label_after    -- string to append to label, for example ': ' to append a colon
+
+    before_element -- string that goes right before the element
+    after_element  -- string that goes right after the element
+
+    no_errors      -- don't issue error messages on the field
+    error_class    -- class for error messages (default 'error_message')
+    warning_class  -- class for warning messages (default 'warning_message' )
 
 =head1 AUTHOR
 

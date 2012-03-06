@@ -5,7 +5,7 @@ use Moose;
 extends 'HTML::FormHandler::Field::NoValue';
 
 
-has '+widget' => ( default => 'button' );
+has '+widget' => ( default => 'Button' );
 
 has '+value' => ( default => 'Button' );
 
@@ -22,7 +22,7 @@ HTML::FormHandler::Field::Button - button field
 
 =head1 VERSION
 
-version 0.36003
+version 0.40000
 
 =head1 SYNOPSIS
 

@@ -1,5 +1,5 @@
 package HTML::FormHandler::Field::Float;
-# ABSTRACT: validate an integer value
+# ABSTRACT: validate a float value
 
 use HTML::FormHandler::Moose;
 extends 'HTML::FormHandler::Field::Text';
@@ -10,6 +10,8 @@ has '+size'                 => ( default => 8 );
 has 'precision'             => ( isa => 'Int|Undef', is => 'rw', default => 2 );
 has 'decimal_symbol'        => ( isa => 'Str', is => 'rw', default => '.');
 has 'decimal_symbol_for_db' => ( isa => 'Str', is => 'rw', default => '.');
+has '+inflate_method'       => ( default => sub { \&inflate_float } );
+has '+deflate_method'       => ( default => sub { \&deflate_float } );
 
 our $class_messages = {
     'float_needed'      => 'Must be a number. May contain numbers, +, - and decimal separator \'[_1]\'',
@@ -25,26 +27,19 @@ sub get_class_messages {
     }
 }
 
-
-apply(
-    [
-        {
-            transform => sub {
-                my $value = shift;
-                $value =~ s/^\+//;
-                return $value;
-                }
-        },
-    ]
-);
-
-sub deflate {
+sub inflate_float {
     my ( $self, $value ) = @_;
+    return $value unless defined $value;
+    $value =~ s/^\+//;
+    return $value;
+}
 
+sub deflate_float {
+    my ( $self, $value ) = @_;
+    return $value unless defined $value;
     my $symbol      = $self->decimal_symbol;
     my $symbol_db   = $self->decimal_symbol_for_db;
     $value =~ s/\Q$symbol_db\E/$symbol/x;
-
     return $value;
 }
 
@@ -85,7 +80,6 @@ sub validate {
     return 1;
 }
 
-
 __PACKAGE__->meta->make_immutable;
 use namespace::autoclean;
 1;
@@ -96,11 +90,11 @@ use namespace::autoclean;
 
 =head1 NAME
 
-HTML::FormHandler::Field::Float - validate an integer value
+HTML::FormHandler::Field::Float - validate a float value
 
 =head1 VERSION
 
-version 0.36003
+version 0.40000
 
 =head1 DESCRIPTION
 

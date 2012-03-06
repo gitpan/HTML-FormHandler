@@ -97,7 +97,7 @@ HTML::FormHandler::Render::WithTT - tt rendering
 
 =head1 VERSION
 
-version 0.36003
+version 0.40000
 
 =head1 SYNOPSIS
 

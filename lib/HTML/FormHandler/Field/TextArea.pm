@@ -5,7 +5,7 @@ use Moose;
 extends 'HTML::FormHandler::Field::Text';
 our $VERSION = '0.02';
 
-has '+widget' => ( default => 'textarea' );
+has '+widget' => ( default => 'Textarea' );
 has 'cols'    => ( isa     => 'Int', is => 'rw' );
 has 'rows'    => ( isa     => 'Int', is => 'rw' );
 
@@ -23,7 +23,7 @@ HTML::FormHandler::Field::TextArea - textarea input
 
 =head1 VERSION
 
-version 0.36003
+version 0.40000
 
 =head1 Summary
 

@@ -74,7 +74,9 @@ sub validate_field {
         $field->_fields_validate;
     }
     else {
-        $field->_set_value( $field->input );
+        my $input = $field->input;
+        $input = $field->inflate( $input ) if $field->has_inflate_method;
+        $field->_set_value( $input );
     }
 
     $field->_inner_validate_field();
@@ -83,6 +85,11 @@ sub validate_field {
     $field->test_ranges;
     $field->_validate($field)    # form field validation method
         if ( $field->has_value && defined $field->value );
+    # validation done, if everything validated, do deflate_value for
+    # final $form->value
+    if( $field->has_deflate_value_method && !$field->has_errors ) {
+        $field->_set_value( $field->deflate_value($field->value) );
+    }
 
     return !$field->has_errors;
 }
@@ -235,7 +242,7 @@ HTML::FormHandler::Validate - validation role (internal)
 
 =head1 VERSION
 
-version 0.36003
+version 0.40000
 
 =head1 SYNOPSIS
 

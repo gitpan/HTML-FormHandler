@@ -5,32 +5,11 @@ use Moose::Role;
 
 requires( 'sorted_fields', 'field' );
 
-use HTML::FormHandler::Render::Util ('process_attrs');
+use HTML::FormHandler::Render::Util ('process_attrs', 'ucc_widget');
 
 our $VERSION = 0.01;
 
 
-
-has 'auto_fieldset' => ( isa => 'Bool', is => 'rw', default => 1 );
-has 'label_types' => (
-    traits    => ['Hash'],
-    isa       => 'HashRef[Str]',
-    is        => 'rw',
-    default   => sub {
-        {
-            text        => 'label',
-            password    => 'label',
-            'select'    => 'label',
-            checkbox    => 'label',
-            textarea    => 'label',
-            radio_group => 'label',
-            compound    => 'legend',
-            upload      => 'label',
-            captcha     => 'label',
-        };
-    },
-    handles   => { get_label_type => 'get' },
-);
 
 sub render {
     my $self   = shift;
@@ -47,14 +26,18 @@ sub render {
 }
 
 sub render_start {
-    my $self   = shift;
+    my $self = shift;
 
-    my $output = $self->html_form_tag;
-
-    my $auto_fieldset = $self->tag_exists('no_auto_fieldset') ?
-         not( $self->get_tag('no_auto_fieldset') ) : $self->auto_fieldset;
-    $output .= '<fieldset class="main_fieldset">'
-        if $auto_fieldset;
+    my $output = '';
+    $output .= $self->get_tag('before');
+    if( $self->do_form_wrapper ) {
+        my $form_wrapper_tag = $self->get_tag('wrapper_tag') || 'fieldset';
+        my $attrs = process_attrs($self->form_wrapper_attributes);
+        $output .= qq{<$form_wrapper_tag$attrs>};
+    }
+    my $attrs = process_attrs($self->attributes);
+    $output .= qq{<form$attrs>};
+    $output .= $self->get_tag('after_start');
 
     return $output
 }
@@ -73,11 +56,11 @@ sub render_form_errors {
 sub render_end {
     my $self = shift;
 
-    my $auto_fieldset = $self->tag_exists('no_auto_fieldset') ?
-         not( $self->get_tag('no_auto_fieldset') ) : $self->auto_fieldset;
-    my $output;
-    $output .= '</fieldset>' if $auto_fieldset;
-    $output .= "</form>\n";
+    my $output = "</form>\n";
+    if( $self->do_form_wrapper ) {
+        my $wrapper_tag = $self->get_tag('wrapper_tag') || 'fieldset';
+        $output .= "</$wrapper_tag>";
+    }
     return $output;
 }
 
@@ -89,9 +72,11 @@ sub render_field {
     }
     die "must pass field to render_field"
         unless ( defined $field && $field->isa('HTML::FormHandler::Field') );
-    return '' if $field->widget eq 'no_render';
+    # widgets should be in camel case, since they are Perl package names
+    my $widget = ucc_widget($field->widget);
+    return '' if $widget eq 'no_render';
     my $rendered_field;
-    my $form_render = 'render_' . $field->widget;
+    my $form_render = 'render_' . $widget;
     if ( $self->can($form_render) ) {
         $rendered_field = $self->$form_render($field);
     }
@@ -99,36 +84,38 @@ sub render_field {
         $rendered_field = $field->render;
     }
     else {
-        die "No widget method found for '" . $field->widget . "' in H::F::Render::Simple";
+        die "No widget method found for '$widget' in H::F::Render::Simple";
     }
-    my $wrapper_attrs = process_attrs($field->wrapper_attributes);
-    return $self->render_field_struct( $field, $rendered_field, $wrapper_attrs );
+    return $self->wrap_field( $field, $rendered_field );
 }
 
-sub render_field_struct {
-    my ( $self, $field, $rendered_field, $wrapper_attrs ) = @_;
-    my $output = qq{\n<div$wrapper_attrs>};
-    my $l_type =
-        defined $self->get_label_type( $field->widget ) ?
-        $self->get_label_type( $field->widget ) :
-        '';
-    if ( $l_type eq 'label' && $field->label ) {
-        $output .= $self->_label($field);
+sub wrap_field {
+    my ( $self, $field, $rendered_field ) = @_;
+
+    return "\n$rendered_field" if $field->uwrapper eq 'none';
+    return "\n$rendered_field" if ! $field->do_wrapper;
+
+    my $output = "\n";
+
+    my $wrapper_tag = $field->get_tag('wrapper_tag');
+    $wrapper_tag ||= $field->has_flag('is_repeatable') ? 'fieldset' : 'div';
+    my $attrs = process_attrs($field->wrapper_attributes);
+
+    $output .= qq{<$wrapper_tag$attrs>};
+    if( $wrapper_tag eq 'fieldset' ) {
+        $output .= '<legend>' . $field->loc_label . '</legend>';
     }
-    elsif ( $l_type eq 'legend' ) {
-        $output .= '<fieldset class="' . $field->html_name . '">';
-        $output .= '<legend>' . $field->html_filter($field->loc_label) . '</legend>';
-    }
-    $output .= $rendered_field;
-    foreach my $error ($field->all_errors){
-        $output .= qq{\n<span class="error_message">} . $field->html_filter($error) . '</span>';
+    elsif ( ! $field->get_tag('label_none') && $field->do_label && length( $field->label ) > 0 ) {
+        $output .= "\n" . $self->render_label($field);
     }
 
-    if ( $l_type eq 'legend' ) {
-        $output .= '</fieldset>';
-    }
-    $output .= "</div>\n";
-    return $output;
+    $output .= "\n$rendered_field";
+    $output .= qq{\n<span class="error_message">$_</span>}
+        for $field->all_errors;
+
+    $output .= "\n</$wrapper_tag>";
+
+    return "$output";
 }
 
 sub render_text {
@@ -139,7 +126,7 @@ sub render_text {
     $output .= ' size="' . $field->size . '"' if $field->size;
     $output .= ' maxlength="' . $field->maxlength . '"' if $field->maxlength;
     $output .= ' value="' . $field->html_filter($field->fif) . '"';
-    $output .= process_attrs($field->attributes);
+    $output .= process_attrs($field->element_attributes);
     $output .= ' />';
     return $output;
 }
@@ -152,7 +139,7 @@ sub render_password {
     $output .= ' size="' . $field->size . '"' if $field->size;
     $output .= ' maxlength="' . $field->maxlength . '"' if $field->maxlength;
     $output .= ' value="' . $field->html_filter($field->fif) . '"';
-    $output .= process_attrs($field->attributes);
+    $output .= process_attrs($field->element_attributes);
     $output .= ' />';
     return $output;
 }
@@ -163,7 +150,7 @@ sub render_hidden {
     $output .= $field->html_name . '"';
     $output .= ' id="' . $field->id . '"';
     $output .= ' value="' . $field->html_filter($field->fif) . '"';
-    $output .= process_attrs($field->attributes);
+    $output .= process_attrs($field->element_attributes);
     $output .= ' />';
     return $output;
 }
@@ -177,7 +164,7 @@ sub render_select {
     $output .= qq{ id="$id"};
     $output .= ' multiple="multiple"' if $multiple == 1;
     $output .= ' size="' . $field->size . '"' if $field->size;
-    my $html_attributes = process_attrs($field->attributes);
+    my $html_attributes = process_attrs($field->element_attributes);
     $output .= $html_attributes;
     $output .= '>';
     my $index = 0;
@@ -220,7 +207,7 @@ sub render_checkbox {
     $output .= ' id="' . $field->id . '"';
     $output .= ' value="' . $field->html_filter($field->checkbox_value) . '"';
     $output .= ' checked="checked"' if $field->fif eq $field->checkbox_value;
-    $output .= process_attrs($field->attributes);
+    $output .= process_attrs($field->element_attributes);
     $output .= ' />';
     return $output;
 }
@@ -252,7 +239,7 @@ sub render_textarea {
 
     my $output =
         qq(<textarea name="$name" id="$id" )
-        . process_attrs($field->attributes)
+        . process_attrs($field->element_attributes)
         . qq(rows="$rows" cols="$cols">)
         . $field->html_filter($fif)
         . q(</textarea>);
@@ -267,18 +254,20 @@ sub render_upload {
     $output = '<input type="file" name="';
     $output .= $field->html_name . '"';
     $output .= ' id="' . $field->id . '"';
-    $output .= process_attrs($field->attributes);
+    $output .= process_attrs($field->element_attributes);
     $output .= ' />';
     return $output;
 }
 
-sub _label {
+sub render_label {
     my ( $self, $field ) = @_;
 
     my $attrs = process_attrs( $field->label_attributes );
     my $label = $field->html_filter($field->loc_label);
-    $label .= ": " unless $field->get_tag('label_no_colon');
-    return qq{<label$attrs for="} . $field->id . qq{">$label</label>};
+    $label .= $field->get_tag('label_after')
+        if( $field->tag_exists('label_after') );
+    my $label_tag = $field->tag_exists('label_tag') ? $field->get_tag('label_tag') : 'label';
+    return qq{<$label_tag$attrs for="} . $field->id . qq{">$label</$label_tag>};
 }
 
 sub render_compound {
@@ -297,7 +286,7 @@ sub render_submit {
     my $output = '<input type="submit" name="';
     $output .= $field->html_name . '"';
     $output .= ' id="' . $field->id . '"';
-    $output .= process_attrs($field->attributes);
+    $output .= process_attrs($field->element_attributes);
     $output .= ' value="' . $field->html_filter($field->_localize($field->value)) . '" />';
     return $output;
 }
@@ -308,7 +297,7 @@ sub render_reset {
     my $output = '<input type="reset" name="';
     $output .= $field->html_name . '"';
     $output .= ' id="' . $field->id . '"';
-    $output .= process_attrs($field->attributes);
+    $output .= process_attrs($field->element_attributes);
     $output .= ' value="' . $field->html_filter($field->value) . '" />';
     return $output;
 }
@@ -318,7 +307,7 @@ sub render_captcha {
 
     my $output .= '<img src="' . $self->captcha_image_url . '"/>';
     $output .= '<input id="' . $field->id . '" name="';
-    $output .= $field->html_name . '">';
+    $output .= $field->html_name . '"/>';
     return $output;
 }
 
@@ -336,31 +325,32 @@ HTML::FormHandler::Render::Simple - simple rendering role
 
 =head1 VERSION
 
-version 0.36003
+version 0.40000
 
 =head1 SYNOPSIS
 
-This is a Moose role that is an example of a very simple rendering
-routine for L<HTML::FormHandler>. It has almost no features, but can
-be used as an example for producing something more complex.
-The idea is to produce your own custom rendering roles...
+This is a Moose role that is an example of a simple rendering
+routine for L<HTML::FormHandler>. It's here as an example of
+how to write a custom renderer in one package, if you prefer
+that to using the widgets. It won't always be updated with
+improvements by default, because it was becoming a lot of work to update
+the rendering in multiple places.
 
-You are advised to create a copy of this module for use in your
-forms, since it is not possible to make improvements to this module
-and maintain backwards compatibility.
-
-In your Form class:
+For a 'MyApp::Form::Renderer' which you've created and modified,
+in your Form class:
 
    package MyApp::Form::Silly;
    use Moose;
    extends 'HTML::FormHandler::Model::DBIC';
-   with 'HTML::FormHandler::Render::Simple';
+   with 'MyApp::Form::Renderers';
 
 In a template:
 
    [% form.render %]
 
-or for individual fields:
+The widgets are rendered with C<< $field->render >>; rendering
+routines from a class like this use C<< $form->render_field('field_name') >>
+to render individual fields:
 
    [% form.render_field( 'title' ) %]
 

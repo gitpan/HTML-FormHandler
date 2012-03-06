@@ -27,11 +27,11 @@ HTML::FormHandler::Field::Boolean - a true or false field
 
 =head1 VERSION
 
-version 0.36003
+version 0.40000
 
 =head1 DESCRIPTION
 
-This field returns 1 if true, 0 if false.  The widget type is 'checkbox'.
+This field returns 1 if true, 0 if false.  The widget type is 'Checkbox'.
 Similar to Checkbox, except only returns values of 1 or 0.
 
 =head1 AUTHOR

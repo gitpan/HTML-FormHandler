@@ -12,7 +12,9 @@ sub render {
 
     my $output .= '<img src="' . $self->form->captcha_image_url . '"/>';
     $output .= '<input id="' . $self->id . '" name="';
-    $output .= $self->html_name . '">';
+    $output .= $self->html_name . '"';
+    $output .= process_attrs($self->element_attributes);
+    $output .= '/>';
 
     return $self->wrap_field( $result, $output );
 }
@@ -28,7 +30,7 @@ HTML::FormHandler::Widget::Field::Captcha - Captcha field rendering widget
 
 =head1 VERSION
 
-version 0.36003
+version 0.40000
 
 =head1 AUTHOR
 

@@ -9,6 +9,7 @@ with 'HTML::FormHandler::Model', 'HTML::FormHandler::Fields',
 with 'HTML::FormHandler::InitResult';
 with 'HTML::FormHandler::Widget::ApplyRole';
 with 'HTML::FormHandler::Traits';
+with 'HTML::FormHandler::Blocks';
 
 use Carp;
 use Class::MOP;
@@ -17,11 +18,13 @@ use HTML::FormHandler::Field;
 use Try::Tiny;
 use MooseX::Types::LoadableClass qw/ LoadableClass /;
 use namespace::autoclean;
+use HTML::FormHandler::Merge ('merge');
+use Sub::Name;
 
 use 5.008;
 
 # always use 5 digits after decimal because of toolchain issues
-our $VERSION = '0.36003';
+our $VERSION = '0.40000';
 
 
 # for consistency in api with field nodes
@@ -64,6 +67,16 @@ sub build_result {
     return $result;
 }
 
+has 'index' => (
+    is => 'ro', isa => 'HashRef[HTML::FormHandler::Field]', traits => ['Hash'],
+    default => sub {{}},
+    handles => {
+        add_to_index => 'set',
+        field_from_index => 'get',
+        field_in_index => 'exists',
+    }
+);
+
 has 'field_traits' => ( is => 'ro', traits => ['Array'], isa => 'ArrayRef',
     default => sub {[]}, handles => { 'has_field_traits' => 'count' } );
 has 'widget_name_space' => (
@@ -76,10 +89,14 @@ has 'widget_name_space' => (
         add_widget_name_space => 'push',
     },
 );
-has 'widget_form'       => ( is => 'ro', isa => 'Str', default => 'Simple' );
-has 'widget_wrapper'    => ( is => 'ro', isa => 'Str', default => 'Simple' );
+# it only really makes sense to set these before widget_form is applied in BUILD
+has 'widget_form'       => ( is => 'ro', isa => 'Str', default => 'Simple', writer => 'set_widget_form' );
+has 'widget_wrapper'    => ( is => 'ro', isa => 'Str', default => 'Simple', writer => 'set_widget_wrapper' );
+has 'do_form_wrapper' => ( is => 'rw', builder => 'build_do_form_wrapper' );
+sub build_do_form_wrapper { 0 }
 has 'no_widgets'        => ( is => 'ro', isa => 'Bool' );
 has 'no_preload'        => ( is => 'ro', isa => 'Bool' );
+has 'no_update'         => ( is => 'rw', isa => 'Bool', clearer => 'clear_no_update' );
 has 'active' => (
     is => 'rw',
     traits => ['Array'],
@@ -113,6 +130,7 @@ has 'update_field_list'   => ( is => 'rw',
     handles => {
         clear_update_field_list => 'clear',
         has_update_field_list => 'count',
+        set_update_field_list => 'set',
     },
 );
 has 'defaults' => ( is => 'rw', isa => 'HashRef', default => sub {{}}, traits => ['Hash'],
@@ -129,16 +147,71 @@ has 'html_prefix'   => ( isa => 'Bool', is  => 'ro' );
 has 'active_column' => ( isa => 'Str',  is  => 'ro' );
 has 'http_method'   => ( isa => 'Str',  is  => 'ro', default => 'post' );
 has 'enctype'       => ( is  => 'rw',   isa => 'Str' );
+has 'error_message' => ( is => 'rw', predicate => 'has_error_message', clearer => 'clear_error_message' );
+has 'success_message' => ( is => 'rw', predicate => 'has_success_message', clearer => 'clear_success_message' );
+# deprecated
 has 'css_class' =>     ( isa => 'Str',  is => 'ro' );
 has 'style'     =>     ( isa => 'Str',  is => 'rw' );
+
 has 'is_html5'  => ( isa => 'Bool', is => 'ro', default => 0 );
+# deprecated. use form_element_attr instead
 has 'html_attr' => ( is => 'rw', traits => ['Hash'],
    default => sub { {} }, handles => { has_html_attr => 'count',
-   set_html_attr => 'set', delete_html_attr => 'delete' }
+   set_html_attr => 'set', delete_html_attr => 'delete' },
+   trigger => \&_html_attr_set,
 );
+sub _html_attr_set {
+    my ( $self, $value ) = @_;
+    my $class = delete $value->{class};
+    $self->form_element_attr($value);
+    $self->add_form_element_class if $class;
+}
 
-sub attributes {
-    my $self = shift;
+{
+    # create the attributes and methods for
+    # form_element_attr, build_form_element_attr, form_element_class,
+    # form_wrapper_attr, build_form_wrapper_atrr, form_wrapper_class
+    no strict 'refs';
+    foreach my $attr ('form_wrapper', 'form_element' ) {
+        my $add_meth = "add_${attr}_class";
+        has "${attr}_attr" => ( is => 'rw', traits => ['Hash'],
+            builder => "build_${attr}_attr",
+            handles => {
+                "has_${attr}_attr" => 'count',
+                "get_${attr}_attr" => 'get',
+                "set_${attr}_attr" => 'set',
+                "delete_${attr}_attr" => 'delete',
+                "exists_${attr}_attr" => 'exists',
+            },
+        );
+        # create builders for _attr
+        my $attr_builder = __PACKAGE__ . "::build_${attr}_attr";
+        *$attr_builder = subname $attr_builder, sub {{}};
+        # create the 'class' slots
+        has "${attr}_class" => ( is => 'rw', isa => 'HFH::ArrayRefStr',
+            traits => ['Array'],
+            coerce => 1,
+            builder => "build_${attr}_class",
+            handles => {
+                "has_${attr}_class" => 'count',
+                "_add_${attr}_class" => 'push',
+           },
+        );
+        # create builders for classes
+        my $class_builder = __PACKAGE__ . "::build_${attr}_class";
+        *$class_builder = subname $class_builder, sub {[]};
+        # create wrapper for add_to_ to accept arrayref
+        my $add_to_class = __PACKAGE__ . "::add_${attr}_class";
+        my $_add_meth = __PACKAGE__ . "::_add_${attr}_class";
+        # create add method that takes an arrayref
+        *$add_to_class = subname $add_to_class, sub { shift->$_add_meth((ref $_[0] eq 'ARRAY' ? @{$_[0]} : @_)); }
+    }
+}
+
+sub attributes { shift->form_element_attributes(@_) }
+sub form_element_attributes {
+    my ( $self, $result ) = @_;
+    $result ||= $self->result;
     my $attr = {};
     $attr->{id} = $self->name;
     $attr->{action} = $self->action if $self->action;
@@ -146,12 +219,29 @@ sub attributes {
     $attr->{enctype} = $self->enctype if $self->enctype;
     $attr->{class} = $self->css_class if $self->css_class;
     $attr->{style} = $self->style if $self->style;
-    return {%$attr, %{$self->html_attr}};
+    $attr = {%$attr, %{$self->form_element_attr}};
+    my $class = [@{$self->form_element_class}];
+    $attr->{class} = $class if @$class;
+    my $mod_attr = $self->html_attributes($self, 'form_element', $attr);
+    return ref $mod_attr eq 'HASH' ? $mod_attr : $attr;
+}
+sub form_wrapper_attributes {
+    my ( $self, $result ) = @_;
+    $result ||= $self->result;
+    my $attr = {%{$self->form_wrapper_attr}};
+    my $class = [@{$self->form_wrapper_class}];
+    $attr->{class} = $class if @$class;
+    my $mod_attr = $self->html_attributes($self, 'form_wrapper', $attr);
+    return ref $mod_attr eq 'HASH' ? $mod_attr : $attr;
 }
 
-sub field_html_attributes {
-    my ( $self, $field, $type, $attrs ) = @_;
-    return;
+sub html_attributes {
+    my ( $self, $obj, $type, $attrs, $result ) = @_;
+    # deprecated 'field_html_attributes'; name changed, remove eventually
+    if( $self->can('field_html_attributes') ) {
+        $attrs = $self->field_html_attributes( $obj, $type, $attrs, $result );
+    }
+    return $attrs;
 }
 
 sub has_flag {
@@ -160,17 +250,43 @@ sub has_flag {
     return $self->$flag_name;
 }
 
-has 'widget_tags'         => (
+# deprecated. here only for compatibility
+# with previous versions. Use update_field_list
+# or update_subfields instead.
+has 'widget_tags' => (
+    isa => 'HashRef',
+    traits => ['Hash'],
+    is => 'rw',
+    default => sub {{}},
+    handles => {
+        has_widget_tags => 'count'
+    }
+);
+has 'form_tags'         => (
     traits => ['Hash'],
     isa => 'HashRef',
     is => 'ro',
-    default => sub {{}},
+    builder => 'build_form_tags',
     handles => {
-      get_tag => 'get',
+      _get_tag => 'get',
       set_tag => 'set',
       tag_exists => 'exists',
+      has_tag => 'exists',
     },
 );
+sub build_form_tags {{}}
+sub get_tag {
+    my ( $self, $name ) = @_;
+    return '' unless $self->tag_exists($name);
+    my $tag = $self->_get_tag($name);
+    return $self->$tag if ref $tag eq 'CODE';
+    return $tag unless $tag =~ /^%/;
+    ( my $block_name = $tag ) =~ s/^%//;
+    return $self->form->block($block_name)->render
+        if ( $self->form && $self->form->block_exists($block_name) );
+    return '';
+}
+
 has 'action' => ( is => 'rw' );
 has 'posted' => ( is => 'rw', isa => 'Bool', clearer => 'clear_posted' );
 has 'params' => (
@@ -249,17 +365,22 @@ sub BUILDARGS {
 sub BUILD {
     my $self = shift;
 
+    # temporary for compatibility: move widget_tags to update_field_list
+    $self->set_update_field_list( 'all', { tags => $self->widget_tags } )
+        if $self->has_widget_tags;
     $self->before_build; # hook to allow customizing forms
+    # HTML::FormHandler::Widget::Form::Simple is applied in Base
     $self->apply_widget_role( $self, $self->widget_form, 'Form' )
-        unless ( $self->no_widgets || $self->widget_form eq 'Simple' );
-    $self->_build_fields($self->field_traits);    # create the form fields (BuildFields.pm)
+        unless (  $self->no_widgets || $self->widget_form eq 'Simple' );
+    $self->build_fields;    # create the form fields (BuildFields.pm)
     $self->build_active if $self->has_active || $self->has_inactive || $self->has_flag('is_wizard');
+    $self->after_build; # hook for customizing
     return if defined $self->item_id && !$self->item;
-    # load values from object (if any)
-    # would rather not load results at all here, but I'm afraid it might
-    # break existing apps; added fudge flag no_preload to enable skipping.
-    # a well-behaved program that always does ->process shouldn't need
-    # this preloading.
+    # Load values from object (if any)
+    # Would rather not load results at all here, but skipping it breaks
+    # existing apps that perform certain actions between 'new' and 'process'.
+    # Added fudge flag no_preload to enable skipping.
+    # A well-behaved program that always does ->process shouldn't need this preloading.
     unless( $self->no_preload ) {
         if ( my $init_object = $self->use_init_obj_over_item ?
             ($self->init_object || $self->item) : ( $self->item || $self->init_object ) ) {
@@ -272,8 +393,18 @@ sub BUILD {
     $self->dump_fields if $self->verbose;
     return;
 }
-
+sub build_fields {
+    my $self = shift;
+    my $field_updates = merge($self->update_field_list, $self->update_subfields);
+    $self->{field_updates} = $field_updates if keys %$field_updates;
+    $self->_build_fields;
+    delete $self->{field_updates};
+    $self->clear_update_field_list;
+    # set update_subfields instead of clear, so that builder methods won't run again
+    $self->update_subfields({});
+}
 sub before_build {}
+sub after_build {}
 
 sub process {
     my $self = shift;
@@ -282,7 +413,7 @@ sub process {
     $self->clear if $self->processed;
     $self->setup_form(@_);
     $self->validate_form      if $self->has_params;
-    $self->update_model       if $self->validated;
+    $self->update_model       if ( $self->validated && !$self->no_update );
     $self->after_update_model if $self->validated;
     $self->dump_fields        if $self->verbose;
     $self->processed(1);
@@ -293,7 +424,7 @@ sub run {
     my $self = shift;
     $self->setup_form(@_);
     $self->validate_form      if $self->has_params;
-    $self->update_model       if $self->validated;
+    $self->update_model       if ( $self->validated && !$self->no_update );;
     $self->after_update_model if $self->validated;
     my $result = $self->result;
     $self->clear;
@@ -317,6 +448,7 @@ sub clear {
     $self->clear_result;
     $self->clear_use_defaults_over_obj;
     $self->clear_use_init_obj_over_item;
+    $self->clear_no_update;
 }
 
 sub values { shift->value }
@@ -576,12 +708,15 @@ sub _can_deflate { }
 
 sub update_fields {
     my $self = shift;
-    if( $self->has_update_field_list ) {
+    if( $self->has_update_field_list || $self->has_update_subfields ) {
+        my $do_updates = $self->build_update_subfields;
         my $updates = $self->update_field_list;
+        $updates = merge($do_updates, $updates);
         foreach my $field_name ( keys %{$updates} ) {
             $self->update_field($field_name, $updates->{$field_name} );
         }
         $self->clear_update_field_list;
+        $self->clear_update_subfields;
     }
     if( $self->has_defaults ) {
         my $defaults = $self->defaults;
@@ -602,7 +737,12 @@ sub update_field {
     while ( my ( $attr_name, $attr_value ) = each %{$updates} ) {
         confess "invalid attribute '$attr_name' passed to update_field"
             unless $field->can($attr_name);
-        $field->$attr_name($attr_value);
+        if( $attr_name eq 'tags' ) {
+            $field->set_tag(%$attr_value);
+        }
+        else {
+            $field->$attr_name($attr_value);
+        }
     }
 }
 
@@ -620,7 +760,7 @@ HTML::FormHandler - HTML forms using Moose
 
 =head1 VERSION
 
-version 0.36003
+version 0.40000
 
 =head1 SYNOPSIS
 
@@ -651,9 +791,7 @@ values and error messages) instead:
         $result->render;
     }
 
-An example of a custom form class (you could also use a 'field_list'
-like the dynamic form example if you don't want to use the 'has_field'
-field declaration sugar):
+An example of a custom form class:
 
     package MyApp::Form::User;
 
@@ -666,8 +804,8 @@ field declaration sugar):
     has_field 'name' => ( type => 'Text' );
     has_field 'age' => ( type => 'PosInteger', apply => [ 'MinimumAge' ] );
     has_field 'birthdate' => ( type => 'DateTime' );
-    has_field 'birthdate.month' => ( type => 'Month' ); # Explicitly split
-    has_field 'birthdate.day' => ( type => 'MonthDay' ); # fields for renderer
+    has_field 'birthdate.month' => ( type => 'Month' );
+    has_field 'birthdate.day' => ( type => 'MonthDay' );
     has_field 'birthdate.year' => ( type => 'Year' );
     has_field 'hobbies' => ( type => 'Multiple' );
     has_field 'address' => ( type => 'Text' );
@@ -718,7 +856,7 @@ details, or L<Catalyst::Manual::Tutorial::09_AdvancedCRUD::09_FormHandler>.
 
 *** Although documentation in this file provides some overview, it is mainly
 intended for API documentation. See L<HTML::FormHandler::Manual::Intro>
-for a more detailed introduction.
+for an introduction, with links to other documentation.
 
 HTML::FormHandler maintains a clean separation between form construction
 and form rendering. It allows you to define your forms and fields in a
@@ -734,8 +872,8 @@ One of its goals is to keep the controller/application program interface as
 simple as possible, and to minimize the duplication of code. In most cases,
 interfacing your controller to your form is only a few lines of code.
 
-With FormHandler you'll never spend hours trying to figure out how to make a
-simple HTML change that would take one minute by hand. Because you CAN do it
+With FormHandler you shouldn't have to spend hours trying to figure out how to make a
+simple HTML change that would take one minute by hand. Because you _can_ do it
 by hand. Or you can automate HTML generation as much as you want, with
 template widgets or pure Perl rendering classes, and stay completely in
 control of what, where, and how much is done automatically. You can define
@@ -754,8 +892,7 @@ a renderer as an external object either).  There are currently two flavors:
 all-in-one solutions like L<HTML::FormHandler::Render::Simple> and
 L<HTML::FormHandler::Render::Table> that contain methods for rendering
 field widget classes, and the L<HTML::FormHandler::Widget> roles, which are
-more atomic roles which are automatically applied to fields and form if a
-'render' method does not already exist. See
+more atomic roles which are automatically applied to fields and form. See
 L<HTML::FormHandler::Manual::Rendering> for more details.
 (And you can easily use hand-build forms - FormHandler doesn't care.)
 
@@ -777,7 +914,7 @@ The new constructor takes name/value pairs:
     );
 
 No attributes are required on new. The form's fields will be built from
-the form definitions. If no initial data object has been provided, the form
+the form definitions. If no initial data object or defaults have been provided, the form
 will be empty. Most attributes can be set on either 'new' or 'process'.
 The common attributes to be passed in to the constructor for a database form
 are either item_id and schema or item:
@@ -786,7 +923,7 @@ are either item_id and schema or item:
    item     - database row object
    schema   - (for DBIC) the DBIx::Class schema
 
-The following are occasionally passed in, but are more often set
+The following are sometimes passed in, but are also often set
 in the form class:
 
    item_class  - source name of row
@@ -858,9 +995,14 @@ for using to fill in the form from C<< $form->fif >>.
 A hash of inflated values (that would be used to update the database for
 a database form) can be retrieved with C<< $form->value >>.
 
+If you don't want to update the database on this process call, you can
+set the 'no_update' flag:
+
+   $form->process( item => $book, params => $params, no_update => 1 );
+
 =head3 params
 
-Parameters are passed in or already set when you call 'process'.
+Parameters are passed in when you call 'process'.
 HFH gets data to validate and store in the database from the params hash.
 If the params hash is empty, no validation is done, so it is not necessary
 to check for POST before calling C<< $form->process >>. (Although see
@@ -913,7 +1055,7 @@ a form with empty params. Most of the time this works OK, but if you
 have a small form with only the controls that do not return a post
 parameter if unselected (checkboxes and select lists), then the form
 will not be validated if everything is unselected. For this case you
-can either add a hidden field, or use the 'posted' flag:
+can either add a hidden field as an 'indicator', or use the 'posted' flag:
 
    $form->process( posted => ($c->req->method eq 'POST'), params => ... );
 
@@ -984,8 +1126,9 @@ alternative to 'has_field' in small, dynamic forms to create fields.
        field_two => 'Text,
     ]
 
-Or the field list can be set inside a form class, when you want to
-add fields to the form depending on some other state.
+The field list can be set inside a form class, when you want to
+add fields to the form depending on some other state, although
+you can also create all the fields and set some of them inactive.
 
    sub field_list {
       my $self = shift;
@@ -1015,12 +1158,38 @@ which can also be used in a form to do specific field updates:
         my $self = shift;
         $self->field('foo')->temp( 'foo_temp' );
         $self->field('bar')->default( 'foo_value' );
+        $self->next::method();
     }
 
 (Note that you although you can set a field's 'default', you can't set a
 field's 'value' directly here, since it will
 be overwritten by the validation process. Set the value in a field
 validation method.)
+
+=head3 update_subfields
+
+Yet another way to provide settings for the field, except this one is intended for
+use in roles and compound fields, and is only executed when the form is
+initially built. It takes the same field name keys as 'update_field_list', plus
+'all' and 'by_flag'.
+
+    sub build_update_subfields {{
+        all => { tags => { wrapper_tag => 'p' } },
+        foo => { element_class => 'blue' },
+    }}
+
+The 'all' hash key will apply updates to all fields (conflicting attributes
+in a field definition take precedence.)
+
+The 'by_flag' hash key will apply updates to fields with a particular flag.
+The currently supported subkeys are 'compound', 'repeatable', and 'contains'.
+This is useful in this context for turning on the rendering
+wrappers for compounds and repeatables, which are off by default. (The
+repeatable instances are wrapped by default.)
+
+    sub build_update_subfields {{
+        by_type => { compound => { do_wrapper => 1 } }
+    }}
 
 =head3 defaults
 
@@ -1057,8 +1226,8 @@ that state will be effective for the life of the form object. Fields specified a
 active/inactive on 'process' will have the field's '_active' flag set for the life
 of the request (the _active flag will be cleared when the form is cleared).
 
-The 'sorted_fields' method returns only active fields. The 'fields' method returns
-all fields.
+The 'sorted_fields' method returns only active fields, sorted according to the
+'order' attribute. The 'fields' method returns all fields.
 
    foreach my $field ( $self->sorted_fields ) { ... }
 
@@ -1067,11 +1236,9 @@ methods.
 
 =head3 field_name_space
 
-Use to set the name space used to locate fields that
-start with a "+", as: "+MetaText". Fields without a "+" are loaded
-from the "HTML::FormHandler::Field" name space. If 'field_name_space'
-is not set, then field types with a "+" must be the complete package
-name.
+Use to look for field during form construction. If a field is not found
+with the field_name_space (or HTML::FormHandler/HTML::FormHandlerX),
+the 'type' must start with a '+' and be the complete package name.
 
 =head3 fields
 
@@ -1100,34 +1267,7 @@ Pass a second true value to die on errors.
 Most validation is performed on a per-field basis, and there are a number
 of different places in which validation can be performed.
 
-=head3 Apply actions
-
-The 'actions' array contains a sequence of transformations and constraints
-(including Moose type constraints) which will be applied in order. The 'apply'
-sugar is used to add to the actions array in field classes. In a field definition
-elements of the 'apply' array will added to the 'actions' array.
-
-The current value of the field is passed in to the subroutines, but it has
-no access to other field information. If you need more information to
-perform validation, you should use one of the other validation methods.
-
-L<HTML::FormHandler::Field::Compound> fields receive as value
-a hash containing values of their child fields - this may be used for
-easy creation of objects (like DateTime).
-See L<HTML::FormHandler::Field/apply> for more documentation.
-
-   has_field 'test' => ( apply => [ 'MyConstraint',
-                         { check => sub {... },
-                           message => '....' },
-                         { transform => sub { ... },
-                           message => '....' }
-                         ] );
-
-=head3 Field class validate method
-
-The 'validate' method can be used in custom field classes to perform additional
-validation.  It has access to the field ($self).  This method is called after the
-actions are performed.
+See also L<HTML::FormHandler::Manual::Validation>.
 
 =head3 Form class validation for individual fields
 
@@ -1160,6 +1300,8 @@ This is the best place to do validation checks that depend on the values of
 more than one field.
 
 =head2 Accessing errors
+
+Also see L<HTML::FormHandler::Manual::Errors>.
 
 Set an error in a field with C<< $field->add_error('some error string'); >>.
 Set a form error not tied to a specific field with
@@ -1198,10 +1340,12 @@ keep the form object clean.
 
 =head3 name
 
-The form's name.  Useful for multiple forms.
-It is used to construct the default 'id' for fields, and is used
-for the HTML field name when 'html_prefix' is set.
-The default is "form" + a one to three digit random number.
+The form's name.  Useful for multiple forms. Used for the form element 'id'.
+When 'html_prefix' is set it is used to construct the field 'id'
+and 'name'.  The default is "form" + a one to three digit random number.
+Because the HTML standards have flip-flopped on whether the HTML
+form element can contain a 'name' attribute, please set a name attribute
+using 'form_element_attr'.
 
 =head3 init_object
 
@@ -1305,14 +1449,18 @@ to be used for defaults instead of the item.
 
 =head2 For use in HTML
 
-   html_attr - hashref for setting arbitrary HTML attributes
-         has '+html_attr' =>
-           ( default => sub { { class => '...', method => '...' } } );
+   form_element_attr - hashref for setting arbitrary HTML attributes
+      set in form with: sub build_form_element_attr {...}
+   form_element_class - arrayref for setting form tag class
+   form_wrapper_attr - hashref for form wrapper element attributes
+      set in form with: sub build_form_wrapper_attr {...}
+   form_wrapper_class - arrayref for setting wrapper class
+   do_form_wrapper - flag to wrap the form
    http_method - For storing 'post' or 'get'
    action - Store the form 'action' on submission. No default value.
    uuid - generates a string containing an HTML field with UUID
 
-Deprecated (use html_attr instead):
+Discouraged (use form_element_attr instead):
 
    css_class - adds a 'class' attribute to the form tag
    style - adds a 'style' attribute to the form tag
@@ -1320,20 +1468,23 @@ Deprecated (use html_attr instead):
 
 Note that the form tag contains an 'id' attribute which is set to the
 form name. The standards have been flip-flopping over whether a 'name'
-attribute is valid. It can be set with 'html_attr'.
+attribute is valid. It can be set with 'form_element_attr'.
 
 The rendering of the HTML attributes is done using the 'process_attrs'
-function and the 'attributes' method, which munges the 'html_attr' hash
-for backward compatibility, etc.
+function and the 'element_attributes' or 'wrapper_attributes' method,
+which adds other attributes in for backward compatibility, and calls
+the 'html_attributes' hook.
 
-For field HTML attributes, there is a form method hook, 'field_html_attributes',
-which can be used to customize/modify/localize field HTML attributes.
+For HTML attributes, there is a form method hook, 'html_attributes',
+which can be used to customize/modify/localize form & field HTML attributes.
+Types: element, wrapper, label, form_element, form_wrapper, checkbox_label
 
-   sub field_html_attributes {
+   sub html_attributes {
        my ( $self, $field, $type, $attr ) = @_;
        $attr->{class} = 'label' if $type eq 'label';
        $attr->{placeholder} = $self->_localize($attr->{placeholder})
            if exists $attr->{placeholder};
+       return $attr;
    }
 
 Also see the documentation in L<HTML::FormHandler::Field>.

@@ -30,12 +30,23 @@ has 'do_not_reload' => ( isa => 'Bool', is => 'ro' );
 sub BUILD {
     my $self = shift;
 
+    $self->options_method;
     if( $self->options && $self->has_options ) {
         $self->options_from('build');
         $self->default_from_options([$self->options]);
     }
     $self->input_without_param; # vivify
 }
+
+has 'options_method' => (
+    traits  => ['Code'],
+    is      => 'rw',
+    isa     => 'CodeRef',
+    predicate => 'has_options_method',
+    handles => {
+        get_options => 'execute_method',
+    },
+);
 
 has 'set_options' => ( isa => 'Str', is => 'ro');
 sub _set_options_meth {
@@ -73,7 +84,6 @@ sub _form_options {
 has 'multiple'         => ( isa => 'Bool', is => 'rw', default => '0' );
 # following is for unusual case where a multiple select is a has_many type relation
 has 'has_many'         => ( isa => 'Str', is => 'rw' );
-has '+deflate_to'      => ( default => 'fif' );
 has 'size'             => ( isa => 'Int|Undef', is => 'rw' );
 has 'label_column'     => ( isa => 'Str',       is => 'rw', default => 'name' );
 has 'localize_labels'  => ( isa => 'Bool', is => 'rw' );
@@ -82,6 +92,7 @@ has 'auto_widget_size' => ( isa => 'Int',       is => 'rw', default => '0' );
 has 'sort_column'      => ( isa => 'Str',       is => 'rw' );
 has '+widget'          => ( default => 'select' );
 has 'empty_select'     => ( isa => 'Str',       is => 'rw' );
+has '+deflate_method'  => ( default => sub { \&select_deflate } );
 has '+input_without_param' => ( lazy => 1, builder => 'build_input_without_param' );
 sub build_input_without_param {
     my $self = shift;
@@ -199,7 +210,11 @@ sub _load_options {
         if ( $self->options_from eq 'build' ||
         ( $self->has_options && $self->do_not_reload ) );
     my @options;
-    if ( $self->_can_form_options ) {
+    if( $self->has_options_method ) {
+        @options = $self->get_options;
+        $self->options_from('method');
+    }
+    elsif ( $self->_can_form_options ) {
         @options = $self->_form_options;
         $self->options_from('method');
     }
@@ -277,7 +292,7 @@ before 'value' => sub {
     }
 };
 
-sub deflate {
+sub select_deflate {
     my ( $self, $value ) = @_;
 
     return $value unless ( $self->has_many && $self->multiple );
@@ -300,7 +315,7 @@ HTML::FormHandler::Field::Select - select fields
 
 =head1 VERSION
 
-version 0.36003
+version 0.40000
 
 =head1 DESCRIPTION
 
@@ -326,7 +341,7 @@ form ('options_<fieldname>') or from the database.
 
 In a field declaration:
 
-   has_field 'opt_in' => ( type => 'Select', widget => 'radio_group',
+   has_field 'opt_in' => ( type => 'Select', widget => 'RadioGroup',
       options => [{ value => 0, label => 'No'}, { value => 1, label => 'Yes'} ] );
 
 In a custom field class:
@@ -345,6 +360,11 @@ In a custom field class:
            } @days
        ];
    }
+
+With a coderef:
+
+   has_field 'flim' => ( type => 'Select', options_method => \&flim_options );
+   sub flim_options {  <return options array> }
 
 In a form:
 
@@ -429,9 +449,9 @@ selected options at the top of the list.
 This is an array of hashes for this field.
 Each has must have a label and value keys.
 
-=head2 set_options
+=head2 options_method
 
-Name of form method that sets options
+Coderef of method to return options
 
 =head2 multiple
 

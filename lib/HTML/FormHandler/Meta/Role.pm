@@ -41,6 +41,18 @@ has 'page_list' => (
     }
 );
 
+has 'block_list' => (
+    traits    => ['Array'],
+    is        => 'rw',
+    isa       => 'ArrayRef',
+    default   => sub { [] },
+    handles  => {
+        add_to_block_list => 'push',
+        has_block_list => 'count',
+        clear_block_list => 'clear',
+    }
+);
+
 has 'found_hfh' => ( is => 'rw', default => '0' );
 
 use namespace::autoclean;
@@ -55,7 +67,7 @@ HTML::FormHandler::Meta::Role - field_list and apply_list
 
 =head1 VERSION
 
-version 0.36003
+version 0.40000
 
 =head1 SYNOPSIS
 

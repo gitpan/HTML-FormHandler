@@ -6,7 +6,7 @@ use Moose::Exporter;
 
 
 Moose::Exporter->setup_import_methods(
-    with_caller => [ 'has_field', 'apply' ],
+    with_caller => [ 'has_field', 'has_block', 'apply' ],
     also        => 'Moose::Role',
 );
 
@@ -29,6 +29,11 @@ sub has_field {
     $class->meta->add_to_field_list( { name => $name, %options } );
 }
 
+sub has_block {
+    my ( $class, $name, %options ) = @_;
+    $class->meta->add_to_block_list( { name => $name, %options } );
+}
+
 sub apply {
     my ( $class, $arrayref ) = @_;
     $class->meta->add_to_apply_list( @{$arrayref} );
@@ -46,7 +51,7 @@ HTML::FormHandler::Moose::Role - to add sugar to roles
 
 =head1 VERSION
 
-version 0.36003
+version 0.40000
 
 =head1 SYNOPSIS
 

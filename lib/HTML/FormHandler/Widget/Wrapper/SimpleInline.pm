@@ -7,8 +7,6 @@ use namespace::autoclean;
 with 'HTML::FormHandler::Widget::Wrapper::Base';
 
 
-has 'auto_fieldset' => ( isa => 'Bool', is => 'rw', lazy => 1, default => 1 );
-
 sub wrap_field {
     my ( $self, $result, $rendered_widget ) = @_;
 
@@ -24,8 +22,8 @@ sub wrap_field {
         $output .= "<$tag" . process_attrs( $self->wrapper_attributes($result) ) . ">";
     }
 
-    if ( !$self->has_flag('no_render_label') && length( $self->label ) > 0 ) {
-        $output .= $self->render_label;
+    if ( $self->do_label && length( $self->label ) > 0 ) {
+        $output .= $self->do_render_label($result);
     }
 
     $output .= $rendered_widget;
@@ -49,7 +47,7 @@ HTML::FormHandler::Widget::Wrapper::SimpleInline - simple field wrapper
 
 =head1 VERSION
 
-version 0.36003
+version 0.40000
 
 =head1 SYNOPSIS
 

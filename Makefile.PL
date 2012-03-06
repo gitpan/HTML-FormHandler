@@ -14,7 +14,6 @@ my %WriteMakefileArgs = (
   "ABSTRACT" => "HTML forms using Moose",
   "AUTHOR" => "FormHandler Contributors - see HTML::FormHandler",
   "BUILD_REQUIRES" => {
-    "HTML::TreeBuilder" => "3.23",
     "Test::Differences" => 0,
     "Test::Exception" => 0,
     "Test::Memory::Cycle" => "1.04",
@@ -31,11 +30,13 @@ my %WriteMakefileArgs = (
   "PREREQ_PM" => {
     "Carp" => 0,
     "Class::Load" => "0.06",
+    "Data::Clone" => 0,
     "DateTime" => 0,
     "DateTime::Format::Strptime" => 0,
     "Email::Valid" => 0,
     "File::ShareDir" => 0,
     "File::Spec" => 0,
+    "HTML::TreeBuilder" => "3.23",
     "Locale::Maketext" => "1.09",
     "Moose" => "2.0007",
     "MooseX::Getopt" => "0.16",
@@ -43,13 +44,14 @@ my %WriteMakefileArgs = (
     "MooseX::Types::Common" => 0,
     "MooseX::Types::LoadableClass" => "0.006",
     "Sub::Exporter" => 0,
+    "Sub::Name" => 0,
     "Try::Tiny" => 0,
     "aliased" => 0,
     "namespace::autoclean" => "0.09"
   },
-  "VERSION" => "0.36003",
+  "VERSION" => "0.40000",
   "test" => {
-    "TESTS" => "t/*.t"
+    "TESTS" => "t/*.t t/blocks/*.t t/bootstrap/*.t t/compound/*.t t/errors/*.t t/field_setup/*.t t/fields/*.t t/form_setup/*.t t/infl_defl/*.t t/moose/*.t t/render/*.t t/repeatable/*.t t/result/*.t t/validation/*.t t/wizard/*.t"
   }
 );
 

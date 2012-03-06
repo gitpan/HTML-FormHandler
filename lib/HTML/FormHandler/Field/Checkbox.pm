@@ -6,10 +6,11 @@ extends 'HTML::FormHandler::Field';
 our $VERSION = '0.02';
 
 
-has '+widget'              => ( default => 'checkbox' );
+has '+widget'              => ( default => 'Checkbox' );
 has 'checkbox_value'       => ( is      => 'rw', default => 1 );
 has '+input_without_param' => ( default => 0 );
 has '+type_attr'           => ( default => 'checkbox' );
+has 'option_label'         => ( is => 'rw' );
 
 sub value {
     my $field = shift;
@@ -37,7 +38,7 @@ HTML::FormHandler::Field::Checkbox - a checkbox field type
 
 =head1 VERSION
 
-version 0.36003
+version 0.40000
 
 =head1 DESCRIPTION
 

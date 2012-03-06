@@ -1,12 +1,69 @@
-0.36003 Tue Feb 14, 2012
-    Bug rendering fields with hidden widget where label is rendered.
-       Switch back to no wrapping of hidden fields.
+0.40000 Tue Mar 6, 2012
 
-0.36002 Fri Feb 2, 2012
-    Fixed bug introduced in last release where rendering roles are overwritten
-       by HTML::FormHandler::Render::Simple being applied on top.
-    Add skip to t/config.t test for Config::Any
-    Set language handle in t/render_errors.t test.
+    **** There are many changes to rendering, many of them incompatible.
+       These changes *will* break existing form rendering.
+       You must check that your rendering works before upgrading. Making a copy
+       of the old code (the widget and rendering roles) may be helpful (or use
+       the compatibility libraries -- see below).
+       I always prefer to maintain backward compatibility if possible, but
+       a number of the improvements were not possible without breaking
+       compatibility, so I did a lot of changes at once.
+    Compatibility libraries are provided to help support rendering that relied
+       on the earlier libriaries at:
+       git://github.com/gshank/html-formhandler_pre-0.40_compat.git
+       README at: https://github.com/gshank/html-formhandler_pre-0.40_compat/blob/master/README
+
+    Add 'no_update' flag to allow skipping model_update.
+    Remove 'deflate_to' flag; provide new inflation/deflation methods.
+        see HTML::FormHandler::Manual::InflationDeflation
+    New 'build_id_method' to provide different builder method for field IDs.
+    'auto_fieldset' and 'no_auto_fieldset' no longer used. No automatic fieldsets.
+       Can be added with do_wrapper => 1 and a tag of wrapper_tag => 'fieldset'
+    Localize the value of the reset button.
+    Tests and fix for form 'validate_<field_name>' and 'default_<field_name>' method
+        for repeatables fields.
+    Change default radiogroup rendering to not use <br /> elements. Add back
+        with tag  radio_br_after => 1
+    Switch to using coderef for deflate_method; custom fields with deflate sub
+        will need to be modified.
+    Add block rendering (HTML::FormHandler::Blocks)
+    Re-do code for default & validate method construction; now provides
+       'default_method' and 'validate_method' coderef setting
+    Remove 'init_value_*' from Field (deprecated for years).
+    Use Hash::Merge in merging update field info on creation
+    Fix bug in copying tags to fields by cloning field definitions
+    Switch to using name 'element_attr' in fields instead of 'html_attr'
+    Put wrapper class 'hfh-repinst' on Repeatable Instances unless they already have a wrapper class
+    Remove 'javascript' field attribute. Put into *_attr hashref.
+    Automatically put 'error' on element and wrapper.
+    Switch to having the 'class' as a separate attribute from the _attr collection.
+       Use 'element_class', 'wrapper_class' & 'label_class' arrayrefs
+    Switch to having widget names by default be camel case; provide convenience
+       methods for templates - uwidget, uwrapper, twidget, twrapper.
+       ** this change will affect existing template systems, if they use the
+          $field->widget method to get the widget name. See example templates.
+       and conversion methods 'ucc_widget' and 'cc_widget' in HTML::FormHandler::Render::Util
+    Create t/share/templates/form/form_in_one.tt
+    Switch default rendering of checkbox to have label wrap input. Checkboxes are
+        complicated. See t/render/checkbox.t for various options.
+    Add 'build_update_subfields' to 'update_fields' processing to allow moving
+       more of rendering settings into a separate role
+    Change form 'html_attr' to 'form_element_attr', and use builder
+    Change interface of html_field_attributes to also return attr (instead of just in-place)
+    Remove 'label_no_colon', make labels without colon the default.
+       Add widget tag 'label_after'. Use "label_after => ': '" for old behavior
+    Add widget tag 'label_tag'. Default 'label'.
+    Widget_tags replaced with 'form_tags' in form and 'tags' in Field.
+       takes builder 'build_form_tags' instead of default
+    Repeatable elements get automatic 'div' wrapper
+    Remove attribute 'auto_fieldset'; wrapping form is no longer a default;
+       Add back with sub build_do_form_wrapper {1},
+       and form_tags => { wrapper_tag => 'fieldset' }
+    Remove automatic wrapping of compounds.
+       Enable wrapping with do_wrapper => 1 (there's also do_label => 1)
+    Put form wrapper around form tag instead of inside
+    wrapper_start and wrapper_end tags not used to skip wrapper; use do_wrapper => 0
+    The 'get_tag' method now returns '' instead of undef if tag doesn't exist.
 
 0.36001 Tues Jan 24, 2012
     Add two more widget tags: 'no_auto_fieldset' and 'no_compound_wrapper'

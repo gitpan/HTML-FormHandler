@@ -15,7 +15,7 @@ sub render {
     $output .= qq{ size="$t"} if $t = $self->size;
     $output .= qq{ maxlength="$t"} if $t = $self->maxlength;
     $output .= ' value="' . $self->html_filter($result->fif) . '"';
-    $output .= process_attrs($self->attributes);
+    $output .= process_attrs($self->element_attributes($result));
     $output .= ' />';
     return $self->wrap_field( $result, $output );
 }
@@ -31,7 +31,7 @@ HTML::FormHandler::Widget::Field::Password - password rendering widget
 
 =head1 VERSION
 
-version 0.36003
+version 0.40000
 
 =head1 AUTHOR
 

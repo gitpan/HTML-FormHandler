@@ -12,7 +12,7 @@ sub render {
     $output = '<input type="file" name="';
     $output .= $self->html_name . '"';
     $output .= ' id="' . $self->id . '"';
-    $output .= process_attrs($self->attributes);
+    $output .= process_attrs($self->element_attributes($result));
     $output .= ' />';
     return $self->wrap_field($result, $output);
 }
@@ -29,7 +29,7 @@ HTML::FormHandler::Widget::Field::Upload - update field rendering widget
 
 =head1 VERSION
 
-version 0.36003
+version 0.40000
 
 =head1 AUTHOR
 

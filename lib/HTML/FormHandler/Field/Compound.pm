@@ -8,9 +8,11 @@ with 'HTML::FormHandler::BuildFields';
 with 'HTML::FormHandler::InitResult';
 
 
-has '+widget' => ( default => 'compound' );
+has '+widget' => ( default => 'Compound' );
 has 'is_compound' => ( is => 'ro', isa => 'Bool', default => 1 );
 has 'item' => ( is => 'rw', clearer => 'clear_item' );
+has '+do_wrapper' => ( default => 0 );
+has '+do_label'   => ( default => 0 );
 
 has '+field_name_space' => (
     default => sub {
@@ -23,7 +25,16 @@ has '+field_name_space' => (
 
 sub BUILD {
     my $self = shift;
+    $self->build_fields;
+}
+
+sub build_fields {
+    my $self = shift;
+    $self->{field_updates} = $self->update_subfields;
     $self->_build_fields;
+    delete $self->{field_updates};
+    # set update_subfields instead of clear, so that builder methods won't run again
+    $self->update_subfields({});
 }
 
 # this is for testing compound fields outside
@@ -85,7 +96,7 @@ HTML::FormHandler::Field::Compound - field consisting of subfields
 
 =head1 VERSION
 
-version 0.36003
+version 0.40000
 
 =head1 SYNOPSIS
 
@@ -117,16 +128,6 @@ fields (and subclasses, like Repeatable).
 The process method of this field runs the process methods on the child fields
 and then builds a hash of these fields values.  This hash is available for
 further processing by L<HTML::FormHandler::Field/actions> and the validate method.
-
-Example:
-
-  has_field 'date_time' => (
-      type => 'Compound',
-      actions => [ { transform => sub{ DateTime->new( $_[0] ) } } ],
-  );
-  has_field 'date_time.year' => ( type => 'Text', );
-  has_field 'date_time.month' => ( type => 'Text', );
-  has_field 'date_time.day' => ( type => 'Text', );
 
 =head2 widget
 

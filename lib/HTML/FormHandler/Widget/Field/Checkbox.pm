@@ -1,6 +1,7 @@
 package HTML::FormHandler::Widget::Field::Checkbox;
 # ABSTRACT: HTML attributes field role
 
+
 use Moose::Role;
 use namespace::autoclean;
 use HTML::FormHandler::Render::Util ('process_attrs');
@@ -15,10 +16,9 @@ sub render {
         . $self->html_filter($checkbox_value) . '"';
     $output .= ' checked="checked"'
         if $result->fif eq $checkbox_value;
-    $output .= process_attrs($self->attributes);
+    $output .= process_attrs($self->element_attributes($result));
     $output .= ' />';
-
-    return $self->wrap_field( $result, $output );
+    return $self->wrap_field( $result, $output, 'wrap_label' );
 }
 
 1;
@@ -32,7 +32,11 @@ HTML::FormHandler::Widget::Field::Checkbox - HTML attributes field role
 
 =head1 VERSION
 
-version 0.36003
+version 0.40000
+
+=head1 SYNOPSIS
+
+Checkbox field renderer
 
 =head1 AUTHOR
 
