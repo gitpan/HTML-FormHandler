@@ -10,7 +10,7 @@ our $VERSION = '0.04';
 
 
 has '+widget' => ( default => 'Compound' );
-has '+deflate_method' => ( default => sub { \&datetime_deflate } );
+has '+inflate_default_method' => ( default => sub { \&datetime_inflate } );
 
 our $class_messages = {
     'datetime_invalid' => 'Not a valid DateTime',
@@ -23,7 +23,7 @@ sub get_class_messages {
     }
 }
 
-sub datetime_deflate {
+sub datetime_inflate {
     my ( $self, $value ) = @_;
     return $value unless ref $value eq 'DateTime';
     my %hash;
@@ -72,7 +72,7 @@ HTML::FormHandler::Field::DateTime - compound DateTime field
 
 =head1 VERSION
 
-version 0.40000
+version 0.40001
 
 =head1 DESCRIPTION
 

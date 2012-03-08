@@ -24,7 +24,7 @@ use Sub::Name;
 use 5.008;
 
 # always use 5 digits after decimal because of toolchain issues
-our $VERSION = '0.40000';
+our $VERSION = '0.40001';
 
 
 # for consistency in api with field nodes
@@ -760,7 +760,7 @@ HTML::FormHandler - HTML forms using Moose
 
 =head1 VERSION
 
-version 0.40000
+version 0.40001
 
 =head1 SYNOPSIS
 

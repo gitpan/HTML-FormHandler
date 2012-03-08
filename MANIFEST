@@ -271,6 +271,7 @@ t/render/result.t
 t/render/select.t
 t/render/simple.t
 t/render/table.t
+t/render/util.t
 t/render/widget_loading.t
 t/render/widget_tags.t
 t/render/widgets.t

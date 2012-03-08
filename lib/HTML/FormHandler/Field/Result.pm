@@ -63,7 +63,7 @@ HTML::FormHandler::Field::Result - result class for fields
 
 =head1 VERSION
 
-version 0.40000
+version 0.40001
 
 =head1 SYNOPSIS
 
