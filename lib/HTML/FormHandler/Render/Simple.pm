@@ -25,22 +25,6 @@ sub render {
     return $output;
 }
 
-sub render_start {
-    my $self = shift;
-
-    my $output = '';
-    $output .= $self->get_tag('before');
-    if( $self->do_form_wrapper ) {
-        my $form_wrapper_tag = $self->get_tag('wrapper_tag') || 'fieldset';
-        my $attrs = process_attrs($self->form_wrapper_attributes);
-        $output .= qq{<$form_wrapper_tag$attrs>};
-    }
-    my $attrs = process_attrs($self->attributes);
-    $output .= qq{<form$attrs>};
-    $output .= $self->get_tag('after_start');
-
-    return $output
-}
 
 sub render_form_errors {
     my $self = shift;
@@ -50,17 +34,6 @@ sub render_form_errors {
     $output .= qq{\n<span class="error_message">$_</span>}
         for $self->all_form_errors;
     $output .= "\n</div>";
-    return $output;
-}
-
-sub render_end {
-    my $self = shift;
-
-    my $output = "</form>\n";
-    if( $self->do_form_wrapper ) {
-        my $wrapper_tag = $self->get_tag('wrapper_tag') || 'fieldset';
-        $output .= "</$wrapper_tag>";
-    }
     return $output;
 }
 
@@ -325,7 +298,7 @@ HTML::FormHandler::Render::Simple - simple rendering role
 
 =head1 VERSION
 
-version 0.40001
+version 0.40002
 
 =head1 SYNOPSIS
 
@@ -376,6 +349,9 @@ To render all the fields in a form in sorted order (using
 'sorted_fields' method).
 
 =head2 render_start, render_end
+
+These use the methods in L<HTML::FormHandler::Widget::Form::Simple> now. If
+you want to customize them, copy them to your own package.
 
 Will render the beginning and ending <form> tags and fieldsets. Allows for easy
 splitting up of the form if you want to hand-render some of the fields.

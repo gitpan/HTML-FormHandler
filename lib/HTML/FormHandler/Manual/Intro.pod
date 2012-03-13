@@ -11,7 +11,7 @@ HTML::FormHandler::Manual::Intro - introduction to using FormHandler
 
 =head1 VERSION
 
-version 0.40001
+version 0.40002
 
 =head1 SYNOPSIS
 
@@ -48,7 +48,7 @@ The most common way of using FormHandler is to create a form package. You
 must 'use' "HTML::FormHandler::Moose" and 'extend' FormHandler:
 
     package MyApp::Form::Sample;
-    use HTML::FormHandler::Moose:
+    use HTML::FormHandler::Moose;
     extends 'HTML::FormHandler';
 
 Then you add some fields with 'has_field', and a field 'type' (the short
@@ -82,7 +82,9 @@ of course.
 The form's 'process' method should be run on each request, passing in the
 request parameters:
 
-    $form->process( params => $c->request->body_parameters );
+    $form->process( params => $c->request->body_parameters,
+        action => $action,
+    );
 
 If the parameters are not empty, then validation will be performed. The
 corollary is that you should not pass in extra parameters when the form
@@ -228,13 +230,31 @@ on fields.
 You can use 'has_field' and 'has_block' in Moose roles:
 
     package MyApp::Form::Role::Address;
-    use HTML::FormHandler::Moose;
+    use HTML::FormHandler::Moose::Role;
 
     has_field 'foo';
     has_block 'bar';
 
 Your forms can inherit from base classes that set common application
 defaults. You can override field definitions with '+'.
+
+You can create 'compound' fields and include them in a form:
+
+    package MyApp::Form::Field::Complex;
+    use HTML::FormHandler::Moose;
+    extends 'HTML::FormHandler::Field::Compound';
+    has_field 'field1' => ( validate_method => \&validate_field1 );
+    has_field 'field2' => ( type => 'Select',
+        options_method => \&options_field2 );
+    sub validate_field1 { ... }
+    sub options_field2 { ... }
+    ...
+    package MyApp::Form::Complex;
+    use HTML::FormHandler::Moose;
+    extends 'HTML::FormHandler';
+    has '+field_name_space' => ( sub => {['MyApp::Form::Field']} );
+    has_field 'compound1' => ( type => 'Complex' );
+    has_field 'compound2' => ( type => 'Complex' );
 
 =head2 Testing
 

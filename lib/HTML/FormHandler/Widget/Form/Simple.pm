@@ -59,16 +59,29 @@ sub render_start {
 
     my $output = '';
     $output = $self->get_tag('before');
-    if( $self->do_form_wrapper ) {
-        my $form_wrapper_tag = $self->get_tag('wrapper_tag') || 'fieldset';
-        my $attrs = process_attrs($self->form_wrapper_attributes($result));
-        $output .= qq{<$form_wrapper_tag$attrs>};
-    }
+
+    my $wtag = $self->get_tag('wrapper_tag') || 'fieldset';
+
+    # render wrapper start if not fieldset
+    $output .= $self->render_wrapper_start($wtag, $result)
+        if $wtag ne 'fieldset';
+    # render form tag
     my $attrs = process_attrs($self->attributes($result));
     $output .= qq{<form$attrs>};
+    # render wrapper start if fieldset (not legal outside form tag)
+    $output .= $self->render_wrapper_start($wtag)
+        if $wtag eq 'fieldset';
     $output .= $self->get_tag('after_start');
 
     return $output
+}
+
+sub render_wrapper_start {
+    my ( $self, $wrapper_tag, $result ) = @_;
+    return '' unless $self->do_form_wrapper;
+    $result ||= $self->result;
+    my $attrs = process_attrs($self->form_wrapper_attributes($result));
+    return qq{<$wrapper_tag$attrs>};
 }
 
 sub render_form_errors { shift->render_form_messages(@_) }
@@ -103,14 +116,19 @@ sub render_end {
     my $self = shift;
 
     my $output = $self->get_tag('before_end');
+    my $wtag = $self->get_tag('wrapper_tag') || 'fieldset';
+    $output .= $self->render_wrapper_end($wtag) if $wtag eq 'fieldset';
     $output .= "\n</form>";
-    if( $self->do_form_wrapper) {
-        my $form_wrapper_tag = $self->get_tag('wrapper_tag') || 'fieldset';
-        $output .= qq{\n</$form_wrapper_tag>};
-    }
+    $output .= $self->render_wrapper_end($wtag) if $wtag ne 'fieldset';
     $output .= $self->get_tag('after');
     $output .= "\n";
     return $output;
+}
+
+sub render_wrapper_end {
+    my ( $self, $wrapper_tag ) = @_;
+    return '' unless $self->do_form_wrapper;
+    return qq{\n</$wrapper_tag>};
 }
 use namespace::autoclean;
 1;
@@ -125,7 +143,7 @@ HTML::FormHandler::Widget::Form::Simple - widget to render a form with divs
 
 =head1 VERSION
 
-version 0.40001
+version 0.40002
 
 =head1 SYNOPSIS
 
@@ -136,6 +154,13 @@ rendering. (L<HTML::FormHandler::Blocks>, L<HTML::FormHandler::Widget::Block>)
 Relevant flags:
 
     do_form_wrapper - put a wrapper around the form
+
+If the wrapper_tag is a 'fieldset' (default if not specified) the
+wrapper goes inside the form tags (because it's not valid to put it
+outside of them). If the wrapper_tag is something else, it will go
+around the form tags. If you're doing one kind of wrapper and want
+another one, you can achieve that result by using the 'before'/'after'
+tags or the 'after_start'/'before_end' tags.
 
 Supported tags:
 

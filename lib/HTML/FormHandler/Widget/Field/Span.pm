@@ -1,5 +1,6 @@
-package HTML::FormHandler::Widget::Field::Button;
+package HTML::FormHandler::Widget::Field::Span;
 # ABSTRACT: button field rendering widget
+
 
 use Moose::Role;
 use HTML::FormHandler::Render::Util ('process_attrs');
@@ -9,12 +10,12 @@ sub render {
     my ( $self, $result ) = @_;
 
     $result ||= $self->result;
-    my $output = '<input type="button" name="';
-    $output .= $self->html_name . '"';
+    my $output = '<span';
     $output .= ' id="' . $self->id . '"';
-    $output .= ' value="' . $self->html_filter($self->_localize($self->value)) . '"';
     $output .= process_attrs($self->element_attributes($result));
     $output .= ' />';
+    $output .= $self->value;
+    $output .= '</span>';
     return $self->wrap_field( $result, $output );
 }
 
@@ -25,11 +26,17 @@ __END__
 
 =head1 NAME
 
-HTML::FormHandler::Widget::Field::Button - button field rendering widget
+HTML::FormHandler::Widget::Field::Span - button field rendering widget
 
 =head1 VERSION
 
 version 0.40002
+
+=head1 SYNOPSIS
+
+Renders the NonEditable pseudo-field as a span.
+
+   <span id="my_field" class="test">The Field Value</span>
 
 =head1 AUTHOR
 

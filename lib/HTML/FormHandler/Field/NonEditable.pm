@@ -1,14 +1,11 @@
-package HTML::FormHandler::Field::Reset;
+package HTML::FormHandler::Field::NonEditable;
 # ABSTRACT: reset field
 
 use Moose;
 extends 'HTML::FormHandler::Field::NoValue';
 
 
-has '+widget' => ( default => 'Reset' );
-has '+value' => ( default => 'Reset' );
-has '+type_attr' => ( default => 'reset' );
-sub do_label {0}
+has '+widget' => ( default => 'Span' );
 
 __PACKAGE__->meta->make_immutable;
 use namespace::autoclean;
@@ -19,7 +16,7 @@ __END__
 
 =head1 NAME
 
-HTML::FormHandler::Field::Reset - reset field
+HTML::FormHandler::Field::NonEditable - reset field
 
 =head1 VERSION
 
@@ -27,11 +24,13 @@ version 0.40002
 
 =head1 SYNOPSIS
 
-Use this field to declare a reset field in your form.
+Another flavor of a display field, but unlike L<HTML::FormHandler::Field::Display>
+it's intended to be rendered somewhat more like a "real" field, like the
+'non-editable' "fields" in Bootstrap.
 
-   has_field 'reset' => ( type => 'Reset', value => 'Restore' );
+   has_field 'source' => ( type => 'NonEditable', value => 'Outsourced' );
 
-Uses the 'reset' widget.
+By default uses the 'Span' widget.
 
 =head1 AUTHOR
 

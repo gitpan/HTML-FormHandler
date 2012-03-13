@@ -42,6 +42,7 @@ lib/HTML/FormHandler/Field/MonthName.pm
 lib/HTML/FormHandler/Field/Multiple.pm
 lib/HTML/FormHandler/Field/Nested.pm
 lib/HTML/FormHandler/Field/NoValue.pm
+lib/HTML/FormHandler/Field/NonEditable.pm
 lib/HTML/FormHandler/Field/Password.pm
 lib/HTML/FormHandler/Field/PasswordConf.pm
 lib/HTML/FormHandler/Field/PosInteger.pm
@@ -77,6 +78,8 @@ lib/HTML/FormHandler/Manual/Database.pod
 lib/HTML/FormHandler/Manual/Defaults.pod
 lib/HTML/FormHandler/Manual/Errors.pod
 lib/HTML/FormHandler/Manual/Fields.pod
+lib/HTML/FormHandler/Manual/FromDFV.pod
+lib/HTML/FormHandler/Manual/FromFF.pod
 lib/HTML/FormHandler/Manual/InflationDeflation.pod
 lib/HTML/FormHandler/Manual/Intro.pod
 lib/HTML/FormHandler/Manual/Reference.pod
@@ -127,6 +130,7 @@ lib/HTML/FormHandler/Widget/Field/Reset.pm
 lib/HTML/FormHandler/Widget/Field/Role/HTMLAttributes.pm
 lib/HTML/FormHandler/Widget/Field/Role/SelectedOption.pm
 lib/HTML/FormHandler/Widget/Field/Select.pm
+lib/HTML/FormHandler/Widget/Field/Span.pm
 lib/HTML/FormHandler/Widget/Field/Submit.pm
 lib/HTML/FormHandler/Widget/Field/Text.pm
 lib/HTML/FormHandler/Widget/Field/Textarea.pm
@@ -265,6 +269,7 @@ t/render/html5_attributes.t
 t/render/html_attr.t
 t/render/html_attributes.t
 t/render/inline.t
+t/render/noneditable.t
 t/render/radio_group.t
 t/render/repeatable.t
 t/render/result.t
@@ -289,6 +294,7 @@ t/structured.t
 t/validation/apply.t
 t/validation/constraints.t
 t/validation/dependency.t
+t/validation/dfv.t
 t/validation/filters.t
 t/validation/types.t
 t/validation/validate_coderef.t

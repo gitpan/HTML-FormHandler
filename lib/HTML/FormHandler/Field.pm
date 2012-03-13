@@ -932,7 +932,7 @@ HTML::FormHandler::Field - base class for fields
 
 =head1 VERSION
 
-version 0.40001
+version 0.40002
 
 =head1 SYNOPSIS
 
@@ -1414,7 +1414,7 @@ Another way of providing a deflation method.
 
 Another way of providing an inflation method.
 
-=back 4
+=back
 
 Normally if you have a deflation, you will need a matching inflation.
 There are two different flavors of inflation/deflation: one for inflating values

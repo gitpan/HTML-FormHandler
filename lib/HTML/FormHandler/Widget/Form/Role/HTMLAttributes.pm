@@ -15,7 +15,13 @@ sub html_form_tag {
         [ style   => 'style' ],
     );
 
-    my $element_attr = { %{$self->element_attr} };
+    # make the element_attr a safe default
+    my $element_attr = {};
+    # Assuming that self is a form
+    $element_attr = { %{$self->form_element_attr} } if ( $self->can( 'form_element_attr' ) );
+    # Assuming that self is a field
+    $element_attr = { %{$self->element_attr} } if ( $self->can( 'element_attr' ) );
+
     foreach my $attr_pair (@attr_accessors) {
         my $attr = $attr_pair->[0];
         my $accessor = $attr_pair->[1];
@@ -45,7 +51,7 @@ HTML::FormHandler::Widget::Form::Role::HTMLAttributes - set HTML attributes on t
 
 =head1 VERSION
 
-version 0.40001
+version 0.40002
 
 =head1 AUTHOR
 

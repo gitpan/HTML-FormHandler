@@ -65,7 +65,7 @@ HTML::FormHandler::Widget::Wrapper::Simple - simple field wrapper
 
 =head1 VERSION
 
-version 0.40001
+version 0.40002
 
 =head1 SYNOPSIS
 
@@ -94,6 +94,9 @@ Supported 'tags':
     no_errors      -- don't issue error messages on the field
     error_class    -- class for error messages (default 'error_message')
     warning_class  -- class for warning messages (default 'warning_message' )
+
+    no_wrapped_label -- for checkboxes. Don't provide an inner wrapped label
+                        (from Base wrapper)
 
 =head1 AUTHOR
 

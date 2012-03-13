@@ -152,7 +152,7 @@ HTML::FormHandler::Widget::Block - base block renderer
 
 =head1 VERSION
 
-version 0.40001
+version 0.40002
 
 =head1 SYNOPSIS
 
@@ -193,7 +193,7 @@ Classes for the label.
 
 Label string. Will be localized.
 
-=back 4
+=back
 
 =head1 AUTHOR
 
