@@ -294,7 +294,6 @@ t/structured.t
 t/validation/apply.t
 t/validation/constraints.t
 t/validation/dependency.t
-t/validation/dfv.t
 t/validation/filters.t
 t/validation/types.t
 t/validation/validate_coderef.t
@@ -311,6 +310,7 @@ xt/captcha2.t
 xt/chbox_group.t
 xt/check_selected_option.t
 xt/custom_fields.t
+xt/dfv.t
 xt/display.t
 xt/email.t
 xt/eol.t

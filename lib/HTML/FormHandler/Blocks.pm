@@ -134,7 +134,7 @@ HTML::FormHandler::Blocks - used in Wizard
 
 =head1 VERSION
 
-version 0.40002
+version 0.40003
 
 =head1 SYNOPSIS
 
