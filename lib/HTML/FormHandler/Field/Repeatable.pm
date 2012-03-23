@@ -226,6 +226,10 @@ sub add_extra {
 sub _result_from_fields {
     my ( $self, $result ) = @_;
 
+    # check for defaults
+    if ( my @values = $self->get_default_value ) {
+        return $self->_result_from_object( $result, \@values );
+    }
     $self->init_state;
     $self->_set_result($result);
     my $count = $self->num_when_empty;
@@ -286,7 +290,7 @@ HTML::FormHandler::Field::Repeatable - repeatable (array) field
 
 =head1 VERSION
 
-version 0.40003
+version 0.40004
 
 =head1 SYNOPSIS
 

@@ -38,7 +38,7 @@ HTML::FormHandler::Field::MonthName - select list with month names
 
 =head1 VERSION
 
-version 0.40003
+version 0.40004
 
 =head1 DESCRIPTION
 

@@ -182,6 +182,7 @@ share/templates/wrapper/wrap_label.tt
 t/01app.t
 t/basic.t
 t/blocks/basic.t
+t/blocks/block_list.t
 t/blocks/blocktags.t
 t/blocks/loading.t
 t/blocks/nested.t
@@ -281,6 +282,7 @@ t/render/widget_loading.t
 t/render/widget_tags.t
 t/render/widgets.t
 t/render/withtt.t
+t/repeatable/defaults.t
 t/repeatable/has_many.t
 t/repeatable/list.t
 t/repeatable/nested.t

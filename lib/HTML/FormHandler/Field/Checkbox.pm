@@ -38,7 +38,7 @@ HTML::FormHandler::Field::Checkbox - a checkbox field type
 
 =head1 VERSION
 
-version 0.40003
+version 0.40004
 
 =head1 DESCRIPTION
 

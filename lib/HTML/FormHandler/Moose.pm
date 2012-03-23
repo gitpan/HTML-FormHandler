@@ -36,7 +36,7 @@ sub has_field {
             $meta->found_hfh(1);
         }
         else {
-            die "Package uses HTML::FormHandler::Moose without extending HTML::FormHandler[::Field]";
+            die "Package '" . $linearized_isa[0] . "' uses HTML::FormHandler::Moose without extending HTML::FormHandler[::Field]";
         }
     }
 
@@ -73,7 +73,7 @@ HTML::FormHandler::Moose - to add FormHandler sugar
 
 =head1 VERSION
 
-version 0.40003
+version 0.40004
 
 =head1 SYNOPSIS
 

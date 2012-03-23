@@ -45,7 +45,6 @@ sub render {
                 $output .= ' selected="selected"';
             }
         }
-        $output .= $ele_attributes;
         my $label = $option->{label};
         $label = $self->_localize($label) if $self->localize_labels;
         $output .= '>' . ( $self->html_filter($label) || '' ) . '</option>';
@@ -66,7 +65,7 @@ HTML::FormHandler::Widget::Field::Select - select field rendering widget
 
 =head1 VERSION
 
-version 0.40003
+version 0.40004
 
 =head1 AUTHOR
 

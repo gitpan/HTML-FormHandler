@@ -24,10 +24,14 @@ has 'blocks' => (
 );
 sub build_blocks { {} }
 
+has 'block_list' => ( is => 'rw', isa => 'ArrayRef', lazy => 1, builder => 'build_block_list' );
+sub build_block_list {[]}
+
 has 'render_list' => (
     is      => 'rw',
     isa     => 'ArrayRef[Str]',
     traits  => ['Array'],
+    lazy    => 1,
     builder => 'build_render_list',
     handles => {
         has_render_list    => 'count',
@@ -53,6 +57,12 @@ after '_build_fields' => sub {
     my $meta_blist = $self->_build_meta_block_list;
     if( @$meta_blist ) {
         foreach my $block_attr (@$meta_blist) {
+            $self->make_block($block_attr);
+        }
+    }
+    my $blist = $self->block_list;
+    if( @$blist ) {
+        foreach my $block_attr (@$blist) {
             $self->make_block($block_attr);
         }
     }
@@ -134,7 +144,7 @@ HTML::FormHandler::Blocks - used in Wizard
 
 =head1 VERSION
 
-version 0.40003
+version 0.40004
 
 =head1 SYNOPSIS
 

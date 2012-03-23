@@ -24,8 +24,9 @@ sub wrap_field {
     # wrapper is always a div
     $output .= qq{\n<div$attr_str>}
         if $self->do_wrapper;
-    if ( $self->do_label && length( $self->label ) > 0 ) {
+    if ( $self->do_label ) {
         my $label = $self->html_filter($self->loc_label);
+        $label .= $self->get_tag('label_after');
         $output .= qq{\n<label class="control-label" for="} . $self->id . qq{">$label</label>};
     }
     $output .=  $self->get_tag('before_element');
@@ -89,7 +90,7 @@ HTML::FormHandler::Widget::Wrapper::Bootstrap - Twitter Bootstrap 2.0 field wrap
 
 =head1 VERSION
 
-version 0.40003
+version 0.40004
 
 =head1 SYNOPSIS
 
