@@ -20,11 +20,12 @@ use MooseX::Types::LoadableClass qw/ LoadableClass /;
 use namespace::autoclean;
 use HTML::FormHandler::Merge ('merge');
 use Sub::Name;
+use Data::Clone;
 
 use 5.008;
 
 # always use 5 digits after decimal because of toolchain issues
-our $VERSION = '0.40004';
+our $VERSION = '0.40005';
 
 
 # for consistency in api with field nodes
@@ -288,7 +289,7 @@ sub get_tag {
 }
 
 has 'action' => ( is => 'rw' );
-has 'posted' => ( is => 'rw', isa => 'Bool', clearer => 'clear_posted' );
+has 'posted' => ( is => 'rw', isa => 'Bool', clearer => 'clear_posted', predicate => 'has_posted' );
 has 'params' => (
     traits     => ['Hash'],
     isa        => 'HashRef',
@@ -412,7 +413,7 @@ sub process {
     warn "HFH: process ", $self->name, "\n" if $self->verbose;
     $self->clear if $self->processed;
     $self->setup_form(@_);
-    $self->validate_form      if $self->has_params;
+    $self->validate_form      if $self->posted;
     $self->update_model       if ( $self->validated && !$self->no_update );
     $self->after_update_model if $self->validated;
     $self->dump_fields        if $self->verbose;
@@ -423,7 +424,7 @@ sub process {
 sub run {
     my $self = shift;
     $self->setup_form(@_);
-    $self->validate_form      if $self->has_params;
+    $self->validate_form      if $self->posted;
     $self->update_model       if ( $self->validated && !$self->no_update );;
     $self->after_update_model if $self->validated;
     my $result = $self->result;
@@ -442,6 +443,7 @@ sub clear {
     my $self = shift;
     $self->clear_data;
     $self->clear_params;
+    $self->clear_posted;
     $self->clear_ctx;
     $self->processed(0);
     $self->did_init_obj(0);
@@ -484,6 +486,7 @@ sub validate_form {
     $self->validate_model;     # model specific validation
     $self->fields_set_value;
     $self->_clear_dependency;
+    $self->clear_posted;
     $self->get_error_fields;
     $self->ran_validation(1);
     $self->dump_validated if $self->verbose;
@@ -520,10 +523,6 @@ sub setup_form {
             $self->$key($value);
         }
     }
-    if( $self->posted ) {
-        $self->set_param('__posted' => 1);
-        $self->clear_posted;
-    }
     if ( $self->item_id && !$self->item ) {
         $self->item( $self->build_item );
     }
@@ -534,22 +533,22 @@ sub setup_form {
     # will be done in _result_from_object when there's an initial object
     # in _result_from_input when there are params
     # and by _result_from_fields for empty forms
+    $self->posted(1) if ( $self->has_params && !$self->has_posted );
     if ( !$self->did_init_obj ) {
         if ( my $init_object = $self->use_init_obj_over_item ?
             ($self->init_object || $self->item) : ( $self->item || $self->init_object ) ) {
             $self->_result_from_object( $self->result, $init_object );
         }
-        elsif ( !$self->has_params ) {
+        elsif ( !$self->posted ) {
             # no initial object. empty form form must be initialized
             $self->_result_from_fields( $self->result );
         }
     }
-    # There's some weirdness here because of trying to support supplying
-    # the db object in the ->new. May change to not support that?
-    my %params = ( %{ $self->params } );
-    if ( $self->has_params ) {
+    # if params exist and if posted flag is either not set or set to true
+    my $params = clone( $self->params );
+    if ( $self->posted ) {
         $self->clear_result;
-        $self->_result_from_input( $self->result, \%params, 1 );
+        $self->_result_from_input( $self->result, $params, 1 );
     }
 
 }
@@ -760,7 +759,7 @@ HTML::FormHandler - HTML forms using Moose
 
 =head1 VERSION
 
-version 0.40004
+version 0.40005
 
 =head1 SYNOPSIS
 
@@ -1061,9 +1060,8 @@ can either add a hidden field as an 'indicator', or use the 'posted' flag:
 
    $form->process( posted => ($c->req->method eq 'POST'), params => ... );
 
-The corollary is that you will confuse FormHandler if you add extra params.
-It's often a better idea to add Moose attributes to the form rather than
-'dummy' fields if the data is not coming from a form control.
+The 'posted' flag also works to prevent validation from being performed
+if there are extra params in the params hash and it is not a 'POST' request.
 
 =head2 Getting data out
 

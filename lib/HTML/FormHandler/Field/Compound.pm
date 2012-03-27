@@ -96,7 +96,7 @@ HTML::FormHandler::Field::Compound - field consisting of subfields
 
 =head1 VERSION
 
-version 0.40004
+version 0.40005
 
 =head1 SYNOPSIS
 

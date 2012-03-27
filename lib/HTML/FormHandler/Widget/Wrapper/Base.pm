@@ -9,7 +9,13 @@ sub do_render_label {
 
     $label_tag ||= $self->get_tag('label_tag') || 'label';
     my $attrs = process_attrs($self->label_attributes($result));
-    my $label = $self->html_filter($self->loc_label);
+    my $label;
+    if( $self->does_wrap_label ) {
+        $label = $self->wrap_label;
+    }
+    else {
+        $label = $self->get_tag('label_no_filter') ? $self->loc_label : $self->html_filter($self->loc_label);
+    }
     $label .= $self->get_tag('label_after') if $label_tag ne 'legend';
     my $id = $self->id;
     my $for = $label_tag eq 'label' ? qq{ for="$id"} : '';
@@ -73,7 +79,7 @@ HTML::FormHandler::Widget::Wrapper::Base - common methods for widget wrappers
 
 =head1 VERSION
 
-version 0.40004
+version 0.40005
 
 =head1 AUTHOR
 

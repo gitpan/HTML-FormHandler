@@ -63,7 +63,7 @@ HTML::FormHandler::Model - default model base class
 
 =head1 VERSION
 
-version 0.40004
+version 0.40005
 
 =head1 SYNOPSIS
 

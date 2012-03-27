@@ -8,7 +8,8 @@ use Try::Tiny;
 
 sub maketext {
     my ( $lh, @message ) = @_;
-    return unless scalar @message;
+    return '' unless scalar @message;
+    return '' unless defined $message[0];
     my $out;
     try {
         $out = $lh->SUPER::maketext(@message);
@@ -31,7 +32,7 @@ HTML::FormHandler::I18N - internationalization
 
 =head1 VERSION
 
-version 0.40004
+version 0.40005
 
 =head1 AUTHOR
 
