@@ -14,7 +14,7 @@ has 'contains' => (
     is        => 'rw',
     predicate => 'has_contains',
 );
-has 'init_contains' => ( is => 'ro', isa => 'HashRef', traits => ['Hash'],
+has 'init_contains' => ( is => 'rw', isa => 'HashRef', traits => ['Hash'],
     default => sub {{}},
     handles => { has_init_contains => 'count' },
 );
@@ -290,7 +290,7 @@ HTML::FormHandler::Field::Repeatable - repeatable (array) field
 
 =head1 VERSION
 
-version 0.40005
+version 0.40006
 
 =head1 SYNOPSIS
 

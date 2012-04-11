@@ -11,7 +11,7 @@ HTML::FormHandler::Manual::Rendering - how to render with FormHandler
 
 =head1 VERSION
 
-version 0.40005
+version 0.40006
 
 =head1 SYNOPSIS
 
@@ -266,6 +266,21 @@ Hashref of arbitrary HTML attributes to include in the label.
 
 Arrayref of classes to include in the label.
 
+=item build_id_method
+
+Coderef to construct the 'id'. Useful if your javascript needs a different
+format for the 'id'.
+
+=item build_label_method
+
+Coderef to construct the label.
+
+=item wrap_label_method
+
+Coderef to wrap the label. Used by the Simple and Bootstrap wrappers.
+Useful if your label contains HTML or a link. You must do your own
+localization and filtering if you use a 'wrap_label' method.
+
 =back
 
 =head2 Field tags
@@ -291,6 +306,44 @@ label formatting:
 Most of the tags are implemented by the 'wrapper' widget, so see that
 documentation for more details: L<HTML::FormHandler::Widget::Wrapper::Simple>,
 L<HTML::FormHandler::Widget::Wrapper::Bootstrap>.
+
+=head3 Tags and other settings for all fields
+
+Tags can be set for all fields in the form by using a 'build_update_subfields'
+sub, or 'widget_tags'. The 'update_subfields' hashref takes general-purpose
+keys 'all', 'by_flag' (compound, repeatable, contains), and 'by_type'.
+You can also set specific field attributes by using the field name as a key.
+For example, if you don't want errors to be displayed
+next to the fields, you need to set the 'no_errors' tag:
+
+   sub build_update_subfields {{
+       all => { tags => { no_errors => 1 }, wrapper_class => ['myapp'] },
+       by_type => { Text => { element_class => ['text'] } },
+       by_flag => { compound => { do_wrapper => 1 } },
+       foo => { label => 'My Foo' },
+   }}
+   -- or --
+   '+widget_tags' => ( default => sub { { no_errors => 1 } } );
+
+The 'widget_tags' attribute only handles the 'tags' hashref, so if you also
+want to set classes or attributes, then build_update_subfields is more useful.
+You can also use 'build_update_subfields' in a custom compound field class.
+
+=head3 Repeatable field instances
+
+The repeatable field instances are constructed internally, so it's trickier to set
+things like wrapper tags. There are two ways to do it, using the 'init_contains'
+attribute on the repeatable field, and using the 'update_subfields' builder:
+
+    has_field 'records' => ( type => 'Repeatable', num_when_empty => 2,
+        init_contains => { tags => { wrapper_tag => 'fieldset' } } );
+    -- or --
+    sub build_update_subfields { { by_flag => {
+        contains => { tags => { wrapper_tag => 'fieldset' }}}}}
+
+The 'build_update_subfields' option is mainly useful if you have multiple
+repeatable fields that you want to set, or if you want defaults in a base
+class.
 
 =head2 Blocks
 
@@ -371,6 +424,8 @@ The following package provides a functional block:
 When a form is rendered, it will either loop through all of the sorted_fields OR
 loop through the fields and blocks listed in the 'render_list'. A render_list can
 contain a mix of fields and blocks.
+
+Note that you must be rendering with widgets to use block rendering.
 
 =head2 Twitter Bootstrap 2.0 rendering
 

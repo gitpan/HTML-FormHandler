@@ -28,7 +28,7 @@ sub wrap_field {
     if ( $self->do_label ) {
         my $label;
         if ( $self->does_wrap_label ) {
-            $label = $self->wrap_label;
+            $label = $self->wrap_label( $self->label );
         }
         else {
             $label = $self->get_tag('label_no_filter') ? $self->loc_label : $self->html_filter($self->loc_label);
@@ -97,7 +97,7 @@ HTML::FormHandler::Widget::Wrapper::Bootstrap - Twitter Bootstrap 2.0 field wrap
 
 =head1 VERSION
 
-version 0.40005
+version 0.40006
 
 =head1 SYNOPSIS
 

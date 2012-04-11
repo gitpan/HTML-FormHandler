@@ -25,7 +25,7 @@ use Data::Clone;
 use 5.008;
 
 # always use 5 digits after decimal because of toolchain issues
-our $VERSION = '0.40005';
+our $VERSION = '0.40006';
 
 
 # for consistency in api with field nodes
@@ -251,9 +251,7 @@ sub has_flag {
     return $self->$flag_name;
 }
 
-# deprecated. here only for compatibility
-# with previous versions. Use update_field_list
-# or update_subfields instead.
+# used to transfer tags to fields from form
 has 'widget_tags' => (
     isa => 'HashRef',
     traits => ['Hash'],
@@ -366,14 +364,11 @@ sub BUILDARGS {
 sub BUILD {
     my $self = shift;
 
-    # temporary for compatibility: move widget_tags to update_field_list
-    $self->set_update_field_list( 'all', { tags => $self->widget_tags } )
-        if $self->has_widget_tags;
     $self->before_build; # hook to allow customizing forms
     # HTML::FormHandler::Widget::Form::Simple is applied in Base
     $self->apply_widget_role( $self, $self->widget_form, 'Form' )
         unless (  $self->no_widgets || $self->widget_form eq 'Simple' );
-    $self->build_fields;    # create the form fields (BuildFields.pm)
+    $self->_build_fields;    # create the form fields (BuildFields.pm)
     $self->build_active if $self->has_active || $self->has_inactive || $self->has_flag('is_wizard');
     $self->after_build; # hook for customizing
     return if defined $self->item_id && !$self->item;
@@ -393,16 +388,6 @@ sub BUILD {
     }
     $self->dump_fields if $self->verbose;
     return;
-}
-sub build_fields {
-    my $self = shift;
-    my $field_updates = merge($self->update_field_list, $self->update_subfields);
-    $self->{field_updates} = $field_updates if keys %$field_updates;
-    $self->_build_fields;
-    delete $self->{field_updates};
-    $self->clear_update_field_list;
-    # set update_subfields instead of clear, so that builder methods won't run again
-    $self->update_subfields({});
 }
 sub before_build {}
 sub after_build {}
@@ -707,15 +692,12 @@ sub _can_deflate { }
 
 sub update_fields {
     my $self = shift;
-    if( $self->has_update_field_list || $self->has_update_subfields ) {
-        my $do_updates = $self->build_update_subfields;
+    if( $self->has_update_field_list ) {
         my $updates = $self->update_field_list;
-        $updates = merge($do_updates, $updates);
         foreach my $field_name ( keys %{$updates} ) {
             $self->update_field($field_name, $updates->{$field_name} );
         }
         $self->clear_update_field_list;
-        $self->clear_update_subfields;
     }
     if( $self->has_defaults ) {
         my $defaults = $self->defaults;
@@ -759,7 +741,7 @@ HTML::FormHandler - HTML forms using Moose
 
 =head1 VERSION
 
-version 0.40005
+version 0.40006
 
 =head1 SYNOPSIS
 
@@ -1187,14 +1169,20 @@ The 'all' hash key will apply updates to all fields (conflicting attributes
 in a field definition take precedence.)
 
 The 'by_flag' hash key will apply updates to fields with a particular flag.
-The currently supported subkeys are 'compound', 'repeatable', and 'contains'.
-This is useful in this context for turning on the rendering
+The currently supported subkeys are 'compound', 'contains', and 'repeatable'.
+(For repeatable instances, in addition to 'contains' you can also use the
+'repeatable' key and the 'init_contains' attribute.)
+This is useful for turning on the rendering
 wrappers for compounds and repeatables, which are off by default. (The
 repeatable instances are wrapped by default.)
 
     sub build_update_subfields {{
-        by_type => { compound => { do_wrapper => 1 } }
+        by_flag => { compound => { do_wrapper => 1 } },
+        by_type => { Select => { element_class => ['sel_elem'] } },
     }}
+
+The 'by_type' hash key will provide values to all fields of a particular
+type.
 
 =head3 defaults
 
@@ -1468,6 +1456,8 @@ to be used for defaults instead of the item.
    http_method - For storing 'post' or 'get'
    action - Store the form 'action' on submission. No default value.
    uuid - generates a string containing an HTML field with UUID
+   form_tags - hashref of tags for use in rendering code
+   widget_tags - rendering tags to be transferred to fields
 
 Discouraged (use form_element_attr instead):
 
@@ -1496,7 +1486,8 @@ Types: element, wrapper, label, form_element, form_wrapper, checkbox_label
        return $attr;
    }
 
-Also see the documentation in L<HTML::FormHandler::Field>.
+Also see the documentation in L<HTML::FormHandler::Field> and in
+L<HTML::FormHandler::Manual::Rendering>.
 
 =head1 SUPPORT
 

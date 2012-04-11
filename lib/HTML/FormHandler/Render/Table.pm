@@ -24,7 +24,7 @@ sub render_start {
     my $self   = shift;
 
     my $attrs = process_attrs($self->attributes);
-    return qq{</form$attrs></table>};
+    return qq{<form$attrs><table>};
 }
 
 sub render_form_errors {
@@ -82,7 +82,7 @@ HTML::FormHandler::Render::Table - render a form with a table layout
 
 =head1 VERSION
 
-version 0.40005
+version 0.40006
 
 =head1 SYNOPSIS
 

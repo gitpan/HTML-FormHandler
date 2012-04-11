@@ -194,6 +194,7 @@ t/bootstrap/ext_controls.t
 t/bootstrap/inline.t
 t/bootstrap/search.t
 t/compound/basic.t
+t/compound/include.t
 t/compound/select.t
 t/errors/basic.t
 t/errors/compound.t
@@ -206,6 +207,7 @@ t/field_setup/id.t
 t/field_setup/inactive.t
 t/field_setup/input_param.t
 t/field_setup/update_fields.t
+t/field_setup/update_subfields.t
 t/fields/dates.t
 t/fields/fields.t
 t/fields/float.t
@@ -216,6 +218,7 @@ t/fields/select.t
 t/form_setup/clone.t
 t/form_setup/config.t
 t/form_setup/dynamic.t
+t/form_setup/include.t
 t/form_setup/no_update.t
 t/form_setup/posted.t
 t/form_setup/render_roles.t
@@ -258,7 +261,6 @@ t/render/basic.t
 t/render/checkbox.t
 t/render/checkbox_group.t
 t/render/classes.t
-t/render/compat.t
 t/render/compound.t
 t/render/compound2.t
 t/render/errors.t
@@ -274,11 +276,13 @@ t/render/inline.t
 t/render/label.t
 t/render/noneditable.t
 t/render/radio_group.t
+t/render/rep_fieldset.t
 t/render/repeatable.t
 t/render/result.t
 t/render/select.t
 t/render/simple.t
 t/render/table.t
+t/render/tags.t
 t/render/util.t
 t/render/widget_loading.t
 t/render/widget_tags.t

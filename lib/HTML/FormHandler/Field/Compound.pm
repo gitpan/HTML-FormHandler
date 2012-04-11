@@ -25,16 +25,7 @@ has '+field_name_space' => (
 
 sub BUILD {
     my $self = shift;
-    $self->build_fields;
-}
-
-sub build_fields {
-    my $self = shift;
-    $self->{field_updates} = $self->update_subfields;
     $self->_build_fields;
-    delete $self->{field_updates};
-    # set update_subfields instead of clear, so that builder methods won't run again
-    $self->update_subfields({});
 }
 
 # this is for testing compound fields outside
@@ -96,7 +87,7 @@ HTML::FormHandler::Field::Compound - field consisting of subfields
 
 =head1 VERSION
 
-version 0.40005
+version 0.40006
 
 =head1 SYNOPSIS
 
@@ -132,6 +123,14 @@ further processing by L<HTML::FormHandler::Field/actions> and the validate metho
 =head2 widget
 
 Widget type is 'compound'
+
+=head2 build_update_subfields
+
+You can set 'defaults' or other settings in a 'build_update_subfields' method,
+which contains attribute settings that will be merged with field definitions
+when the fields are built. Use the 'by_flag' key with 'repeatable', 'compound',
+and 'contains' subkeys, or use the 'all' key for settings which apply to all
+subfields in the compound field.
 
 =head1 AUTHOR
 

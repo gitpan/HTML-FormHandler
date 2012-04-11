@@ -22,7 +22,7 @@ HTML::FormHandler::Field::PrimaryKey - primary key field
 
 =head1 VERSION
 
-version 0.40005
+version 0.40006
 
 =head1 SYNOPSIS
 

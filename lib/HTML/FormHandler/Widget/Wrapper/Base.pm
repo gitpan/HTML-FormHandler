@@ -11,7 +11,7 @@ sub do_render_label {
     my $attrs = process_attrs($self->label_attributes($result));
     my $label;
     if( $self->does_wrap_label ) {
-        $label = $self->wrap_label;
+        $label = $self->wrap_label( $self->label );
     }
     else {
         $label = $self->get_tag('label_no_filter') ? $self->loc_label : $self->html_filter($self->loc_label);
@@ -79,7 +79,7 @@ HTML::FormHandler::Widget::Wrapper::Base - common methods for widget wrappers
 
 =head1 VERSION
 
-version 0.40005
+version 0.40006
 
 =head1 AUTHOR
 

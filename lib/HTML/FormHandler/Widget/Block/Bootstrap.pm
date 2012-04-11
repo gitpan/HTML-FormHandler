@@ -12,7 +12,7 @@ sub BUILD {
     $self->label_tag('label');
 }
 
-sub render_process_list {
+sub render_from_list {
     my ( $self, $result ) = @_;
     $result ||= $self->form->result;
     my $output = $self->next::method($result);
@@ -31,7 +31,7 @@ HTML::FormHandler::Widget::Block::Bootstrap - block to format bare form element 
 
 =head1 VERSION
 
-version 0.40005
+version 0.40006
 
 =head1 AUTHOR
 
