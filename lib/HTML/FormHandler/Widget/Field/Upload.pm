@@ -1,10 +1,10 @@
 package HTML::FormHandler::Widget::Field::Upload;
 # ABSTRACT: update field rendering widget
-
 use Moose::Role;
 use HTML::FormHandler::Render::Util ('process_attrs');
 
-sub render {
+
+sub render_element {
     my ( $self, $result ) = @_;
 
     $result ||= $self->result;
@@ -14,7 +14,14 @@ sub render {
     $output .= ' id="' . $self->id . '"';
     $output .= process_attrs($self->element_attributes($result));
     $output .= ' />';
-    return $self->wrap_field($result, $output);
+    return $output;
+}
+
+sub render {
+    my ( $self, $result ) = @_;
+    $result ||= $self->result;
+    my $output = $self->render_element( $result );
+    return $self->wrap_field( $result, $output );
 }
 
 use namespace::autoclean;
@@ -29,7 +36,11 @@ HTML::FormHandler::Widget::Field::Upload - update field rendering widget
 
 =head1 VERSION
 
-version 0.40006
+version 0.40007
+
+=head1 SYNOPSIS
+
+Renders an Upload field
 
 =head1 AUTHOR
 

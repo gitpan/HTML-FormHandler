@@ -203,6 +203,7 @@ t/errors/messages.t
 t/errors/req_message.t
 t/field_setup/compound_update_fields.t
 t/field_setup/defaults.t
+t/field_setup/disabled.t
 t/field_setup/id.t
 t/field_setup/inactive.t
 t/field_setup/input_param.t

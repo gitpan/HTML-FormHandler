@@ -72,7 +72,7 @@ HTML::FormHandler::Result - form result object
 
 =head1 VERSION
 
-version 0.40006
+version 0.40007
 
 =head1 SYNOPSIS
 

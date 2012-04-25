@@ -1,7 +1,7 @@
 package HTML::FormHandler::Widget::Field::NoRender;
 # ABSTRACT: no rendering widget
-
 use Moose::Role;
+
 
 sub render { '' }
 
@@ -17,7 +17,11 @@ HTML::FormHandler::Widget::Field::NoRender - no rendering widget
 
 =head1 VERSION
 
-version 0.40006
+version 0.40007
+
+=head1 SYNOPSIS
+
+Renders a field as the empty string.
 
 =head1 AUTHOR
 

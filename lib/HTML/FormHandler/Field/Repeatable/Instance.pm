@@ -31,7 +31,7 @@ HTML::FormHandler::Field::Repeatable::Instance - used internally by repeatable f
 
 =head1 VERSION
 
-version 0.40006
+version 0.40007
 
 =head1 SYNOPSIS
 

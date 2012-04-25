@@ -1,8 +1,8 @@
 package HTML::FormHandler::Widget::Field::Repeatable;
 # ABSTRACT: repeatable field widget
-
 use Moose::Role;
 with 'HTML::FormHandler::Widget::Field::Compound';
+
 
 sub render_subfield {
     my ( $self, $result, $subfield ) = @_;
@@ -28,7 +28,11 @@ HTML::FormHandler::Widget::Field::Repeatable - repeatable field widget
 
 =head1 VERSION
 
-version 0.40006
+version 0.40007
+
+=head1 SYNOPSIS
+
+Renders a repeatable field
 
 =head1 AUTHOR
 

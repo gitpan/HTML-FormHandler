@@ -6,16 +6,23 @@ use Moose::Role;
 use HTML::FormHandler::Render::Util ('process_attrs');
 use namespace::autoclean;
 
-sub render {
+sub render_element {
     my ( $self, $result ) = @_;
-
     $result ||= $self->result;
+
     my $output = '<span';
     $output .= ' id="' . $self->id . '"';
     $output .= process_attrs($self->element_attributes($result));
     $output .= ' />';
     $output .= $self->value;
     $output .= '</span>';
+    return $output;
+}
+
+sub render {
+    my ( $self, $result ) = @_;
+    $result ||= $self->result;
+    my $output = $self->render_element( $result );
     return $self->wrap_field( $result, $output );
 }
 
@@ -30,7 +37,7 @@ HTML::FormHandler::Widget::Field::Span - button field rendering widget
 
 =head1 VERSION
 
-version 0.40006
+version 0.40007
 
 =head1 SYNOPSIS
 

@@ -42,7 +42,7 @@ HTML::FormHandler::TraitFor::Captcha - generate and validate captchas
 
 =head1 VERSION
 
-version 0.40006
+version 0.40007
 
 =head1 SYNOPSIS
 

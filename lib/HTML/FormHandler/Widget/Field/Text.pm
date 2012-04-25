@@ -1,15 +1,15 @@
 package HTML::FormHandler::Widget::Field::Text;
 # ABSTRACT: text field rendering widget
-
 use Moose::Role;
 use namespace::autoclean;
 use HTML::FormHandler::Render::Util ('process_attrs');
 
-sub render {
+
+sub render_element {
     my $self = shift;
     my $result = shift || $self->result;
-    my $t;
 
+    my $t;
     my $rendered = $self->html_filter($result->fif);
     my $output = '<input type="' . $self->input_type . '" name="'
         . $self->html_name . '" id="' . $self->id . '"';
@@ -18,7 +18,13 @@ sub render {
     $output .= ' value="' . $self->html_filter($result->fif) . '"';
     $output .= process_attrs($self->element_attributes($result));
     $output .= ' />';
+    return $output;
+}
 
+sub render {
+    my ( $self, $result ) = @_;
+    $result ||= $self->result;
+    my $output = $self->render_element( $result );
     return $self->wrap_field( $result, $output );
 }
 
@@ -33,7 +39,11 @@ HTML::FormHandler::Widget::Field::Text - text field rendering widget
 
 =head1 VERSION
 
-version 0.40006
+version 0.40007
+
+=head1 SYNOPSIS
+
+Renders a text field
 
 =head1 AUTHOR
 

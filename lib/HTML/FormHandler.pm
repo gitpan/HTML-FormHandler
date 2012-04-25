@@ -25,11 +25,12 @@ use Data::Clone;
 use 5.008;
 
 # always use 5 digits after decimal because of toolchain issues
-our $VERSION = '0.40006';
+our $VERSION = '0.40007';
 
 
 # for consistency in api with field nodes
 sub form { shift }
+sub is_form { 1 }
 sub has_form { 1 }
 
 # Moose attributes
@@ -741,7 +742,7 @@ HTML::FormHandler - HTML forms using Moose
 
 =head1 VERSION
 
-version 0.40006
+version 0.40007
 
 =head1 SYNOPSIS
 
@@ -1158,7 +1159,7 @@ validation method.)
 Yet another way to provide settings for the field, except this one is intended for
 use in roles and compound fields, and is only executed when the form is
 initially built. It takes the same field name keys as 'update_field_list', plus
-'all' and 'by_flag'.
+'all', 'by_flag', and 'by_type'.
 
     sub build_update_subfields {{
         all => { tags => { wrapper_tag => 'p' } },
@@ -1479,7 +1480,9 @@ which can be used to customize/modify/localize form & field HTML attributes.
 Types: element, wrapper, label, form_element, form_wrapper, checkbox_label
 
    sub html_attributes {
-       my ( $self, $field, $type, $attr ) = @_;
+       my ( $self, $obj, $type, $attrs, $result ) = @_;
+
+       # obj is either form or field
        $attr->{class} = 'label' if $type eq 'label';
        $attr->{placeholder} = $self->_localize($attr->{placeholder})
            if exists $attr->{placeholder};
