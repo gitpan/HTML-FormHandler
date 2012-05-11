@@ -186,7 +186,6 @@ sub _make_adhoc_field {
     return $field;
 }
 
-
 sub _find_field_class {
     my ( $self, $type, $name ) = @_;
 
@@ -229,6 +228,9 @@ sub _find_parent {
             die "The parent of field " . $field_attr->{name} . " is not a Compound Field"
                 unless $parent->isa('HTML::FormHandler::Field::Compound');
             $field_attr->{name}   = $simple_name;
+        }
+        else {
+            die "did not find parent for field " . $field_attr->{name};
         }
     }
     elsif ( !( $self->form && $self == $self->form ) ) {
@@ -319,6 +321,7 @@ sub _merge_updates {
             my $attr = $class->meta->find_attribute_by_name( 'widget' );
             $widget = $attr->default if $attr;
         }
+        $widget = '' if $widget eq 'None';
         # widget wrapper
         my $widget_wrapper = $field_attr->{widget_wrapper};
         unless( $widget_wrapper ) {
@@ -363,8 +366,8 @@ sub by_flag_updates {
 sub _update_or_create {
     my ( $self, $parent, $field_attr, $class, $do_update ) = @_;
 
-    $field_attr->{parent} = $parent if $parent;
     $parent ||= $self->form;
+    $field_attr->{parent} = $parent;
     $field_attr->{form} = $self->form if $self->form;
     my $index = $parent->field_index( $field_attr->{name} );
     my $field;
@@ -391,8 +394,6 @@ sub _update_or_create {
         $field = $self->new_field_with_traits( $class, $field_attr);
         $parent->add_field($field);
     }
-    $field->form->reload_after_update(1)
-        if ( $field->form && $field->reload_after_update );
     return $field;
 }
 
@@ -443,7 +444,7 @@ HTML::FormHandler::BuildFields - role to build field array
 
 =head1 VERSION
 
-version 0.40007
+version 0.40008
 
 =head1 SYNOPSIS
 

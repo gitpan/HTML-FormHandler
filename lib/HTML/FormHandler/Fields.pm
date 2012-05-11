@@ -25,7 +25,7 @@ has 'fields' => (
 # both updates on the process call and updates from class applied roles
 has 'update_subfields' => ( is => 'rw', isa => 'HashRef', builder => 'build_update_subfields',
     traits => ['Hash'], handles => { clear_update_subfields => 'clear',
-    has_update_subfields => 'count' }, init_arg => undef );
+    has_update_subfields => 'count' } );
 sub build_update_subfields {{}}
 
 # compatibility wrappers for result errors
@@ -61,6 +61,11 @@ sub field_index {
         $index++;
     }
     return;
+}
+
+sub subfield {
+    my ( $self, $name ) = @_;
+    return $self->field($name, undef, $self);
 }
 
 sub field {
@@ -166,20 +171,19 @@ sub clear_data {
     $_->clear_data for $self->all_fields;
 }
 
-sub get_error_fields {
-    my $self = shift;
+sub propagate_error {
+    my ( $self, $result ) = @_;
 
-    my @error_results;
-    foreach my $field ( $self->sorted_fields ) {
-        next unless $field->has_result;
-        if ( $field->has_fields ) {
-            $field->get_error_fields;
-            push @error_results, @{ $field->result->error_results }
-                if $field->result->has_error_results;
+    # References to fields with errors are propagated up the tree.
+    # All fields with errors should end up being in the form's
+    # error_results. Once.
+    my ($found) = grep { $_ == $result } $self->result->all_error_results;
+    unless ( $found ) {
+        $self->result->add_error_result($result);
+        if ( $self->parent ) {
+            $self->parent->propagate_error( $result );
         }
-        push @error_results, $field->result if $field->result->has_errors;
     }
-    $self->result->add_error_result(@error_results) if scalar @error_results;
 }
 
 sub dump_fields { shift->dump(@_) }
@@ -216,7 +220,7 @@ HTML::FormHandler::Fields - internal role for form and compound fields
 
 =head1 VERSION
 
-version 0.40007
+version 0.40008
 
 =head1 SYNOPSIS
 

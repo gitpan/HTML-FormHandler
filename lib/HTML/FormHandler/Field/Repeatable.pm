@@ -23,7 +23,6 @@ has 'num_when_empty' => ( isa => 'Int',  is => 'rw', default => 1 );
 has 'num_extra'      => ( isa => 'Int',  is => 'rw', default => 0 );
 has 'index'          => ( isa => 'Int',  is => 'rw', default => 0 );
 has 'auto_id'        => ( isa => 'Bool', is => 'rw', default => 0 );
-has '+reload_after_update' => ( default => 1 );
 has 'is_repeatable'        => ( is      => 'ro', default => 1 );
 has '+widget'              => ( default => 'Repeatable' );
 
@@ -80,6 +79,9 @@ sub create_element {
     }
     # copy the fields from this field into the instance
     $instance->add_field( $self->all_fields );
+    foreach my $fld ( $instance->all_fields ) {
+        $fld->parent($instance);
+    }
 
     # set required flag
     $instance->required( $self->required );
@@ -290,7 +292,7 @@ HTML::FormHandler::Field::Repeatable - repeatable (array) field
 
 =head1 VERSION
 
-version 0.40007
+version 0.40008
 
 =head1 SYNOPSIS
 
@@ -362,11 +364,6 @@ The subfields of the elements will be in a fields array in each element.
 
 Every field that has a 'fields' array will also have an 'error_fields' array
 containing references to the fields that contain errors.
-
-Note that after updates to the database the fields will be reloaded. This means
-that the array indexes ( the '3' in C<< $form->field('addresses.3') >> ) may
-not be the same if there have been changes since the fields were initially
-loaded.
 
 =head1 ATTRIBUTES
 

@@ -42,9 +42,8 @@ sub test_validate_field {
     }
     $self->validate_field;
     unless( $self->form ) {
-        $self->get_error_fields;
         foreach my $err_res (@{$self->result->error_results}) {
-            $self->result->push_errors($err_res->all_errors);
+            $self->result->_push_errors($err_res->all_errors);
         }
     }
 }
@@ -87,7 +86,7 @@ HTML::FormHandler::Field::Compound - field consisting of subfields
 
 =head1 VERSION
 
-version 0.40007
+version 0.40008
 
 =head1 SYNOPSIS
 

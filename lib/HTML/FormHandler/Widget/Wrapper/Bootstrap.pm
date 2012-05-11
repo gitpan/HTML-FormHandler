@@ -25,17 +25,8 @@ sub wrap_field {
     $output .= qq{\n<div$attr_str>}
         if $self->do_wrapper;
     # render the label
-    if ( $self->do_label ) {
-        my $label;
-        if ( $self->does_wrap_label ) {
-            $label = $self->wrap_label( $self->label );
-        }
-        else {
-            $label = $self->get_tag('label_no_filter') ? $self->loc_label : $self->html_filter($self->loc_label);
-        }
-        $label .= $self->get_tag('label_after');
-        $output .= qq{\n<label class="control-label" for="} . $self->id . qq{">$label</label>};
-    }
+    $output .= "\n" . $self->do_render_label($result, undef, ['control-label'] )
+        if $self->do_label;
     $output .=  $self->get_tag('before_element');
     # the controls div for ... controls
     $output .= qq{\n<div class="controls">} unless $form_actions || !$self->do_label;
@@ -97,7 +88,7 @@ HTML::FormHandler::Widget::Wrapper::Bootstrap - Twitter Bootstrap 2.0 field wrap
 
 =head1 VERSION
 
-version 0.40007
+version 0.40008
 
 =head1 SYNOPSIS
 

@@ -15,6 +15,7 @@ sub build_form_element_class { ['form-horizontal'] }
 sub render_form_messages {
     my ( $self, $result ) = @_;
 
+    $result ||= $self->result;
     my $output = '';
     if ( $result->has_form_errors || $result->has_errors ) {
         $output = qq{\n<div class="alert alert-error">};
@@ -48,7 +49,7 @@ HTML::FormHandler::Widget::Theme::Bootstrap - sample bootstrap theme
 
 =head1 VERSION
 
-version 0.40007
+version 0.40008
 
 =head1 SYNOPSIS
 

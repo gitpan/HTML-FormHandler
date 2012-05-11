@@ -22,6 +22,17 @@ has 'options' => (
     lazy    => 1,
     builder => 'build_options'
 );
+# this is used for rendering
+has 'options_index' => ( traits => ['Counter'], isa => 'Num',
+    is => 'rw', default => 0,
+    handles => { inc_options_index => 'inc', dec_options_index => 'dec',
+        reset_options_index => 'reset' },
+);
+sub clear_data {
+    my $self = shift;
+    $self->next::method();
+    $self->reset_options_index;
+}
 
 sub build_options { [] }
 has 'options_from' => ( isa => 'Str', is => 'rw', default => 'none' );
@@ -158,7 +169,17 @@ sub _inner_validate_field {
     }
 
     # create a lookup hash
-    my %options = map { $_->{value} => 1 } @{ $self->options };
+    my %options;
+    foreach my $opt ( @{ $self->options } ) {
+        if ( exists $opt->{group} ) {
+            foreach my $group_opt ( @{ $opt->{options} } ) {
+                $options{$group_opt->{value}} = 1;
+            }
+        }
+        else {
+            $options{$opt->{value}} = 1;
+        }
+    }
     if( $self->has_many ) {
         $value = [map { $_->{$self->has_many} } @$value];
     }
@@ -315,7 +336,7 @@ HTML::FormHandler::Field::Select - select fields
 
 =head1 VERSION
 
-version 0.40007
+version 0.40008
 
 =head1 DESCRIPTION
 
@@ -537,6 +558,34 @@ This does a string compare.
 
 Customize 'select_invalid_value' and 'select_not_multiple'. Though neither of these
 messages should really be seen by users in a properly constructed select.
+
+=head1 Rendering
+
+The 'select' field can be rendered by the 'Select', 'RadioGroup', and 'CheckboxGroup'
+widgets. 'RadioGroup' is for a single select, and 'CheckboxGroup' is for a multiple
+select.
+
+Option groups can be rendered by providing an options arrays with 'group' elements
+containing options:
+
+    sub options_testop { (
+        {
+            group => 'First Group',
+            options => [
+                { value => 1, label => 'One' },
+                { value => 2, label => 'Two' },
+                { value => 3, label => 'Three' },
+            ],
+        },
+        {
+            group => 'Second Group',
+            options => [
+                { value => 4, label => 'Four' },
+                { value => 5, label => 'Five' },
+                { value => 6, label => 'Six' },
+            ],
+        },
+    ) }
 
 =head1 Database relations
 

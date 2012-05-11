@@ -25,7 +25,7 @@ use Data::Clone;
 use 5.008;
 
 # always use 5 digits after decimal because of toolchain issues
-our $VERSION = '0.40007';
+our $VERSION = '0.40008';
 
 
 # for consistency in api with field nodes
@@ -39,6 +39,8 @@ has 'name' => (
     is      => 'rw',
     default => sub { return 'form' . int( rand 1000 ) }
 );
+sub full_name { '' }
+sub full_accessor { '' }
 has 'parent' => ( is => 'rw' );
 has 'result' => (
     isa       => 'HTML::FormHandler::Result',
@@ -140,7 +142,6 @@ has 'defaults' => ( is => 'rw', isa => 'HashRef', default => sub {{}}, traits =>
 );
 has 'use_defaults_over_obj' => ( is => 'rw', isa => 'Bool', clearer => 'clear_use_defaults_over_obj' );
 has 'use_init_obj_over_item' => ( is => 'rw', isa => 'Bool', clearer => 'clear_use_init_obj_over_item' );
-has 'reload_after_update' => ( is => 'rw', isa     => 'Bool' );
 # flags
 has [ 'verbose', 'processed', 'did_init_obj' ] => ( isa => 'Bool', is => 'rw' );
 has 'user_data' => ( isa => 'HashRef', is => 'rw' );
@@ -401,7 +402,6 @@ sub process {
     $self->setup_form(@_);
     $self->validate_form      if $self->posted;
     $self->update_model       if ( $self->validated && !$self->no_update );
-    $self->after_update_model if $self->validated;
     $self->dump_fields        if $self->verbose;
     $self->processed(1);
     return $self->validated;
@@ -412,7 +412,6 @@ sub run {
     $self->setup_form(@_);
     $self->validate_form      if $self->posted;
     $self->update_model       if ( $self->validated && !$self->no_update );;
-    $self->after_update_model if $self->validated;
     my $result = $self->result;
     $self->clear;
     return $result;
@@ -456,6 +455,14 @@ sub errors {
     return @errors;
 }
 
+sub build_errors {
+    my $self = shift;
+    # this puts the errors in the result
+    foreach my $err_res (@{$self->result->error_results}) {
+        $self->result->_push_errors($err_res->all_errors);
+    }
+}
+
 sub uuid {
     my $form = shift;
     require Data::UUID;
@@ -471,9 +478,9 @@ sub validate_form {
     $self->validate;           # empty method for users
     $self->validate_model;     # model specific validation
     $self->fields_set_value;
+    $self->build_errors;       # move errors to result
     $self->_clear_dependency;
     $self->clear_posted;
-    $self->get_error_fields;
     $self->ran_validation(1);
     $self->dump_validated if $self->verbose;
     return $self->validated;
@@ -488,12 +495,6 @@ sub has_errors {
 sub num_errors {
     my $self = shift;
     return $self->num_error_fields + $self->num_form_errors;
-}
-
-sub after_update_model {
-    my $self = shift;
-    $self->_result_from_object( $self->result, $self->item )
-        if ( $self->reload_after_update && $self->item );
 }
 
 sub setup_form {
@@ -664,13 +665,6 @@ sub _munge_params {
     $self->{params} = $new_params;
 }
 
-after 'get_error_fields' => sub {
-   my $self = shift;
-   foreach my $err_res (@{$self->result->error_results}) {
-       $self->result->push_errors($err_res->all_errors);
-   }
-};
-
 sub add_form_error {
     my ( $self, @message ) = @_;
 
@@ -742,7 +736,7 @@ HTML::FormHandler - HTML forms using Moose
 
 =head1 VERSION
 
-version 0.40007
+version 0.40008
 
 =head1 SYNOPSIS
 
@@ -1245,7 +1239,7 @@ so this is a tree structure.
 Returns those fields from the fields array which are currently active. This
 is the method that returns the fields that are looped through when rendering.
 
-=head3 field($name)
+=head3 field($name), subfield($name)
 
 This is the method that is usually called to access a field:
 
@@ -1255,6 +1249,16 @@ This is the method that is usually called to access a field:
     my $city = $form->field('addresses.0.city')->value;
 
 Pass a second true value to die on errors.
+
+Since fields are searched for using the form as a base, if you want to find
+a sub field in a compound field method, the 'subfield' method may be more
+useful, since you can search starting at the current field. The 'chained'
+method also works:
+
+    -- in a compound field --
+    $self->field('media.caption'); # fails
+    $self->field('media')->field('caption'); # works
+    $self->subfield('media.caption'); # works
 
 =head2 Constraints and validation
 

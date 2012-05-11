@@ -40,6 +40,7 @@ has 'error_results' => (
         num_error_results => 'count',
         clear_error_results => 'clear',
         add_error_result => 'push',
+        all_error_results => 'elements',
     }
 );
 
@@ -50,7 +51,7 @@ has 'errors' => (
     default    => sub { [] },
     handles   => {
         all_errors  => 'elements',
-        push_errors => 'push',
+        _push_errors => 'push',
         num_errors => 'count',
         has_errors => 'count',
         clear_errors => 'clear',
@@ -115,7 +116,7 @@ HTML::FormHandler::Result::Role - role with common code for form & field results
 
 =head1 VERSION
 
-version 0.40007
+version 0.40008
 
 =head1 SYNOPSIS
 

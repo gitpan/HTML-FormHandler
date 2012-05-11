@@ -12,7 +12,7 @@ HTML::FormHandler::Manual::Rendering - how to render with FormHandler
 
 =head1 VERSION
 
-version 0.40007
+version 0.40008
 
 =head1 SYNOPSIS
 
@@ -439,6 +439,13 @@ The 'build_update_subfields' option is mainly useful if you have multiple
 repeatable fields that you want to set, or if you want defaults in a base
 class.
 
+=head3 widget and widget_wrapper set to 'None'
+
+If you want to implement the 'render' method in a custom field, you can set
+'widget' to 'None' and no widget will be applied. Setting the 'widget_wrapper'
+to 'None' will apply the 'None' wrapper, which simply returns the widget
+rendering.
+
 =head3 Error messages
 
 The default is currently to display error messages next to the rendered fields,
@@ -624,6 +631,10 @@ Some fields by default do not render a label: Button, Submit, Reset, ButtonTag.
 If you do want a label with these fields, you must set the 'do_label' flag to 1:
 
    has_field 'foo' ( type => 'Button', do_label => 1 );
+
+Select fields are also fairly complicated. They can be rendered with the
+'Select', 'RadioGroup', and 'CheckboxGroup' widgets. Option groups are also
+supported. See L<HTML::FormHandler::Field::Select>;
 
 =head2 Rendering labels
 

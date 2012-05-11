@@ -41,12 +41,17 @@ has 'result' => (
     writer    => '_set_result',
     handles   => [
         '_set_input',   '_clear_input', '_set_value', '_clear_value',
-        'errors',       'all_errors',   'push_errors',  'num_errors', 'has_errors',
+        'errors',       'all_errors',   '_push_errors',  'num_errors', 'has_errors',
         'clear_errors', 'validated', 'add_warning', 'all_warnings', 'num_warnings',
         'has_warnings', 'warnings',
     ],
 );
 has '_pin_result' => ( is => 'ro', reader => '_get_pin_result', writer => '_set_pin_result' );
+
+sub missing {
+    my $self = shift;
+    return $self->required && $self->validated && ( !$self->has_input || !$self->input_defined );
+}
 
 sub has_input {
     my $self = shift;
@@ -112,7 +117,6 @@ sub _deflate_and_set_value {
 }
 
 sub is_repeatable { }
-has 'reload_after_update' => ( is => 'rw', isa => 'Bool' );
 
 has 'fif_from_value' => ( isa => 'Str', is => 'ro' );
 
@@ -766,8 +770,13 @@ sub full_name {
     my $field = shift;
 
     my $name = $field->name;
-    my $parent = $field->parent || return $name;
-    return $parent->full_name . '.' . $name;
+    my $parent_name;
+    # field should always have a parent unless it's a standalone field test
+    if ( $field->parent ) {
+        $parent_name = $field->parent->full_name;
+    }
+    return $name unless defined $parent_name && length $parent_name;
+    return $parent_name . '.' . $name;
 }
 
 sub full_accessor {
@@ -779,8 +788,12 @@ sub full_accessor {
         return $parent->full_accessor;
     }
     my $accessor = $field->accessor;
-    return $accessor unless $parent;
-    return $parent->full_accessor . '.' . $accessor;
+    my $parent_accessor;
+    if ( $parent ) {
+        $parent_accessor = $parent->full_accessor;
+    }
+    return $accessor unless defined $parent_accessor && length $parent_accessor;
+    return $parent_accessor . '.' . $accessor;
 }
 
 sub add_error {
@@ -795,10 +808,17 @@ sub add_error {
         $out = $self->_localize(@message);
     }
     catch {
-        die "Error occurred localizing error message for " . $self->label . ".  $_";
+        die "Error occurred localizing error message for " . $self->label . ". Check brackets. $_";
     };
+    return $self->push_errors($out);;
+}
 
-    $self->push_errors($out);
+sub push_errors {
+    my $self = shift;
+    $self->_push_errors(@_);
+    if ( $self->parent ) {
+        $self->parent->propagate_error($self->result);
+    }
     return;
 }
 
@@ -952,7 +972,7 @@ HTML::FormHandler::Field - base class for fields
 
 =head1 VERSION
 
-version 0.40007
+version 0.40008
 
 =head1 SYNOPSIS
 

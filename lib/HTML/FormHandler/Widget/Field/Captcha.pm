@@ -36,7 +36,7 @@ HTML::FormHandler::Widget::Field::Captcha - Captcha field rendering widget
 
 =head1 VERSION
 
-version 0.40007
+version 0.40008
 
 =head1 SYNOPSIS
 

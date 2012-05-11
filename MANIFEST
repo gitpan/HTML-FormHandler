@@ -207,6 +207,7 @@ t/field_setup/disabled.t
 t/field_setup/id.t
 t/field_setup/inactive.t
 t/field_setup/input_param.t
+t/field_setup/missing.t
 t/field_setup/update_fields.t
 t/field_setup/update_subfields.t
 t/fields/dates.t
@@ -276,6 +277,7 @@ t/render/html_attributes.t
 t/render/inline.t
 t/render/label.t
 t/render/noneditable.t
+t/render/optgroup.t
 t/render/radio_group.t
 t/render/rep_fieldset.t
 t/render/repeatable.t
@@ -295,6 +297,7 @@ t/repeatable/list.t
 t/repeatable/nested.t
 t/repeatable/num_extra.t
 t/repeatable/set_methods.t
+t/repeatable/subfield.t
 t/result/basic.t
 t/result/compound.t
 t/result/errors.t

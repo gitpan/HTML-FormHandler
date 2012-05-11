@@ -11,7 +11,7 @@ HTML::FormHandler::Manual::FromDFV - converting from Data::FormValidator
 
 =head1 VERSION
 
-version 0.40007
+version 0.40008
 
 =head1 SYNOPSIS
 
