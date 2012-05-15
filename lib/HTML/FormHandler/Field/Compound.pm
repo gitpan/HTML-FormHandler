@@ -13,6 +13,8 @@ has 'is_compound' => ( is => 'ro', isa => 'Bool', default => 1 );
 has 'item' => ( is => 'rw', clearer => 'clear_item' );
 has '+do_wrapper' => ( default => 0 );
 has '+do_label'   => ( default => 0 );
+has 'primary_key' => ( is => 'rw', isa => 'ArrayRef',
+    predicate => 'has_primary_key', );
 
 has '+field_name_space' => (
     default => sub {
@@ -86,7 +88,7 @@ HTML::FormHandler::Field::Compound - field consisting of subfields
 
 =head1 VERSION
 
-version 0.40008
+version 0.40009
 
 =head1 SYNOPSIS
 

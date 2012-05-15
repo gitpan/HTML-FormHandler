@@ -296,6 +296,7 @@ t/repeatable/has_many.t
 t/repeatable/list.t
 t/repeatable/nested.t
 t/repeatable/num_extra.t
+t/repeatable/reload.t
 t/repeatable/set_methods.t
 t/repeatable/subfield.t
 t/result/basic.t

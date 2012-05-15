@@ -394,6 +394,8 @@ sub _update_or_create {
         $field = $self->new_field_with_traits( $class, $field_attr);
         $parent->add_field($field);
     }
+    $field->form->add_repeatable_field($field)
+        if ( $field->form && $field->has_flag('is_repeatable') );
     return $field;
 }
 
@@ -444,7 +446,7 @@ HTML::FormHandler::BuildFields - role to build field array
 
 =head1 VERSION
 
-version 0.40008
+version 0.40009
 
 =head1 SYNOPSIS
 

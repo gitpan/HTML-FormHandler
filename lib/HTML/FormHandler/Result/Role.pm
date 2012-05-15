@@ -27,6 +27,8 @@ has '_results' => (
         num_results => 'count',
         has_results => 'count',
         clear_results => 'clear',
+        find_result_index => 'first_index',
+        set_result_at_index => 'set',
     }
 );
 
@@ -116,7 +118,7 @@ HTML::FormHandler::Result::Role - role with common code for form & field results
 
 =head1 VERSION
 
-version 0.40008
+version 0.40009
 
 =head1 SYNOPSIS
 
