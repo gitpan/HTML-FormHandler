@@ -26,6 +26,7 @@ has 'input_without_param' => (
     predicate => 'has_input_without_param'
 );
 has 'not_nullable' => ( is => 'rw', isa => 'Bool' );
+has 'validate_when_empty' => ( is => 'rw', isa => 'Bool' );
 has 'init_value' => ( is => 'rw', clearer => 'clear_init_value', predicate => 'has_init_value' );
 has 'default' => ( is => 'rw' );
 has 'default_over_obj' => ( is => 'rw', builder => 'build_default_over_obj' );
@@ -480,7 +481,7 @@ sub build_validate_method {
     my $self = shift;
     my $set_validate = $self->set_validate;
     $set_validate ||= "validate_" . convert_full_name($self->full_name);
-    return sub { $self = shift; $self->form->$set_validate($self); }
+    return sub { my $self = shift; $self->form->$set_validate($self); }
         if ( $self->form && $self->form->can($set_validate) );
     return sub { };
 }
@@ -501,7 +502,7 @@ sub build_default_method {
     $set_default ||= "default_" . convert_full_name($self->full_name);
     if ( $self->form && $self->form->can($set_default) ) {
         $self->_set_default_method(
-            sub { $self = shift; return $self->form->$set_default($self, $self->form->item); }
+            sub { my $self = shift; return $self->form->$set_default($self, $self->form->item); }
         );
     }
 }
@@ -972,7 +973,7 @@ HTML::FormHandler::Field - base class for fields
 
 =head1 VERSION
 
-version 0.40009
+version 0.40010
 
 =head1 SYNOPSIS
 

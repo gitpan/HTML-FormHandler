@@ -52,7 +52,7 @@ HTML::FormHandler::Field::Duration - DateTime::Duration from HTML form values
 
 =head1 VERSION
 
-version 0.40009
+version 0.40010
 
 =head1 SubFields
 

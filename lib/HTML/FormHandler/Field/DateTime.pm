@@ -72,7 +72,7 @@ HTML::FormHandler::Field::DateTime - compound DateTime field
 
 =head1 VERSION
 
-version 0.40009
+version 0.40010
 
 =head1 DESCRIPTION
 

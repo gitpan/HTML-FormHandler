@@ -53,21 +53,23 @@ sub validate_field {
     return unless $field->has_result;
     $field->clear_errors;    # this is only here for testing convenience
                              # See if anything was submitted
+    my $continue_validation = 1;
     if ( $field->required && ( !$field->has_input || !$field->input_defined ) ) {
         $field->add_error( $field->get_message('required'), $field->loc_label );
         if( $field->has_input ) {
            $field->not_nullable ? $field->_set_value($field->input) : $field->_set_value(undef);
         }
-        return;
+        $continue_validation = 0;
     }
     elsif ( $field->DOES('HTML::FormHandler::Field::Repeatable') ) { }
     elsif ( !$field->has_input ) {
-        return;
+        $continue_validation = 0;
     }
     elsif ( !$field->input_defined ) {
         $field->not_nullable ? $field->_set_value($field->input) : $field->_set_value(undef);
-        return;
+        $continue_validation = 0;
     }
+    return if ( !$continue_validation && !$field->validate_when_empty );
 
     # do building of node
     if ( $field->DOES('HTML::FormHandler::Fields') ) {
@@ -153,6 +155,36 @@ sub _apply_actions {
         # Moose constraints
         if ( !ref $action || ref $action eq 'MooseX::Types::TypeDecorator' ) {
             $action = { type => $action };
+        }
+        if ( my $when = $action->{when} ) {
+            my $matched = 0;
+            foreach my $key ( keys %$when ) {
+                my $check_against = $when->{$key};
+                my $from_form = ( $key =~ /^\+/ );
+                $key =~ s/^\+//;
+                my $field = $from_form ? $self->form->field($key) : $self->parent->subfield( $key );
+                unless ( $field ) {
+                    warn "field '$key' not found processing when";
+                    next;
+                }
+                if ( ref $check_against eq 'CODE' ) {
+                    $matched++
+                        if $check_against->($field->fif, $self);
+                }
+                elsif ( ref $check_against eq 'ARRAY' ) {
+                    foreach my $value ( @$check_against ) {
+                        $matched++ if ( $value eq $field->fif );
+                    }
+                }
+                elsif ( $check_against eq ( $field->fif || '' ) ) {
+                    $matched++;
+                }
+                else {
+                    $matched = 0;
+                    last;
+                }
+            }
+            next unless $matched;
         }
         if ( exists $action->{type} ) {
             my $tobj;
@@ -242,7 +274,7 @@ HTML::FormHandler::Validate - validation role (internal)
 
 =head1 VERSION
 
-version 0.40009
+version 0.40010
 
 =head1 SYNOPSIS
 

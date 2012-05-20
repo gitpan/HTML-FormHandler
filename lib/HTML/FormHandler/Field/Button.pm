@@ -22,7 +22,7 @@ HTML::FormHandler::Field::Button - button field
 
 =head1 VERSION
 
-version 0.40009
+version 0.40010
 
 =head1 SYNOPSIS
 

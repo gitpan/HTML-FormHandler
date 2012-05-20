@@ -218,6 +218,7 @@ t/fields/password.t
 t/fields/repeatable.t
 t/fields/select.t
 t/form_setup/clone.t
+t/form_setup/compound_field_list.t
 t/form_setup/config.t
 t/form_setup/dynamic.t
 t/form_setup/include.t
@@ -310,6 +311,7 @@ t/validation/dependency.t
 t/validation/filters.t
 t/validation/types.t
 t/validation/validate_coderef.t
+t/validation/when.t
 t/var/form1.pl
 t/var/form1.yml
 t/wizard/basic.t
@@ -323,6 +325,7 @@ xt/captcha2.t
 xt/chbox_group.t
 xt/check_selected_option.t
 xt/custom_fields.t
+xt/cycles.t
 xt/dfv.t
 xt/display.t
 xt/email.t
