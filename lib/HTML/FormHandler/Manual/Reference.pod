@@ -12,7 +12,7 @@ HTML::FormHandler::Manual::Reference - concise reference
 
 =head1 VERSION
 
-version 0.40010
+version 0.40011
 
 =head1 DESCRIPTION
 
@@ -166,8 +166,10 @@ L<HTML::FormHandler::Render::Simple>, and in the individual field classes.
 =head2 Field validation
 
    apply         Array of constraint/coercion/transformation actions
+                 ( type, check, transform, message, when )
    validate_method  Validation coderef, or 'validate_$fieldname' in form (default)
    required      Field is required
+   required_when Takes a hashref of field name keys and values
    maxlength     Text fields. Validated.
    minlength     Text fields. Used in validation
    range_start   Range start for number fields

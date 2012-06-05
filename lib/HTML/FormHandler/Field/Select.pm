@@ -58,6 +58,15 @@ has 'options_method' => (
         get_options => 'execute_method',
     },
 );
+has 'sort_options_method' => (
+    traits  => ['Code'],
+    is      => 'rw',
+    isa     => 'CodeRef',
+    predicate => 'has_sort_options_method',
+    handles => {
+        sort_options => 'execute_method',
+    },
+);
 
 has 'set_options' => ( isa => 'Str', is => 'ro');
 sub _set_options_meth {
@@ -101,7 +110,7 @@ has 'localize_labels'  => ( isa => 'Bool', is => 'rw' );
 has 'active_column'    => ( isa => 'Str',       is => 'rw', default => 'active' );
 has 'auto_widget_size' => ( isa => 'Int',       is => 'rw', default => '0' );
 has 'sort_column'      => ( isa => 'Str',       is => 'rw' );
-has '+widget'          => ( default => 'select' );
+has '+widget'          => ( default => 'Select' );
 has 'empty_select'     => ( isa => 'Str',       is => 'rw' );
 has '+deflate_method'  => ( default => sub { \&select_deflate } );
 has '+input_without_param' => ( lazy => 1, builder => 'build_input_without_param' );
@@ -114,6 +123,12 @@ sub build_input_without_param {
     else {
         return '';
     }
+}
+has 'value_when_empty' => ( is => 'ro', lazy => 1, builder => 'build_value_when_empty' );
+sub build_value_when_empty {
+    my $self = shift;
+    return [] if $self->multiple;
+    return undef;
 }
 
 our $class_messages = {
@@ -133,9 +148,9 @@ sub select_widget {
     my $field = shift;
 
     my $size = $field->auto_widget_size;
-    return $field->widget unless $field->widget eq 'select' && $size;
+    return $field->widget unless $field->widget eq 'Select' && $size;
     my $options = $field->options || [];
-    return 'select' if @$options > $size;
+    return 'Select' if @$options > $size;
     return $field->multiple ? 'checkbox_group' : 'radio_group';
 }
 
@@ -265,7 +280,8 @@ sub _load_options {
         push @{$opts}, { value => shift @options, label => shift @options } while @options;
     }
     if ($opts) {
-        my $opts = $self->sort_options($opts);    # allow sorting options
+        # sort options if sort method exists
+        $opts = $self->sort_options($opts) if $self->has_sort_options_method;
         $self->options($opts);
     }
 }
@@ -291,17 +307,14 @@ sub default_from_options {
     }
 }
 
-sub sort_options { shift; return shift; }
-
 before 'value' => sub {
     my $self  = shift;
 
     return undef unless $self->has_result;
     my $value = $self->result->value;
-
     if( $self->multiple ) {
-        if ( !defined $value || $value eq '' ) {
-            $self->_set_value( [] );
+        if ( !defined $value || $value eq '' || ( ref $value eq 'ARRAY' && scalar @$value == 0 ) ) {
+            $self->_set_value( $self->value_when_empty );
         }
         elsif ( $self->has_many && scalar @$value && ref($value->[0]) ne 'HASH' ) {
             my @new_values;
@@ -336,7 +349,7 @@ HTML::FormHandler::Field::Select - select fields
 
 =head1 VERSION
 
-version 0.40010
+version 0.40011
 
 =head1 DESCRIPTION
 
@@ -355,15 +368,20 @@ This field type can also be used for fields that use the
 selects with multiple flag turned on, or that use the Multiple
 field).
 
-The 'options' array can come from four different places.
-The options attribute itself, either declaratively or using a
-'build_options' method in the field, from a method in the
-form ('options_<fieldname>') or from the database.
+=head2 options
+
+The 'options' array can come from a number of different places:
+
+=over 4
+
+=item From a field declaration
 
 In a field declaration:
 
    has_field 'opt_in' => ( type => 'Select', widget => 'RadioGroup',
       options => [{ value => 0, label => 'No'}, { value => 1, label => 'Yes'} ] );
+
+=item From a field class 'build_options' method
 
 In a custom field class:
 
@@ -382,12 +400,12 @@ In a custom field class:
        ];
    }
 
-With a coderef:
+=item From a coderef supplied to the field definition
 
    has_field 'flim' => ( type => 'Select', options_method => \&flim_options );
    sub flim_options {  <return options array> }
 
-In a form:
+=item From a form 'options_<field_name>' method or attribute
 
    has_field 'fruit' => ( type => 'Select' );
    sub options_fruit {
@@ -404,9 +422,33 @@ In a form:
 
 Notice that, as a convenience, you can return a simple array (or arrayref)
 for the options array in the 'options_field_name' method. The hashrefs with
-'value' and 'label' keys will be constructed for you by FormHandler. The
-arrayref of hashrefs format can be useful if you want to add another key
-to the hashes that you can use in creating the HTML:
+'value' and 'label' keys will be constructed for you by FormHandler.
+
+=item From the database
+
+The final source of the options array is a database when the name of the
+accessor is a relation to the table holding the information used to construct
+the select list.  The primary key is used as the value. The other columns used are:
+
+    label_column  --  Used for the labels in the options (default 'name')
+    active_column --  The name of the column to be used in the query (default 'active')
+                      that allows the rows retrieved to be restricted
+    sort_column   --  The name of the column used to sort the options
+
+See also L<HTML::FormHandler::Model::DBIC>, the 'lookup_options' method.
+
+=back
+
+=head2 Customizing options
+
+Additional attributes can be added in the options array hashref, by using
+the 'attributes' key. If you have custom rendering code, you can add any
+additional key that you want, of course.
+
+Note that you should *not* set 'checked' or 'selected' attributes in options.
+That is handled by setting a field default.
+
+An options array with an extra 'note' key:
 
    sub options_license
    {
@@ -422,11 +464,7 @@ to the hashes that you can use in creating the HTML:
       return @selections;
    }
 
-To have an option being shown, but disabled (thus not selectable), use the
-'disabled' key with a true value inside this hashref. Let's extend the example
-above, adding also inactive licenses, and disabling them.  Keep in mind that a
-disabled option can be made selectable later, by removing the disabled
-attribute, e.g. using javascript.
+Setting the select element to disabled:
 
    sub options_license
    {
@@ -437,21 +475,15 @@ attribute, e.g. using javascript.
       my @selections;
       while ( my $license = $licenses->next ) {
          push @selections, { value => $license->id, label => $license->label,
-              note => $license->note, disabled => ($license->active == 0) ? 1 : 0 };
+              attributes => { disabled => ($license->active == 0) ? 1 : 0 } };
       }
       return @selections;
    }
 
-The final source of the options array is a database when the name of the
-accessor is a relation to the table holding the information used to construct
-the select list.  The primary key is used as the value. The other columns used are:
+You can also devide the options up into option groups. See the section on
+rendering.
 
-    label_column  --  Used for the labels in the options (default 'name')
-    active_column --  The name of the column to be used in the query (default 'active')
-                      that allows the rows retrieved to be restricted
-    sort_column   --  The name of the column used to sort the options
-
-See also L<HTML::FormHandler::Model::DBIC>, the 'lookup_options' method.
+=head2 Reloading options
 
 If the options come from the options_<fieldname> method or the database, they
 will be reloaded every time the form is reloaded because the available options
@@ -459,9 +491,12 @@ may have changed. To prevent this from happening when the available options are
 known to be static, set the 'do_not_reload' flag, and the options will not be
 reloaded after the first time
 
+=head2 Sorting options
+
 The sorting of the options may be changed using a 'sort_options' method in a
 custom field class. The 'Multiple' field uses this method to put the already
-selected options at the top of the list.
+selected options at the top of the list. Note that this won't work with
+option groups.
 
 =head1 Attributes and Methods
 
@@ -491,6 +526,11 @@ not add an entry to the list of options.
 
    has_field 'fruit' => ( type => 'Select,
         empty_select => '---Choose a Fruit---' );
+
+=head1 value_when_empty
+
+Usually the empty value is an empty arrayref. This attribute allows
+changing that. Used by SelectCSV field.
 
 =head2 label_column
 
@@ -586,6 +626,9 @@ containing options:
             ],
         },
     ) }
+
+The select rendering widgets all have a 'render_option' method, which may be useful
+for situations when you want to split up the rendering of a radio group or checkbox group.
 
 =head1 Database relations
 

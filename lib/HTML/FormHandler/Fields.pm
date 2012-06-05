@@ -79,8 +79,6 @@ sub field {
         exists $self->index->{$name} ) {
         return $self->index->{$name};
     }
-    return $self->form->index->{$name}
-        if $self->form && exists $self->form->index->{$name};
     if ( $name =~ /\./ ) {
         my @names = split /\./, $name;
         $f ||= $self->form || $self;
@@ -220,7 +218,7 @@ HTML::FormHandler::Fields - internal role for form and compound fields
 
 =head1 VERSION
 
-version 0.40010
+version 0.40011
 
 =head1 SYNOPSIS
 

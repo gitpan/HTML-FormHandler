@@ -35,8 +35,6 @@ has 'result' => (
     isa       => 'HTML::FormHandler::Field::Result',
     is        => 'ro',
     weak_ref  => 1,
-    lazy      => 1,
-    builder   => 'build_result',
     clearer   => 'clear_result',
     predicate => 'has_result',
     writer    => '_set_result',
@@ -66,7 +64,12 @@ sub has_value {
     return $self->result->has_value;
 }
 
-# this should normally only be called for field tests
+# these should normally only be called for field tests
+sub reset_result {
+    my $self = shift;
+    $self->clear_result;
+    $self->build_result;
+}
 sub build_result {
     my $self = shift;
     my @parent = ( 'parent' => $self->parent->result )
@@ -77,7 +80,7 @@ sub build_result {
         @parent
     );
     $self->_set_pin_result($result);    # to prevent garbage collection of result
-    return $result;
+    $self->_set_result($result);
 }
 
 sub input {
@@ -973,7 +976,7 @@ HTML::FormHandler::Field - base class for fields
 
 =head1 VERSION
 
-version 0.40010
+version 0.40011
 
 =head1 SYNOPSIS
 
@@ -1150,6 +1153,9 @@ The 'element_attr' hashref attribute can be used to set
 arbitrary HTML attributes on a field's input tag.
 
    has_field 'foo' => ( element_attr => { readonly => 1, my_attr => 'abc' } );
+
+Note that the 'id' and 'type' attributes are not set using element_attr. Use
+the field's 'id' attribute (or 'build_id_method') to set the id.
 
 The 'label_attr' hashref is for label attributes, and the 'wrapper_attr'
 is for attributes on the wrapping element (a 'div' for the standard 'simple'

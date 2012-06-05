@@ -53,6 +53,7 @@ lib/HTML/FormHandler/Field/Reset.pm
 lib/HTML/FormHandler/Field/Result.pm
 lib/HTML/FormHandler/Field/Second.pm
 lib/HTML/FormHandler/Field/Select.pm
+lib/HTML/FormHandler/Field/SelectCSV.pm
 lib/HTML/FormHandler/Field/Submit.pm
 lib/HTML/FormHandler/Field/Text.pm
 lib/HTML/FormHandler/Field/TextArea.pm
@@ -62,6 +63,7 @@ lib/HTML/FormHandler/Field/Year.pm
 lib/HTML/FormHandler/Fields.pm
 lib/HTML/FormHandler/Foo.pm
 lib/HTML/FormHandler/I18N.pm
+lib/HTML/FormHandler/I18N/bg_bg.pm
 lib/HTML/FormHandler/I18N/de_de.pm
 lib/HTML/FormHandler/I18N/en_us.pm
 lib/HTML/FormHandler/I18N/hu_hu.pm
@@ -210,6 +212,7 @@ t/field_setup/input_param.t
 t/field_setup/missing.t
 t/field_setup/update_fields.t
 t/field_setup/update_subfields.t
+t/fields/csv.t
 t/fields/dates.t
 t/fields/fields.t
 t/fields/float.t
@@ -296,6 +299,7 @@ t/repeatable/defaults.t
 t/repeatable/has_many.t
 t/repeatable/list.t
 t/repeatable/nested.t
+t/repeatable/nested2.t
 t/repeatable/num_extra.t
 t/repeatable/reload.t
 t/repeatable/set_methods.t
@@ -309,6 +313,7 @@ t/validation/apply.t
 t/validation/constraints.t
 t/validation/dependency.t
 t/validation/filters.t
+t/validation/reqwhen.t
 t/validation/types.t
 t/validation/validate_coderef.t
 t/validation/when.t

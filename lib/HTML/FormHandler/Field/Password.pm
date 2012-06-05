@@ -6,7 +6,7 @@ extends 'HTML::FormHandler::Field::Text';
 our $VERSION = '0.04';
 
 
-has '+widget'           => ( default => 'password' );
+has '+widget'           => ( default => 'Password' );
 has '+password'         => ( default => 1 );
 has 'ne_username'       => ( isa     => 'Str', is => 'rw' );
 has '+type_attr'        => ( default => 'password' );
@@ -65,7 +65,7 @@ HTML::FormHandler::Field::Password - password field
 
 =head1 VERSION
 
-version 0.40010
+version 0.40011
 
 =head1 DESCRIPTION
 
