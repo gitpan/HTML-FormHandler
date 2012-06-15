@@ -11,7 +11,7 @@ HTML::FormHandler::Manual::Errors - FormHandler error methods
 
 =head1 VERSION
 
-version 0.40011
+version 0.40012
 
 =head1 SYNOPSIS
 
@@ -99,7 +99,7 @@ use in the validation process.
 
 =item errors
 
-Returns an array of error strings;
+Returns an array of error strings.
 
 =item has_errors
 
@@ -119,7 +119,7 @@ Add an error without localization.
 
 =item error_fields
 
-In a compound field (and it's subclasses, like 'Repeatable'), the list
+In a compound field (and its subclasses, like 'Repeatable'), the list
 of fields with errors.
 
 =back

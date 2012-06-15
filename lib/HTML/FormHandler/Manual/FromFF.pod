@@ -11,7 +11,7 @@ HTML::FormHandler::Manual::FromFF - converting from HTML::FormFu
 
 =head1 VERSION
 
-version 0.40011
+version 0.40012
 
 =head1 SYNOPSIS
 
@@ -26,7 +26,7 @@ FormFu.
 
 =head2 Inside/Outside
 
-FormFu forms look to me like "inside-out" object. The attributes and
+FormFu forms look to me like "inside-out" objects. The attributes and
 code are all set outside of the object. FormHandler forms are the
 opposite. Almost all attributes and settings are set *inside* the
 form class, although settings can be passed in on 'new' and 'process',

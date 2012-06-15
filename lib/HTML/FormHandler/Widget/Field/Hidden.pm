@@ -41,7 +41,7 @@ HTML::FormHandler::Widget::Field::Hidden - hidden field rendering widget
 
 =head1 VERSION
 
-version 0.40011
+version 0.40012
 
 =head1 SYNOPSIS
 
