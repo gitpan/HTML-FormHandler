@@ -97,7 +97,7 @@ sub render_option {
     # handle label
     my $label = $option->{label};
     $label = $self->_localize($label) if $self->localize_labels;
-    $output .= '>' . ( $self->html_filter($label) || '' ) . '</option>';
+    $output .= '>' . ( $self->html_filter($label) ) . '</option>';
     $self->inc_options_index;
     return $output;
 }
@@ -113,7 +113,7 @@ HTML::FormHandler::Widget::Field::Select - select field rendering widget
 
 =head1 VERSION
 
-version 0.40012
+version 0.40013
 
 =head1 DESCRIPTION
 

@@ -80,7 +80,7 @@ sub render_option {
     # handle label
     my $label = $option->{label};
     $label = $self->_localize($label) if $self->localize_labels;
-    $output .= $self->html_filter($label) || '';
+    $output .= $self->html_filter($label);
     $output .= "\n</label>";
     $self->inc_options_index;
     return $output;
@@ -97,7 +97,7 @@ HTML::FormHandler::Widget::Field::CheckboxGroup - checkbox group field role
 
 =head1 VERSION
 
-version 0.40012
+version 0.40013
 
 =head1 SYNOPSIS
 

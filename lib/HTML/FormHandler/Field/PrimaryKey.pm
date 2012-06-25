@@ -8,6 +8,7 @@ extends 'HTML::FormHandler::Field';
 has 'is_primary_key' => ( isa => 'Bool', is => 'ro', default => '1' );
 has '+widget' => ( default => 'Hidden' );
 has '+do_label' => ( default => 0 );
+has '+no_value_if_empty' => ( default => 1 );
 
 sub BUILD {
     my $self = shift;
@@ -34,7 +35,7 @@ HTML::FormHandler::Field::PrimaryKey - primary key field
 
 =head1 VERSION
 
-version 0.40012
+version 0.40013
 
 =head1 SYNOPSIS
 

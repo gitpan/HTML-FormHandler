@@ -181,8 +181,8 @@ sub _make_field {
 sub _make_adhoc_field {
     my ( $self, $class, $field_attr ) = @_;
 
-    # remove and save form & parent, because sometimes hash cloning creates
-    # a new reference
+    # remove and save form & parent, because if the form class has a 'clone'
+    # method, Data::Clone::clone will clone the form
     my $parent = delete $field_attr->{parent};
     my $form = delete $field_attr->{form};
     $field_attr = $self->_merge_updates( $field_attr, $class );
@@ -452,7 +452,7 @@ HTML::FormHandler::BuildFields - role to build field array
 
 =head1 VERSION
 
-version 0.40012
+version 0.40013
 
 =head1 SYNOPSIS
 

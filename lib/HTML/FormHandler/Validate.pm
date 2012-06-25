@@ -58,6 +58,7 @@ sub validate_field {
     if ( ( $field->required ||
            ( $field->has_required_when && $field->match_when($field->required_when) ) ) &&
        ( !$field->has_input || !$field->input_defined ) ) {
+        $field->missing(1);
         $field->add_error( $field->get_message('required'), $field->loc_label );
         if( $field->has_input ) {
            $field->not_nullable ? $field->_set_value($field->input) : $field->_set_value(undef);
@@ -69,8 +70,18 @@ sub validate_field {
         $continue_validation = 0;
     }
     elsif ( !$field->input_defined ) {
-        $field->not_nullable ? $field->_set_value($field->input) : $field->_set_value(undef);
-        $continue_validation = 0;
+        if ( $field->not_nullable ) {
+            $field->_set_value($field->input);
+            # handles the case where a compound field value needs to have empty subfields
+            $continue_validation = 0 unless $field->has_flag('is_compound');
+        }
+        elsif ( $field->no_value_if_empty || $field->has_flag('is_contains') ) {
+            $continue_validation = 0;
+        }
+        else {
+            $field->_set_value(undef);
+            $continue_validation = 0;
+        }
     }
     return if ( !$continue_validation && !$field->validate_when_empty );
 
@@ -283,7 +294,7 @@ HTML::FormHandler::Validate - validation role (internal)
 
 =head1 VERSION
 
-version 0.40012
+version 0.40013
 
 =head1 SYNOPSIS
 

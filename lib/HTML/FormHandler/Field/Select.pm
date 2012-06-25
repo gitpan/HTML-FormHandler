@@ -349,7 +349,7 @@ HTML::FormHandler::Field::Select - select fields
 
 =head1 VERSION
 
-version 0.40012
+version 0.40013
 
 =head1 DESCRIPTION
 
@@ -524,7 +524,7 @@ Set to the string value of the select label if you want the renderer
 to create an empty select value. This only affects rendering - it does
 not add an entry to the list of options.
 
-   has_field 'fruit' => ( type => 'Select,
+   has_field 'fruit' => ( type => 'Select',
         empty_select => '---Choose a Fruit---' );
 
 =head1 value_when_empty

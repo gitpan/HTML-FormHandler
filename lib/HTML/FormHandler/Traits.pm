@@ -117,7 +117,7 @@ HTML::FormHandler::Traits - customized replacement for MooseX::Traits
 
 =head1 VERSION
 
-version 0.40012
+version 0.40013
 
 =head1 SYNOPSIS
 

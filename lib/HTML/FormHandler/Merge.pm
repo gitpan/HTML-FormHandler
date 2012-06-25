@@ -70,7 +70,7 @@ HTML::FormHandler::Merge - internal hash merging
 
 =head1 VERSION
 
-version 0.40012
+version 0.40013
 
 =head1 AUTHOR
 

@@ -8,6 +8,7 @@ extends 'HTML::FormHandler::Field::NoValue';
 has '+widget' => ( default => 'Reset' );
 has '+value' => ( default => 'Reset' );
 has '+type_attr' => ( default => 'reset' );
+has '+html5_type_attr' => ( default => 'reset' );
 sub do_label {0}
 
 __PACKAGE__->meta->make_immutable;
@@ -23,7 +24,7 @@ HTML::FormHandler::Field::Reset - reset field
 
 =head1 VERSION
 
-version 0.40012
+version 0.40013
 
 =head1 SYNOPSIS
 

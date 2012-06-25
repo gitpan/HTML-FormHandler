@@ -8,6 +8,7 @@ extends 'HTML::FormHandler::Field::NoValue';
 has '+value'  => ( default => 'Save' );
 has '+widget' => ( default => 'Submit' );
 has '+type_attr' => ( default => 'submit' );
+has '+html5_type_attr' => ( default => 'submit' );
 sub do_label {0}
 
 sub _result_from_input {
@@ -31,7 +32,7 @@ HTML::FormHandler::Field::Submit - submit field
 
 =head1 VERSION
 
-version 0.40012
+version 0.40013
 
 =head1 SYNOPSIS
 

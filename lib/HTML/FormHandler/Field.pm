@@ -26,6 +26,7 @@ has 'input_without_param' => (
     predicate => 'has_input_without_param'
 );
 has 'not_nullable' => ( is => 'rw', isa => 'Bool' );
+has 'no_value_if_empty' => ( is => 'rw', isa => 'Bool' );
 has 'validate_when_empty' => ( is => 'rw', isa => 'Bool' );
 has 'init_value' => ( is => 'rw', clearer => 'clear_init_value', predicate => 'has_init_value' );
 has 'default' => ( is => 'rw' );
@@ -42,15 +43,10 @@ has 'result' => (
         '_set_input',   '_clear_input', '_set_value', '_clear_value',
         'errors',       'all_errors',   '_push_errors',  'num_errors', 'has_errors',
         'clear_errors', 'validated', 'add_warning', 'all_warnings', 'num_warnings',
-        'has_warnings', 'warnings',
+        'has_warnings', 'warnings', 'missing',
     ],
 );
 has '_pin_result' => ( is => 'ro', reader => '_get_pin_result', writer => '_set_pin_result' );
-
-sub missing {
-    my $self = shift;
-    return $self->required && $self->validated && ( !$self->has_input || !$self->input_defined );
-}
 
 sub has_input {
     my $self = shift;
@@ -976,7 +972,7 @@ HTML::FormHandler::Field - base class for fields
 
 =head1 VERSION
 
-version 0.40012
+version 0.40013
 
 =head1 SYNOPSIS
 
@@ -1040,7 +1036,7 @@ The name of the field with all parents:
 
 =item full_accessor
 
-The field accessor with all parents
+The field accessor with all parents.
 
 =item html_name
 
@@ -1131,7 +1127,7 @@ want to use a MakeText language handle. Default is an empty list.
 
 =item add_error
 
-Add an error to the list of errors. Field will be localized
+Add an error to the list of errors. Error message will be localized
 using '_localize' method.
 See also L<HTML::FormHandler::TraitFor::I18N>.
 
@@ -1205,7 +1201,7 @@ attributes, etc.
 The slots for the class attributes are arrayrefs; they will coerce a
 string into an arrayref.
 In addition, these 'wrapping methods' call a hook method in the form class,
-'html_attributes' which you can use to customize and localize the various
+'html_attributes', which you can use to customize and localize the various
 attributes. (Field types: 'element', 'wrapper', 'label')
 
    sub html_attributes {
@@ -1219,7 +1215,7 @@ The 'process_attrs' function will also handle an array of strings, such as for t
 
 =head2 tags
 
-A hashref containing flags and string for use in the rendering code.
+A hashref containing flags and strings for use in the rendering code.
 The value of a tag can be a string, a coderef (accessed as a method on the
 field) or a block specified with a percent followed by the blockname
 ('%blockname').
@@ -1255,8 +1251,8 @@ to create a widget template.
 
 Widget types for some of the provided field classes:
 
-    Widget         : Field classes
-    ---------------:-----------------------------------
+    Widget                 : Field classes
+    -----------------------:---------------------------------
     Text                   : Text, Integer
     Checkbox               : Checkbox, Boolean
     RadioGroup             : Select, Multiple, IntRange (etc)
@@ -1295,7 +1291,7 @@ For more about widgets, see L<HTML::FormHandler::Manual::Rendering>.
 
 =head2 Defaults
 
-See also the section in L<HTML::FormHandler::Manual::Intro#Defaults>.
+See also the documentation on L<HTML::FormHandler::Manual::Intro/Defaults>.
 
 =over
 
@@ -1367,7 +1363,7 @@ the DB model.
 Set messages created by FormHandler by setting in the 'messages'
 hashref. Some field subclasses have additional settable messages.
 
-required:  Error message text added to errors if required field is not present
+required:  Error message text added to errors if required field is not present.
 The default is "Field <field label> is required".
 
 =item range_start
@@ -1381,7 +1377,7 @@ does not have 'options'.
 The IntRange field uses this range to create a select list
 with a range of integers.
 
-In a FormHandler field_list
+In a FormHandler field_list:
 
     age => {
         type            => 'Integer',
@@ -1402,6 +1398,9 @@ an empty string instead of a null value (such as a NOT NULL column), set this at
 
 This attribute is also used when you want an empty array to stay an empty array and not
 be set to undef.
+
+It's also used when you have a compound field and you want the 'value' returned
+to contain subfields with undef, instead of the whole field to be undef.
 
 =back
 
@@ -1452,11 +1451,11 @@ Deflate to a string format for presenting in HTML.
 
 =item inflate_default_method
 
-Modify the 'default' provided by an 'item' or 'init_object'
+Modify the 'default' provided by an 'item' or 'init_object'.
 
 =item deflate_value_method
 
-Modify the value return by C<< $form->value >>.
+Modify the value returned by C<< $form->value >>.
 
 =item deflation
 

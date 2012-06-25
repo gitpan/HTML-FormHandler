@@ -166,7 +166,7 @@ sub render_select {
         $output .= $html_attributes;
         my $label = $option->{label};
         $label = $field->_localize($label) if $field->localize_labels;
-        $output .= '>' . ( $field->html_filter($label) || '' ) . '</option>';
+        $output .= '>' . ( $field->html_filter($label) ) . '</option>';
         $index++;
     }
     $output .= '</select>';
@@ -298,7 +298,7 @@ HTML::FormHandler::Render::Simple - simple rendering role
 
 =head1 VERSION
 
-version 0.40012
+version 0.40013
 
 =head1 SYNOPSIS
 

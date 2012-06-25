@@ -196,6 +196,7 @@ t/bootstrap/ext_controls.t
 t/bootstrap/inline.t
 t/bootstrap/search.t
 t/compound/basic.t
+t/compound/default.t
 t/compound/include.t
 t/compound/select.t
 t/errors/basic.t
@@ -288,6 +289,7 @@ t/render/repeatable.t
 t/render/result.t
 t/render/select.t
 t/render/simple.t
+t/render/submit.t
 t/render/table.t
 t/render/tags.t
 t/render/util.t
@@ -297,6 +299,7 @@ t/render/widgets.t
 t/render/withtt.t
 t/repeatable/defaults.t
 t/repeatable/has_many.t
+t/repeatable/hash.t
 t/repeatable/list.t
 t/repeatable/nested.t
 t/repeatable/nested2.t
@@ -350,5 +353,6 @@ xt/multiple_forms.t
 xt/order.t
 xt/params.t
 xt/posted.t
+xt/repeatable_clone.t
 xt/submit.t
 xt/upload.t

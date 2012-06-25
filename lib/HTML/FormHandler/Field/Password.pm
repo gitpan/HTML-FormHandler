@@ -10,6 +10,7 @@ has '+widget'           => ( default => 'Password' );
 has '+password'         => ( default => 1 );
 has 'ne_username'       => ( isa     => 'Str', is => 'rw' );
 has '+type_attr'        => ( default => 'password' );
+has '+html5_type_attr'  => ( default => 'password' );
 
 our $class_messages = {
     'required' => 'Please enter a password in this field',
@@ -65,7 +66,7 @@ HTML::FormHandler::Field::Password - password field
 
 =head1 VERSION
 
-version 0.40012
+version 0.40013
 
 =head1 DESCRIPTION
 

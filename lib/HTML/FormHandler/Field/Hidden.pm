@@ -7,6 +7,7 @@ our $VERSION = '0.01';
 
 has '+widget' => ( default => 'Hidden' );
 has '+do_label' => ( default => 0 );
+has '+html5_type_attr' => ( default => 'hidden' );
 
 
 __PACKAGE__->meta->make_immutable;
@@ -22,7 +23,7 @@ HTML::FormHandler::Field::Hidden - hidden field
 
 =head1 VERSION
 
-version 0.40012
+version 0.40013
 
 =head1 DESCRIPTION
 

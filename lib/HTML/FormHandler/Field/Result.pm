@@ -18,6 +18,8 @@ has 'field_def' => (
     writer => '_set_field_def',
 );
 
+has 'missing' => ( is => 'rw',  isa => 'Bool' );
+
 sub fif {
     my $self = shift;
     return $self->field_def->fif($self);
@@ -63,7 +65,7 @@ HTML::FormHandler::Field::Result - result class for fields
 
 =head1 VERSION
 
-version 0.40012
+version 0.40013
 
 =head1 SYNOPSIS
 

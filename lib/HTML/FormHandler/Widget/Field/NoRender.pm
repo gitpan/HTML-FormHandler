@@ -17,7 +17,7 @@ HTML::FormHandler::Widget::Field::NoRender - no rendering widget
 
 =head1 VERSION
 
-version 0.40012
+version 0.40013
 
 =head1 SYNOPSIS
 

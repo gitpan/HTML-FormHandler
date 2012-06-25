@@ -1,5 +1,5 @@
 package HTML::FormHandler::Widget::Field::ButtonTag;
-# ABSTRACT: button field rendering widget, using 'button tag
+# ABSTRACT: button field rendering widget, using button tag
 
 use Moose::Role;
 use namespace::autoclean;
@@ -33,11 +33,11 @@ __END__
 
 =head1 NAME
 
-HTML::FormHandler::Widget::Field::ButtonTag - button field rendering widget, using 'button tag
+HTML::FormHandler::Widget::Field::ButtonTag - button field rendering widget, using button tag
 
 =head1 VERSION
 
-version 0.40012
+version 0.40013
 
 =head1 AUTHOR
 
