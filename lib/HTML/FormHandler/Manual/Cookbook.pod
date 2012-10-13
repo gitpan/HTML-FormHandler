@@ -11,7 +11,7 @@ HTML::FormHandler::Manual::Cookbook - FormHandler use recipes
 
 =head1 VERSION
 
-version 0.40013
+version 0.40014
 
 =head1 SYNOPSIS
 
@@ -366,6 +366,17 @@ set in the update_model method;
         $values->{some_field}->{some_key} = 'some_value';
         $self->_set_value($values);
         $self->next::method;
+    }
+
+If you need to access a database field in order to create the value for a
+form field you can use a C< default_* > method.
+
+    sub default_myformfield {
+        my ($self, $field, $item) = @_;
+        return unless defined $item;
+        my $databasefield =  $item->databasefield;
+        my $value = ... # do stuff
+        return $value;
     }
 
 =head2 Additional changes to the database

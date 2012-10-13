@@ -19,7 +19,19 @@ sub _build_language_handle {
     if (!$self->isa('HTML::FormHandler') && $self->has_form) {
         return $self->form->language_handle();
     }
-    return $ENV{LANGUAGE_HANDLE} || HTML::FormHandler::I18N->get_handle;
+    my $lh;
+    if ( $ENV{LANGUAGE_HANDLE} ) {
+        if ( blessed $ENV{LANGUAGE_HANDLE} ) {
+            $lh = $ENV{LANGUAGE_HANDLE};
+        }
+        else {
+            $lh = HTML::FormHandler::I18N->get_handle( $ENV{LANGUAGE_HANDLE} );
+        }
+    }
+    else {
+       $lh =  HTML::FormHandler::I18N->get_handle;
+    }
+    return $lh;
 }
 
 sub _localize {
@@ -42,7 +54,7 @@ HTML::FormHandler::TraitFor::I18N - localization
 
 =head1 VERSION
 
-version 0.40013
+version 0.40014
 
 =head3 language_handle, _build_language_handle
 
@@ -55,9 +67,11 @@ etc.
 The builder for this attribute gets the Locale::Maketext language
 handle from the environment variable $ENV{LANGUAGE_HANDLE}:
 
-    $ENV{LANGUAGE_HANDLE} = HTML::FormHandler::I18N->get_handle('en_en');
+    $ENV{LANGUAGE_HANDLE} = 'en_en';
 
 ...or creates a default language handler using L<HTML::FormHandler::I18N>.
+(Note that earlier versions required an actual object reference in ENV,
+which is a bad practice and no longer supported.)
 You can pass in an existing L<Locale::MakeText> subclass instance
 or create one in a builder.
 

@@ -22,7 +22,7 @@ HTML::FormHandler::Field::Month - select list 1 to 12
 
 =head1 VERSION
 
-version 0.40013
+version 0.40014
 
 =head1 DESCRIPTION
 

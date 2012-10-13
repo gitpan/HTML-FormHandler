@@ -11,7 +11,7 @@ HTML::FormHandler::Manual::Fields - brief documentation of available fields
 
 =head1 VERSION
 
-version 0.40013
+version 0.40014
 
 =head1 SYNOPSIS
 
@@ -560,7 +560,7 @@ L<HTML::FormHandler::Field::PrimaryKey>
 =head3 Captcha
 
 A Captcha field using GD::SecurityImage. Requires the use of the
-L<HTML::FormHandler::Form::Captcha> role, or similar code.
+L<HTML::FormHandler::TraitFor::Captcha> role, or similar code.
 
 L<HTML::FormHandler::Field::Captcha>
 

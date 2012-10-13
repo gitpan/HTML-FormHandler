@@ -109,7 +109,7 @@ has 'label_column'     => ( isa => 'Str',       is => 'rw', default => 'name' );
 has 'localize_labels'  => ( isa => 'Bool', is => 'rw' );
 has 'active_column'    => ( isa => 'Str',       is => 'rw', default => 'active' );
 has 'auto_widget_size' => ( isa => 'Int',       is => 'rw', default => '0' );
-has 'sort_column'      => ( isa => 'Str',       is => 'rw' );
+has 'sort_column'      => ( isa => 'Str|ArrayRef[Str]',       is => 'rw' );
 has '+widget'          => ( default => 'Select' );
 has 'empty_select'     => ( isa => 'Str',       is => 'rw' );
 has '+deflate_method'  => ( default => sub { \&select_deflate } );
@@ -155,13 +155,28 @@ sub select_widget {
 }
 
 sub as_label {
-    my $field = shift;
+    my $self = shift;
 
-    my $value = $field->value;
+    my $value = $self->value;
     return unless defined $value;
-
-    for ( $field->options ) {
-        return $_->{label} if $_->{value} eq $value;
+    if ( $self->multiple ) {
+        my @labels;
+        my %value_hash;
+        @value_hash{@$value} = ();
+        for ( $self->options ) {
+            if ( exists $value_hash{$_->{value}} ) {
+                push @labels, $_->{label};
+                delete $value_hash{$_->{value}};
+                last unless keys %value_hash;
+            }
+        }
+        my $str = join(', ', @labels);
+        return $str;
+    }
+    else {
+        for ( $self->options ) {
+            return $_->{label} if $_->{value} eq $value;
+        }
     }
     return;
 }
@@ -349,7 +364,7 @@ HTML::FormHandler::Field::Select - select fields
 
 =head1 VERSION
 
-version 0.40013
+version 0.40014
 
 =head1 DESCRIPTION
 
@@ -433,7 +448,7 @@ the select list.  The primary key is used as the value. The other columns used a
     label_column  --  Used for the labels in the options (default 'name')
     active_column --  The name of the column to be used in the query (default 'active')
                       that allows the rows retrieved to be restricted
-    sort_column   --  The name of the column used to sort the options
+    sort_column   --  The name or arrayref of names of the column(s) used to sort the options
 
 See also L<HTML::FormHandler::Model::DBIC>, the 'lookup_options' method.
 
@@ -540,7 +555,7 @@ to fetch the text to use for the select list.
 Refers to the method (or column) name to use in a related
 object class for the label for select lists.
 
-Defaults to "name"
+Defaults to "name".
 
 =head2 localize_labels
 
@@ -572,14 +587,10 @@ See L<select_widget> below.
 
 =head2 sort_column
 
-Sets or returns the column used in the foreign class for sorting the
-options labels.  Default is undefined.
+Sets or returns the column or arrayref of columns used in the foreign class
+for sorting the options labels.  Default is undefined.
 
-If this column exists in the foreign table then labels returned will be sorted
-by this column.
-
-If not defined or the column is not found as a method on the foreign class then
-the label_column is used as the sort condition.
+If not defined the label_column is used as the sort condition.
 
 =head2 select_widget
 
@@ -592,7 +603,6 @@ otherwise will return C<checkbox_group>.
 
 Returns the option label for the option value that matches the field's current value.
 Can be helpful for displaying information about the field in a more friendly format.
-This does a string compare.
 
 =head2 error messages
 

@@ -22,7 +22,7 @@ HTML::FormHandler::Widget::Field::Role::HTMLAttributes - apply HTML attributes
 
 =head1 VERSION
 
-version 0.40013
+version 0.40014
 
 =head1 SYNOPSIS
 

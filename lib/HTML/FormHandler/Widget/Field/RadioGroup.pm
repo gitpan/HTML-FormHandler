@@ -8,6 +8,7 @@ use HTML::FormHandler::Render::Util ('process_attrs');
 sub render {
     my ( $self, $result ) = @_;
     $result ||= $self->result;
+    die "No result for form field '" . $self->full_name . "'. Field may be inactive." unless $result;
     my $output = $self->render_element( $result );
     return $self->wrap_field( $result, $output );
 }
@@ -25,7 +26,7 @@ sub render_element {
             my $attr = $option->{attributes} || {};
             my $attr_str = process_attrs($attr);
             my $lattr = $option->{label_attributes} || {};
-            my $lattr_str= process_attrs($attr);
+            my $lattr_str= process_attrs($lattr);
             $output .= qq{\n<div$attr_str><label$lattr_str>$label</label>};
             foreach my $group_opt ( @{ $option->{options} } ) {
                 $output .= $self->render_option( $group_opt, $result );
@@ -104,7 +105,7 @@ HTML::FormHandler::Widget::Field::RadioGroup - radio group rendering widget
 
 =head1 VERSION
 
-version 0.40013
+version 0.40014
 
 =head1 SYNOPSIS
 

@@ -184,6 +184,9 @@ sub _result_from_object {
         my $field = $self->clone_element($index);
         my $result =
             HTML::FormHandler::Field::Result->new( name => $index, parent => $self->result );
+        if( $field->has_inflate_default_method ) {
+            $element = $field->inflate_default($element);
+        }
         $result = $field->_result_from_object( $result, $element );
         push @new_values, $result->value;
         $self->add_field($field);
@@ -227,7 +230,7 @@ sub add_extra {
     $self->index($index);
 }
 
-# create an empty form
+# create an empty field
 sub _result_from_fields {
     my ( $self, $result ) = @_;
 
@@ -269,7 +272,7 @@ HTML::FormHandler::Field::Repeatable - repeatable (array) field
 
 =head1 VERSION
 
-version 0.40013
+version 0.40014
 
 =head1 SYNOPSIS
 
@@ -321,7 +324,7 @@ The name of the element fields will be an array index,
 starting with 0. Therefore the first array element can be accessed with:
 
    $form->field('tags')->field('0')
-   $form->field('addresses')->field('0)->field('city')
+   $form->field('addresses')->field('0')->field('city')
 
 or using the shortcut form:
 

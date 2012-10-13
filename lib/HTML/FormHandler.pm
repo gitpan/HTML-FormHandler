@@ -25,7 +25,7 @@ use Data::Clone;
 use 5.008;
 
 # always use 5 digits after decimal because of toolchain issues
-our $VERSION = '0.40013';
+our $VERSION = '0.40014';
 
 
 # for consistency in api with field nodes
@@ -150,6 +150,7 @@ has 'defaults' => ( is => 'rw', isa => 'HashRef', default => sub {{}}, traits =>
 );
 has 'use_defaults_over_obj' => ( is => 'rw', isa => 'Bool', clearer => 'clear_use_defaults_over_obj' );
 has 'use_init_obj_over_item' => ( is => 'rw', isa => 'Bool', clearer => 'clear_use_init_obj_over_item' );
+has 'use_fields_for_input_without_param' => ( is => 'rw', isa => 'Bool' );
 # flags
 has [ 'verbose', 'processed', 'did_init_obj' ] => ( isa => 'Bool', is => 'rw' );
 has 'user_data' => ( isa => 'HashRef', is => 'rw' );
@@ -160,6 +161,7 @@ has 'http_method'   => ( isa => 'Str',  is  => 'ro', default => 'post' );
 has 'enctype'       => ( is  => 'rw',   isa => 'Str' );
 has 'error_message' => ( is => 'rw', predicate => 'has_error_message', clearer => 'clear_error_message' );
 has 'success_message' => ( is => 'rw', predicate => 'has_success_message', clearer => 'clear_success_message' );
+has 'info_message'  => ( is => 'rw', predicate => 'has_info_message', clearer => 'clear_info_message' );
 # deprecated
 has 'css_class' =>     ( isa => 'Str',  is => 'ro' );
 has 'style'     =>     ( isa => 'Str',  is => 'rw' );
@@ -491,6 +493,7 @@ sub clear {
     $self->clear_use_defaults_over_obj;
     $self->clear_use_init_obj_over_item;
     $self->clear_no_update;
+    $self->clear_info_message;
 }
 
 sub values { shift->value }
@@ -791,7 +794,7 @@ HTML::FormHandler - HTML forms using Moose
 
 =head1 VERSION
 
-version 0.40013
+version 0.40014
 
 =head1 SYNOPSIS
 

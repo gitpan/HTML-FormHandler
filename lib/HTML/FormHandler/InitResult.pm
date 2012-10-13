@@ -56,9 +56,10 @@ sub _result_from_input {
                 name   => $field_name,
                 parent => $self_result
             );
+            my $exists = exists $input->{$field->input_param || $field_name};
             $result =
                 $field->_result_from_input( $result, $input->{$field->input_param || $field_name},
-                exists $input->{$field->input_param || $field_name} );
+                $exists );
             $self_result->add_result($result) if $result;
         }
     }
@@ -119,7 +120,12 @@ sub _get_value {
     elsif( $field->form && $field->form->use_defaults_over_obj && ( @values = $field->get_default_value )  ) {
     }
     elsif ( blessed($item) && $item->can($accessor) ) {
-        @values = $item->$accessor;
+        my $v = $item->$accessor;
+        if($field->has_flag('multiple') && ref($v) eq 'ARRAY'){
+            @values = @$v;
+        } else {
+            @values = $v;
+        }
     }
     elsif ( exists $item->{$accessor} ) {
         my $v = $item->{$accessor};
@@ -159,7 +165,7 @@ HTML::FormHandler::InitResult - internal code
 
 =head1 VERSION
 
-version 0.40013
+version 0.40014
 
 =head1 SYNOPSIS
 

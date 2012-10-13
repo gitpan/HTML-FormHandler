@@ -9,6 +9,7 @@ use HTML::FormHandler::Render::Util ('process_attrs');
 sub render {
     my ( $self, $result ) = @_;
     $result ||= $self->result;
+    die "No result for form field '" . $self->full_name . "'. Field may be inactive." unless $result;
     my $output = $self->render_element( $result );
     return $self->wrap_field( $result, $output );
 }
@@ -113,7 +114,7 @@ HTML::FormHandler::Widget::Field::Select - select field rendering widget
 
 =head1 VERSION
 
-version 0.40013
+version 0.40014
 
 =head1 DESCRIPTION
 

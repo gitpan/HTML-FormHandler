@@ -1,17 +1,8 @@
-package HTML::FormHandler::Widget::Theme::Bootstrap;
-# ABSTRACT: sample bootstrap theme
-
+package HTML::FormHandler::Widget::Theme::BootstrapFormMessages;
+# ABSTRACT: role to render form messages using Bootstrap styling
 
 use Moose::Role;
-with 'HTML::FormHandler::Widget::Theme::BootstrapFormMessages';
 
-after 'before_build' => sub {
-    my $self = shift;
-    $self->set_widget_wrapper('Bootstrap')
-       if $self->widget_wrapper eq 'Simple';
-};
-
-sub build_form_element_class { ['form-horizontal'] }
 
 sub render_form_messages {
     my ( $self, $result ) = @_;
@@ -53,26 +44,19 @@ __END__
 
 =head1 NAME
 
-HTML::FormHandler::Widget::Theme::Bootstrap - sample bootstrap theme
+HTML::FormHandler::Widget::Theme::BootstrapFormMessages - role to render form messages using Bootstrap styling
 
 =head1 VERSION
 
 version 0.40014
 
-=head1 SYNOPSIS
+=head1 DESCRIPTION
 
-Sample Bootstrap theme role. Apply to your subclass of HTML::FormHandler
-Sets the widet wrapper to 'Bootstrap' and renders form messages using Bootstrap
-formatting and classes.  Does 'form-horizontal' with 'build_form_element_class'.
-Implement your own sub to use 'form-vertical':
+Role to render form messages using Bootstrap styling.
 
-   sub build_form_element_class { ['form-vertical'] }
+=head1 NAME
 
-Form error messages:
-
-   <div class="alert alert-error">
-       <span class="error_message">....</span>
-   </div>
+HTML::FormHandler::Widget::Theme::BootstrapFormMessages
 
 =head1 AUTHOR
 
