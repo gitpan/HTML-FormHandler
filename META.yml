@@ -3,7 +3,7 @@ abstract: 'HTML forms using Moose'
 author:
   - 'FormHandler Contributors - see HTML::FormHandler'
 build_requires:
-  Padwalker: 0
+  PadWalker: 0
   Test::Differences: 0
   Test::Exception: 0
   Test::Memory::Cycle: 1.04
@@ -42,4 +42,4 @@ requires:
 resources:
   bugtracker: https://rt.cpan.org/Public/Dist/Display.html?Name=HTML-FormHandler
   repository: git://github.com/gshank/html-formhandler.git
-version: 0.40014
+version: 0.40015

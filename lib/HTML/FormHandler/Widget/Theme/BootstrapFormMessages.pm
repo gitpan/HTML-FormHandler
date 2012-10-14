@@ -48,7 +48,7 @@ HTML::FormHandler::Widget::Theme::BootstrapFormMessages - role to render form me
 
 =head1 VERSION
 
-version 0.40014
+version 0.40015
 
 =head1 DESCRIPTION
 

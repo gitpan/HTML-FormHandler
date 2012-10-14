@@ -47,7 +47,7 @@ HTML::FormHandler::Widget::Wrapper::SimpleInline - simple field wrapper
 
 =head1 VERSION
 
-version 0.40014
+version 0.40015
 
 =head1 SYNOPSIS
 
