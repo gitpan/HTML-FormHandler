@@ -32,7 +32,7 @@ HTML::FormHandler::I18N - internationalization
 
 =head1 VERSION
 
-version 0.40015
+version 0.40016
 
 =head1 AUTHOR
 
