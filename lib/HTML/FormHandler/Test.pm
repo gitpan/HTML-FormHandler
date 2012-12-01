@@ -39,7 +39,7 @@ HTML::FormHandler::Test - provides is_html method used in tests
 
 =head1 VERSION
 
-version 0.40016
+version 0.40017
 
 =head1 SYNOPSIS
 

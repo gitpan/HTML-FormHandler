@@ -53,7 +53,7 @@ HTML::FormHandler::Field::Email - validates email using Email::Valid
 
 =head1 VERSION
 
-version 0.40016
+version 0.40017
 
 =head1 DESCRIPTION
 

@@ -14,6 +14,10 @@ has 'value' => (
 
 sub _result_from_fields {
     my ( $self, $result ) = @_;
+    my $value = $self->get_default_value;
+    if ( $value ) {
+        $self->value($value);
+    }
     $self->_set_result($result);
     $result->_set_field_def($self);
     return $result;
@@ -61,12 +65,12 @@ HTML::FormHandler::Field::NoValue - base class for submit field
 
 =head1 VERSION
 
-version 0.40016
+version 0.40017
 
 =head1 SYNOPSIS
 
 This is the base class for the Submit & Reset fields. It can be used for fields that
-are do not produce valid 'values'. It should not be used for fields that
+do not produce valid 'values'. It should not be used for fields that
 produce a value or need validating.
 
 =head1 AUTHOR

@@ -164,7 +164,7 @@ HTML::FormHandler::InitResult - internal code
 
 =head1 VERSION
 
-version 0.40016
+version 0.40017
 
 =head1 SYNOPSIS
 

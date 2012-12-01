@@ -29,7 +29,7 @@ HTML::FormHandler::Widget::Field::Role::SelectedOption - allow setting options f
 
 =head1 VERSION
 
-version 0.40016
+version 0.40017
 
 =head1 AUTHOR
 

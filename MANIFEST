@@ -214,6 +214,7 @@ t/field_setup/inactive.t
 t/field_setup/init_object.t
 t/field_setup/input_param.t
 t/field_setup/missing.t
+t/field_setup/plus_field.t
 t/field_setup/update_fields.t
 t/field_setup/update_subfields.t
 t/fields/csv.t
@@ -221,6 +222,7 @@ t/fields/dates.t
 t/fields/fields.t
 t/fields/float.t
 t/fields/formhandlerx.t
+t/fields/novalue.t
 t/fields/password.t
 t/fields/repeatable.t
 t/fields/select.t

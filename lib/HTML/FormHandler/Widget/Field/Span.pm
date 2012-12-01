@@ -13,7 +13,7 @@ sub render_element {
     my $output = '<span';
     $output .= ' id="' . $self->id . '"';
     $output .= process_attrs($self->element_attributes($result));
-    $output .= ' />';
+    $output .= '>';
     $output .= $self->value;
     $output .= '</span>';
     return $output;
@@ -38,7 +38,7 @@ HTML::FormHandler::Widget::Field::Span - button field rendering widget
 
 =head1 VERSION
 
-version 0.40016
+version 0.40017
 
 =head1 SYNOPSIS
 

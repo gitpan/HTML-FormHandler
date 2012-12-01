@@ -63,7 +63,7 @@ HTML::FormHandler::Widget::ApplyRole - role to apply widgets
 
 =head1 VERSION
 
-version 0.40016
+version 0.40017
 
 =head1 AUTHOR
 
