@@ -31,6 +31,7 @@
             "File::ShareDir" : "0",
             "File::Spec" : "0",
             "HTML::TreeBuilder" : "3.23",
+            "JSON" : "0",
             "Locale::Maketext" : "1.09",
             "Moose" : "2.0007",
             "MooseX::Getopt" : "0.16",
@@ -66,6 +67,6 @@
          "web" : "http://github.com/gshank/html-formhandler"
       }
    },
-   "version" : "0.40017"
+   "version" : "0.40018"
 }
 

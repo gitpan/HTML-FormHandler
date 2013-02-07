@@ -434,6 +434,9 @@ sub wrapper_attributes {
     push @$class, 'error' if ( $result->has_error_results || $result->has_errors );
     push @$class, 'warning' if $result->has_warnings;
     $attr->{class} = $class if @$class;
+    # add id if compound field and id doesn't exist unless 'no_wrapper_id' tag
+    $attr->{id} = $self->id
+        if ( $self->has_flag('is_compound') && not exists $attr->{id} && ! $self->get_tag('no_wrapper_id') );
     # call form hook
     my $mod_attr = $self->form->html_attributes($self, 'wrapper', $attr, $result) if $self->form;
     return ref($mod_attr) eq 'HASH' ? $mod_attr : $attr;
@@ -993,7 +996,7 @@ HTML::FormHandler::Field - base class for fields
 
 =head1 VERSION
 
-version 0.40017
+version 0.40018
 
 =head1 SYNOPSIS
 
@@ -1538,7 +1541,7 @@ FormHandler Contributors - see HTML::FormHandler
 
 =head1 COPYRIGHT AND LICENSE
 
-This software is copyright (c) 2012 by Gerda Shank.
+This software is copyright (c) 2013 by Gerda Shank.
 
 This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.

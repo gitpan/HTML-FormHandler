@@ -17,6 +17,7 @@ sub wrap_field {
     my $label_tag = $self->label_tag || '';
     my $wrapper_tag;
     if( $self->do_wrapper ) {
+        $output .= $self->get_tag('before_wrapper');
         $wrapper_tag = $self->get_tag('wrapper_tag');
         # default wrapper tags
         $wrapper_tag ||= $self->has_flag('is_repeatable') ? 'fieldset' : 'div';
@@ -49,6 +50,7 @@ sub wrap_field {
     }
     if( $self->do_wrapper ) {
         $output .= "\n</$wrapper_tag>";
+        $output .= $self->get_tag('after_wrapper');
     }
     return "$output";
 }
@@ -65,7 +67,7 @@ HTML::FormHandler::Widget::Wrapper::Simple - simple field wrapper
 
 =head1 VERSION
 
-version 0.40017
+version 0.40018
 
 =head1 SYNOPSIS
 
@@ -108,7 +110,7 @@ FormHandler Contributors - see HTML::FormHandler
 
 =head1 COPYRIGHT AND LICENSE
 
-This software is copyright (c) 2012 by Gerda Shank.
+This software is copyright (c) 2013 by Gerda Shank.
 
 This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.

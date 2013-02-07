@@ -38,6 +38,7 @@ my %WriteMakefileArgs = (
     "File::ShareDir" => 0,
     "File::Spec" => 0,
     "HTML::TreeBuilder" => "3.23",
+    "JSON" => 0,
     "Locale::Maketext" => "1.09",
     "Moose" => "2.0007",
     "MooseX::Getopt" => "0.16",
@@ -50,7 +51,7 @@ my %WriteMakefileArgs = (
     "aliased" => 0,
     "namespace::autoclean" => "0.09"
   },
-  "VERSION" => "0.40017",
+  "VERSION" => "0.40018",
   "test" => {
     "TESTS" => "t/*.t t/blocks/*.t t/bootstrap/*.t t/compound/*.t t/errors/*.t t/field_setup/*.t t/fields/*.t t/form_setup/*.t t/infl_defl/*.t t/moose/*.t t/render/*.t t/repeatable/*.t t/result/*.t t/validation/*.t t/wizard/*.t"
   }

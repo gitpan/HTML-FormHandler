@@ -7,6 +7,7 @@ extends 'HTML::FormHandler::Field::Compound';
 use aliased 'HTML::FormHandler::Field::Repeatable::Instance';
 use HTML::FormHandler::Field::PrimaryKey;
 use HTML::FormHandler::Merge ('merge');
+use Data::Clone ('data_clone');
 
 
 has 'contains' => (
@@ -21,6 +22,7 @@ has 'init_contains' => ( is => 'rw', isa => 'HashRef', traits => ['Hash'],
 
 has 'num_when_empty' => ( isa => 'Int',  is => 'rw', default => 1 );
 has 'num_extra'      => ( isa => 'Int',  is => 'rw', default => 0 );
+has 'setup_for_js' => ( isa => 'Bool', is => 'rw' );
 has 'index'          => ( isa => 'Int',  is => 'rw', default => 0 );
 has 'auto_id'        => ( isa => 'Bool', is => 'rw', default => 0 );
 has 'is_repeatable'        => ( is      => 'ro', default => 1 );
@@ -161,8 +163,27 @@ sub _result_from_input {
         }
     }
     $self->index($index);
+    $self->_setup_for_js if $self->setup_for_js;
     $self->result->_set_field_def($self);
     return $self->result;
+}
+
+sub _setup_for_js {
+    my $self = shift;
+    return unless $self->form;
+    my $full_name = $self->full_name;
+    my $index_level =()= $full_name =~ /{index\d+}/g;
+    $index_level++;
+    my $field_name = "{index-$index_level}";
+    my $field = $self->_add_extra($field_name);
+    my $rendered = $field->render;
+    # remove extra result & field, now that it's rendered
+    $self->result->_pop_result;
+    $self->_pop_field;
+    # set the information in the form
+    # $self->index is the index of the next instance
+    $self->form->set_for_js( $self->full_name,
+        { index => $self->index, html => $rendered, level => $index_level } );
 }
 
 # this is called when there is an init_object or a db item with values
@@ -201,6 +222,7 @@ sub _result_from_object {
         }
     }
     $self->index($index);
+    $self->_setup_for_js if $self->setup_for_js;
     $values = \@new_values if scalar @new_values;
     $self->_set_value($values);
     $self->result->_set_field_def($self);
@@ -216,6 +238,7 @@ sub _add_extra {
     $result = $field->_result_from_fields($result);
     $self->result->add_result($result) if $result;
     $self->add_field($field);
+    return $field;
 }
 
 sub add_extra {
@@ -255,6 +278,7 @@ sub _result_from_fields {
         $count--;
     }
     $self->index($index);
+    $self->_setup_for_js if $self->setup_for_js;
     $self->result->_set_field_def($self);
     return $result;
 }
@@ -272,7 +296,7 @@ HTML::FormHandler::Field::Repeatable - repeatable (array) field
 
 =head1 VERSION
 
-version 0.40017
+version 0.40018
 
 =head1 SYNOPSIS
 
@@ -396,7 +420,7 @@ FormHandler Contributors - see HTML::FormHandler
 
 =head1 COPYRIGHT AND LICENSE
 
-This software is copyright (c) 2012 by Gerda Shank.
+This software is copyright (c) 2013 by Gerda Shank.
 
 This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.

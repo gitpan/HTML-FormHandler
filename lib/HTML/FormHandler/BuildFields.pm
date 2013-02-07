@@ -338,10 +338,13 @@ sub _merge_updates {
             $field_attr->{widget_wrapper} = $widget_wrapper;
         }
         # add widget and wrapper roles to field traits
-        if( $widget ) {
+        if ( $widget ) {
             my $widget_role = $self->get_widget_role( $widget, 'Field' );
+            push @{$field_attr->{traits}}, $widget_role;
+        }
+        if ( $widget_wrapper ) {
             my $wrapper_role = $self->get_widget_role( $widget_wrapper, 'Wrapper' );
-            push @{$field_attr->{traits}}, $widget_role, $wrapper_role;
+            push @{$field_attr->{traits}}, $wrapper_role;
         }
     }
     return $field_attr;
@@ -453,7 +456,7 @@ HTML::FormHandler::BuildFields - role to build field array
 
 =head1 VERSION
 
-version 0.40017
+version 0.40018
 
 =head1 SYNOPSIS
 
@@ -468,7 +471,7 @@ FormHandler Contributors - see HTML::FormHandler
 
 =head1 COPYRIGHT AND LICENSE
 
-This software is copyright (c) 2012 by Gerda Shank.
+This software is copyright (c) 2013 by Gerda Shank.
 
 This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.

@@ -1,7 +1,19 @@
+0.40018 Thur Feb 7, 2013
+   Don't put 'control-group' on Bootstrap hidden field div because of spacing issues
+   Support for repeatable add/remove javascript
+       add 'setup_for_js' flag to Field::Repeatable
+       add HTML::FormHandler::Render::RepeatableJs
+       add HTML::FormHandler::Field::AddElement
+       add before_wrapper and after_wrapper tags
+       add 'id' to wrappers of compound fields
+       update Display field to use 'render_method'
+       allow applying wrapper widget even if field has render method
+   Fix positioning of 'before_element' tag in Bootstrap wrapper
+
 0.40017 Sat Dec 1, 2012
    Fix bad html in Span widget
    Fix unitialized warning processing has_field with '+'
-   Use get_default_value in Submit/Rest field
+   Use get_default_value in Submit/Reset field
    Improve doc for bootstrap theme, use BootstrapFormMessages role
    Add lazy to render_filter for random failures in 5.17.6
 

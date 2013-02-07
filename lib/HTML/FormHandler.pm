@@ -25,7 +25,7 @@ use Data::Clone;
 use 5.008;
 
 # always use 5 digits after decimal because of toolchain issues
-our $VERSION = '0.40017';
+our $VERSION = '0.40018';
 
 
 # for consistency in api with field nodes
@@ -297,6 +297,17 @@ sub get_tag {
         if ( $self->form && $self->form->block_exists($block_name) );
     return '';
 }
+has 'for_js' => (
+    isa => 'HashRef',
+    traits => ['Hash'],
+    is => 'rw',
+    default => sub { {} },
+    handles => {
+        set_for_js => 'set',
+        has_for_js => 'count',
+        clear_for_js => 'clear',
+    }
+);
 
 has 'action' => ( is => 'rw' );
 has 'posted' => ( is => 'rw', isa => 'Bool', clearer => 'clear_posted', predicate => 'has_posted' );
@@ -494,6 +505,7 @@ sub clear {
     $self->clear_use_init_obj_over_item;
     $self->clear_no_update;
     $self->clear_info_message;
+    $self->clear_for_js;
 }
 
 sub values { shift->value }
@@ -794,7 +806,7 @@ HTML::FormHandler - HTML forms using Moose
 
 =head1 VERSION
 
-version 0.40017
+version 0.40018
 
 =head1 SYNOPSIS
 
@@ -1655,7 +1667,7 @@ FormHandler Contributors - see HTML::FormHandler
 
 =head1 COPYRIGHT AND LICENSE
 
-This software is copyright (c) 2012 by Gerda Shank.
+This software is copyright (c) 2013 by Gerda Shank.
 
 This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.

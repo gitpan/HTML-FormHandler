@@ -15,6 +15,7 @@ lib/HTML/FormHandler/Blocks.pm
 lib/HTML/FormHandler/BuildFields.pm
 lib/HTML/FormHandler/BuildPages.pm
 lib/HTML/FormHandler/Field.pm
+lib/HTML/FormHandler/Field/AddElement.pm
 lib/HTML/FormHandler/Field/BoolSelect.pm
 lib/HTML/FormHandler/Field/Boolean.pm
 lib/HTML/FormHandler/Field/Button.pm
@@ -101,6 +102,7 @@ lib/HTML/FormHandler/Page.pm
 lib/HTML/FormHandler/Page/Simple.pm
 lib/HTML/FormHandler/Pages.pm
 lib/HTML/FormHandler/Params.pm
+lib/HTML/FormHandler/Render/RepeatableJs.pm
 lib/HTML/FormHandler/Render/Simple.pm
 lib/HTML/FormHandler/Render/Table.pm
 lib/HTML/FormHandler/Render/Util.pm
@@ -195,6 +197,7 @@ t/bootstrap/control_states.t
 t/bootstrap/controls.t
 t/bootstrap/ext_controls.t
 t/bootstrap/inline.t
+t/bootstrap/other.t
 t/bootstrap/search.t
 t/compound/basic.t
 t/compound/default.t
@@ -276,6 +279,7 @@ t/render/checkbox_group.t
 t/render/classes.t
 t/render/compound.t
 t/render/compound2.t
+t/render/display.t
 t/render/errors.t
 t/render/escaping.t
 t/render/ff.t
@@ -306,6 +310,7 @@ t/render/withtt.t
 t/repeatable/defaults.t
 t/repeatable/has_many.t
 t/repeatable/hash.t
+t/repeatable/js.t
 t/repeatable/list.t
 t/repeatable/nested.t
 t/repeatable/nested2.t
@@ -318,6 +323,7 @@ t/result/compound.t
 t/result/errors.t
 t/result/repeatable.t
 t/structured.t
+t/template.t
 t/validation/apply.t
 t/validation/constraints.t
 t/validation/dependency.t
