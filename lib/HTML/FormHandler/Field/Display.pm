@@ -55,7 +55,7 @@ HTML::FormHandler::Field::Display - display only field
 
 =head1 VERSION
 
-version 0.40018
+version 0.40019
 
 =head1 SYNOPSIS
 

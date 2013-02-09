@@ -154,7 +154,7 @@ HTML::FormHandler::Widget::Block - base block renderer
 
 =head1 VERSION
 
-version 0.40018
+version 0.40019
 
 =head1 SYNOPSIS
 
