@@ -1,25 +1,22 @@
-package HTML::FormHandler::Field::AddElement;
-# ABSTRACT: Field to support repeatable javascript add
+package HTML::FormHandler::Field::RmElement;
+# ABSTRACT: field to support repeatable javascript remove
 use HTML::FormHandler::Moose;
 extends 'HTML::FormHandler::Field::Display';
 use HTML::FormHandler::Render::Util ('process_attrs');
 
 
-has 'repeatable' => ( is => 'rw', isa => 'Str', required => 1 );
 has '+do_wrapper' => ( default => 1 );
-has '+value'  => ( default => 'Add Element' );
+has '+value'  => ( default => 'Remove' );
 
 sub build_render_method {
     return sub {
         my ( $self, $result ) = @_;
         $result ||= $self->result;
 
-        my $rep_field = $self->parent->field($self->repeatable);
-        die "Invalid repeatable name in field " . $self->name unless $rep_field;
-        my $value = $self->html_filter($self->_localize($self->value));
+        my $value = $self->html || $self->html_filter($self->_localize($self->value));
         my $attrs = $self->element_attributes($result);
-        push @{$attrs->{class}}, ( 'add_element', 'btn' );
-        $attrs->{'data-rep-id'} = $rep_field->id;
+        push @{$attrs->{class}}, ( 'rm_element', 'btn' );
+        $attrs->{'data-rep-elem-id'} = $self->parent->id;
         $attrs->{id} = $self->id;
         my $attr_str = process_attrs($attrs);
         my $wrapper_tag = $self->get_tag('wrapper_tag') || 'div';
@@ -29,6 +26,7 @@ sub build_render_method {
     };
 }
 
+__PACKAGE__->meta->make_immutable;
 1;
 
 __END__
@@ -36,7 +34,7 @@ __END__
 
 =head1 NAME
 
-HTML::FormHandler::Field::AddElement - Field to support repeatable javascript add
+HTML::FormHandler::Field::RmElement - field to support repeatable javascript remove
 
 =head1 VERSION
 
@@ -44,33 +42,28 @@ version 0.40020
 
 =head1 SYNOPSIS
 
-EXAMPLE field for rendering an AddElement field for
-doing javascript additions of repeatable elements.
+EXAMPLE field for rendering an RmElement field for
+doing javascript removals of repeatable elements.
 
 You probably want to make your own.
 
 The main requirements are that the button have 1) the
-'add_element' class, 2) a 'data-rep-id' attribute that
-contains the id of the repeatable to which you want to
-add an element.
+'rm_element' class, 2) a 'data-rep-elem-id' attribute that
+contains the id of the repeatable instance that you want
+to remove (C<< $self->parent->id >>).
+
+This field should be a subfield of the Repeatable, probably
+either first or last.
 
 =head1 NAME
 
-HTML::FormHandler::Field::AddElement
+HTML::FormHandler::Field::RmElement
 
 =head1 ATTRIBUTES
 
-    has_field 'add_element' => ( type => 'AddElement', repeatable => 'foo',
-        value => 'Add another foo',
+    has_field 'rm_element' => ( type => 'RmElement',
+        value => 'Remove',
     );
-
-=head2 repeatable
-
-Requires the name of a Repeatable sibling field.
-
-=head2 value
-
-The value of the button that's rendered, 'Add Element' by default.
 
 =head1 AUTHOR
 

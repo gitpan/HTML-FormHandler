@@ -15,6 +15,7 @@ has 'contains' => (
     is        => 'rw',
     predicate => 'has_contains',
 );
+
 has 'init_contains' => ( is => 'rw', isa => 'HashRef', traits => ['Hash'],
     default => sub {{}},
     handles => { has_init_contains => 'count' },
@@ -22,11 +23,11 @@ has 'init_contains' => ( is => 'rw', isa => 'HashRef', traits => ['Hash'],
 
 has 'num_when_empty' => ( isa => 'Int',  is => 'rw', default => 1 );
 has 'num_extra'      => ( isa => 'Int',  is => 'rw', default => 0 );
-has 'setup_for_js' => ( isa => 'Bool', is => 'rw' );
+has 'setup_for_js'   => ( isa => 'Bool', is => 'rw' );
 has 'index'          => ( isa => 'Int',  is => 'rw', default => 0 );
 has 'auto_id'        => ( isa => 'Bool', is => 'rw', default => 0 );
-has 'is_repeatable'        => ( is      => 'ro', default => 1 );
-has '+widget'              => ( default => 'Repeatable' );
+has 'is_repeatable'  => ( isa => 'Bool', is => 'ro', default => 1 );
+has '+widget'        => ( default => 'Repeatable' );
 
 sub _fields_validate {
     my $self = shift;
@@ -296,7 +297,7 @@ HTML::FormHandler::Field::Repeatable - repeatable (array) field
 
 =head1 VERSION
 
-version 0.40019
+version 0.40020
 
 =head1 SYNOPSIS
 
@@ -327,7 +328,7 @@ If the MyAddress field contains fields 'address_id', 'street', 'city', and
 'state', then this syntax is functionally equivalent to the first method
 where the fields are declared with dots ('addresses.city');
 
-You can pass attributes to the 'contains' field by supplying a 'contains' hashref.
+You can pass attributes to the 'contains' field by supplying an 'init_contains' hashref.
 
     has_field 'addresses' => ( type => 'Repeatable,
        init_contains => { wrapper_attr => { class => ['hfh', 'repinst'] } },
@@ -411,6 +412,17 @@ be wanted. The method 'add_extra' will add an empty repeatable element.
     $form->field('my_repeatable')->add_extra(1);
 
 This might be useful if the form is being re-presented to the user.
+
+=item setup_for_js
+
+    setup_for_js => 1
+
+Saves information in the form for javascript to use when adding repeatable elements.
+If using the example javascript, you also must set 'do_wrapper' in the
+Repeatable field and use the Bootstrap widget wrapper (or wrap the repeatable
+elements in a 'controls' div by setting tags => { controls_div => 1 }.
+See t/repeatable/js.t for an example. See also
+L<HTML::FormHandler::Render::RepeatableJs> and L<HTML::FormHandler::Field::AddElement>.
 
 =back
 

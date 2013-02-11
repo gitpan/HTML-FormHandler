@@ -52,6 +52,7 @@ lib/HTML/FormHandler/Field/Repeatable.pm
 lib/HTML/FormHandler/Field/Repeatable/Instance.pm
 lib/HTML/FormHandler/Field/Reset.pm
 lib/HTML/FormHandler/Field/Result.pm
+lib/HTML/FormHandler/Field/RmElement.pm
 lib/HTML/FormHandler/Field/Second.pm
 lib/HTML/FormHandler/Field/Select.pm
 lib/HTML/FormHandler/Field/SelectCSV.pm

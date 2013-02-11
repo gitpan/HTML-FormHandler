@@ -105,7 +105,7 @@ HTML::FormHandler::Widget::Field::RadioGroup - radio group rendering widget
 
 =head1 VERSION
 
-version 0.40019
+version 0.40020
 
 =head1 SYNOPSIS
 

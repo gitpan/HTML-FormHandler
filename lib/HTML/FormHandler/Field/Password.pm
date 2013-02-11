@@ -66,7 +66,7 @@ HTML::FormHandler::Field::Password - password field
 
 =head1 VERSION
 
-version 0.40019
+version 0.40020
 
 =head1 DESCRIPTION
 
