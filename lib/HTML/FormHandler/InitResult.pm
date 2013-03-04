@@ -85,7 +85,7 @@ sub _result_from_object {
             $result = $field->_result_from_fields($result);
         }
         else {
-           my $value = $self->_get_value( $field, $item );
+           my $value = $self->_get_value( $field, $item ) if ! $field->writeonly;
            $result = $field->_result_from_object( $result, $value );
         }
         $self_result->add_result($result) if $result;
@@ -164,7 +164,7 @@ HTML::FormHandler::InitResult - internal code
 
 =head1 VERSION
 
-version 0.40020
+version 0.40021
 
 =head1 SYNOPSIS
 

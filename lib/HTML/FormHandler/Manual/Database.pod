@@ -11,7 +11,7 @@ HTML::FormHandler::Manual::Database - FormHandler use recipes
 
 =head1 VERSION
 
-version 0.40020
+version 0.40021
 
 =head1 SYNOPSIS
 
@@ -35,6 +35,9 @@ FormHandler will use relationships to populate single and multiple
 selection lists, and validate input. A 'single' relationship is processed
 by L<HTML::FormHandler::Field::Compound>. A 'has_many' relationship is
 processed by L<HTML::FormHandler::Field::Repeatable>.
+
+Do not use database row method names, such as 'delete', as field names in
+a database form.
 
 You can pass in either the primary key or a row object to the form. If a
 primary key (item_id) is passed in, you must also provide the schema.

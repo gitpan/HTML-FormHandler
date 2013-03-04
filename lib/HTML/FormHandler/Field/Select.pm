@@ -41,7 +41,7 @@ has 'do_not_reload' => ( isa => 'Bool', is => 'ro' );
 sub BUILD {
     my $self = shift;
 
-    $self->options_method;
+    $self->build_options_method;
     if( $self->options && $self->has_options ) {
         $self->options_from('build');
         $self->default_from_options([$self->options]);
@@ -50,14 +50,30 @@ sub BUILD {
 }
 
 has 'options_method' => (
-    traits  => ['Code'],
-    is      => 'rw',
-    isa     => 'CodeRef',
+    traits => ['Code'],
+    is     => 'ro',
+    isa    => 'CodeRef',
+    writer => '_set_options_method',
     predicate => 'has_options_method',
-    handles => {
-        get_options => 'execute_method',
-    },
+    handles => { 'get_options' => 'execute_method' },
 );
+
+sub build_options_method {
+    my $self = shift;
+
+    my $set_options = $self->set_options;
+    $set_options ||= "options_" . HTML::FormHandler::Field::convert_full_name($self->full_name);
+    if ( $self->form && $self->form->can($set_options) ) {
+        my $attr = $self->form->meta->find_method_by_name( $set_options );
+        if ( $attr and $attr->isa('Moose::Meta::Method::Accessor') ) {
+            $self->_set_options_method( sub { my $self = shift; $self->form->$set_options; } );
+        }
+        else {
+            $self->_set_options_method( sub { my $self = shift; $self->form->$set_options($self); } );
+        }
+    }
+}
+
 has 'sort_options_method' => (
     traits  => ['Code'],
     is      => 'rw',
@@ -69,37 +85,6 @@ has 'sort_options_method' => (
 );
 
 has 'set_options' => ( isa => 'Str', is => 'ro');
-sub _set_options_meth {
-    my $self = shift;
-    return $self->set_options if $self->set_options;
-    my $name = $self->full_name;
-    if( $name =~ /\./ ) {
-        $name =~ s/\.\d+\./_/g;
-        $name =~ s/\./_/g;
-    }
-    return 'options_' . $name;
-}
-sub _can_form_options {
-    my $self = shift;
-    my $set_options = $self->_set_options_meth;
-    return
-        unless $self->form &&
-            $set_options &&
-            $self->form->can( $set_options );
-    return $set_options;
-}
-
-sub _form_options {
-    my $self = shift;
-    return unless (my $meth = $self->_can_form_options);
-    my $attr = $self->form->meta->find_method_by_name( $meth );
-    if ( $attr and $attr->isa('Moose::Meta::Method::Accessor') ) {
-        return $self->form->$meth;
-    }
-    else {
-        return $self->form->$meth($self);
-    }
-}
 
 has 'multiple'         => ( isa => 'Bool', is => 'rw', default => '0' );
 # following is for unusual case where a multiple select is a has_many type relation
@@ -111,6 +96,7 @@ has 'active_column'    => ( isa => 'Str',       is => 'rw', default => 'active' 
 has 'auto_widget_size' => ( isa => 'Int',       is => 'rw', default => '0' );
 has 'sort_column'      => ( isa => 'Str|ArrayRef[Str]',       is => 'rw' );
 has '+widget'          => ( default => 'Select' );
+has '+type_attr'       => ( default => 'select' );
 has 'empty_select'     => ( isa => 'Str',       is => 'rw' );
 has '+deflate_method'  => ( default => sub { \&select_deflate } );
 has '+input_without_param' => ( lazy => 1, builder => 'build_input_without_param' );
@@ -265,10 +251,6 @@ sub _load_options {
         @options = $self->get_options;
         $self->options_from('method');
     }
-    elsif ( $self->_can_form_options ) {
-        @options = $self->_form_options;
-        $self->options_from('method');
-    }
     elsif ( $self->form ) {
         my $full_accessor;
         $full_accessor = $self->parent->full_accessor if $self->parent;
@@ -364,7 +346,7 @@ HTML::FormHandler::Field::Select - select fields
 
 =head1 VERSION
 
-version 0.40020
+version 0.40021
 
 =head1 DESCRIPTION
 

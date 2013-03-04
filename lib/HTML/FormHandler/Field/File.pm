@@ -20,7 +20,7 @@ HTML::FormHandler::Field::File - simple file field; does no processing
 
 =head1 VERSION
 
-version 0.40020
+version 0.40021
 
 =head1 SYNOPSIS
 

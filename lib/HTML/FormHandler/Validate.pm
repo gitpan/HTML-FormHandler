@@ -103,7 +103,7 @@ sub validate_field {
 
     $field->_inner_validate_field();
     $field->_apply_actions;
-    $field->validate;
+    $field->validate( $field->value );
     $field->test_ranges;
     $field->_validate($field)    # form field validation method
         if ( $field->has_value && defined $field->value );
@@ -263,11 +263,11 @@ sub match_when {
         my $from_form = ( $key =~ /^\+/ );
         $key =~ s/^\+//;
         my $field = $from_form ? $self->form->field($key) : $self->parent->subfield( $key );
-        my $field_fif = defined $field->fif ? $field->fif : '';
         unless ( $field ) {
-            warn "field '$key' not found processing when";
+            warn "field '$key' not found processing 'when' for '" . $self->full_name . "'";
             next;
         }
+        my $field_fif = defined $field->fif ? $field->fif : '';
         if ( ref $check_against eq 'CODE' ) {
             $matched++
                 if $check_against->($field_fif, $self);
@@ -301,7 +301,7 @@ HTML::FormHandler::Validate - validation role (internal)
 
 =head1 VERSION
 
-version 0.40020
+version 0.40021
 
 =head1 SYNOPSIS
 

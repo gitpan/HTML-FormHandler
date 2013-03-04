@@ -25,7 +25,7 @@ use Data::Clone;
 use 5.008;
 
 # always use 5 digits after decimal because of toolchain issues
-our $VERSION = '0.40020';
+our $VERSION = '0.40021';
 
 
 # for consistency in api with field nodes
@@ -806,7 +806,7 @@ HTML::FormHandler - HTML forms using Moose
 
 =head1 VERSION
 
-version 0.40020
+version 0.40021
 
 =head1 SYNOPSIS
 
