@@ -40,7 +40,7 @@ HTML::FormHandler::Field::AddElement - Field to support repeatable javascript ad
 
 =head1 VERSION
 
-version 0.40021
+version 0.40022
 
 =head1 SYNOPSIS
 

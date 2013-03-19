@@ -119,7 +119,7 @@ HTML::FormHandler::Result::Role - role with common code for form & field results
 
 =head1 VERSION
 
-version 0.40021
+version 0.40022
 
 =head1 SYNOPSIS
 

@@ -28,7 +28,7 @@ HTML::FormHandler::Widget::Field::Repeatable - repeatable field widget
 
 =head1 VERSION
 
-version 0.40021
+version 0.40022
 
 =head1 SYNOPSIS
 

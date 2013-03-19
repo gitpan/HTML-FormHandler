@@ -11,7 +11,7 @@ HTML::FormHandler::Manual::Catalyst - using HFH forms in Catalyst
 
 =head1 VERSION
 
-version 0.40021
+version 0.40022
 
 =head1 SYNOPSIS
 
@@ -41,6 +41,8 @@ by both the create and edit actions.
 
    use Moose;
    BEGIN { extends 'Catalyst::Controller' }
+
+   use BookDB::Form::Borrower;
 
    sub borrower_base : Chained PathPart('borrower') CaptureArgs(0) { }
 

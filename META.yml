@@ -41,6 +41,6 @@ requires:
   aliased: 0
   namespace::autoclean: 0.09
 resources:
-  bugtracker: https://rt.cpan.org/Public/Dist/Display.html?Name=HTML-FormHandler
+  bugtracker: http://github.com/gshank/html-formhandler/issues
   repository: git://github.com/gshank/html-formhandler.git
-version: 0.40021
+version: 0.40022

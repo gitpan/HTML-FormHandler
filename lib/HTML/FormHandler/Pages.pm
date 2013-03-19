@@ -76,7 +76,7 @@ HTML::FormHandler::Pages - used in Wizard
 
 =head1 VERSION
 
-version 0.40021
+version 0.40022
 
 =head1 AUTHOR
 

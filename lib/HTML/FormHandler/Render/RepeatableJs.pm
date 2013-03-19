@@ -76,7 +76,7 @@ HTML::FormHandler::Render::RepeatableJs - role providing method to construct rep
 
 =head1 VERSION
 
-version 0.40021
+version 0.40022
 
 =head1 SYNOPSIS
 

@@ -40,7 +40,6 @@ sub _result_from_object {
 sub fif { }
 
 has '+widget'    => ( default => '' );
-has '+writeonly' => ( default => 1 );
 has '+noupdate'  => ( default => 1 );
 
 sub validate_field { }
@@ -65,7 +64,7 @@ HTML::FormHandler::Field::NoValue - base class for submit field
 
 =head1 VERSION
 
-version 0.40021
+version 0.40022
 
 =head1 SYNOPSIS
 

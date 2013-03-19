@@ -223,6 +223,7 @@ t/field_setup/update_fields.t
 t/field_setup/update_subfields.t
 t/fields/csv.t
 t/fields/dates.t
+t/fields/display.t
 t/fields/fields.t
 t/fields/float.t
 t/fields/formhandlerx.t
