@@ -59,6 +59,7 @@ lib/HTML/FormHandler/Field/SelectCSV.pm
 lib/HTML/FormHandler/Field/Submit.pm
 lib/HTML/FormHandler/Field/Text.pm
 lib/HTML/FormHandler/Field/TextArea.pm
+lib/HTML/FormHandler/Field/TextCSV.pm
 lib/HTML/FormHandler/Field/Upload.pm
 lib/HTML/FormHandler/Field/Weekday.pm
 lib/HTML/FormHandler/Field/Year.pm
@@ -70,6 +71,7 @@ lib/HTML/FormHandler/I18N/de_de.pm
 lib/HTML/FormHandler/I18N/en_us.pm
 lib/HTML/FormHandler/I18N/hu_hu.pm
 lib/HTML/FormHandler/I18N/ja_jp.pm
+lib/HTML/FormHandler/I18N/pt_br.pm
 lib/HTML/FormHandler/I18N/ru_ru.pm
 lib/HTML/FormHandler/I18N/sv_se.pm
 lib/HTML/FormHandler/I18N/tr_tr.pm
@@ -88,6 +90,7 @@ lib/HTML/FormHandler/Manual/InflationDeflation.pod
 lib/HTML/FormHandler/Manual/Intro.pod
 lib/HTML/FormHandler/Manual/Reference.pod
 lib/HTML/FormHandler/Manual/Rendering.pod
+lib/HTML/FormHandler/Manual/RenderingCookbook.pod
 lib/HTML/FormHandler/Manual/Templates.pod
 lib/HTML/FormHandler/Manual/Testing.pod
 lib/HTML/FormHandler/Manual/Tutorial.pod
@@ -221,7 +224,6 @@ t/field_setup/missing.t
 t/field_setup/plus_field.t
 t/field_setup/update_fields.t
 t/field_setup/update_subfields.t
-t/fields/csv.t
 t/fields/dates.t
 t/fields/display.t
 t/fields/fields.t
@@ -231,6 +233,8 @@ t/fields/novalue.t
 t/fields/password.t
 t/fields/repeatable.t
 t/fields/select.t
+t/fields/selectcsv.t
+t/fields/textcsv.t
 t/form_setup/api.t
 t/form_setup/clone.t
 t/form_setup/compound_field_list.t

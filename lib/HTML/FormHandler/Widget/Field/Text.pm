@@ -40,7 +40,7 @@ HTML::FormHandler::Widget::Field::Text - text field rendering widget
 
 =head1 VERSION
 
-version 0.40022
+version 0.40023
 
 =head1 SYNOPSIS
 

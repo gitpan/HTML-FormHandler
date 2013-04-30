@@ -98,7 +98,7 @@ HTML::FormHandler::Widget::Field::CheckboxGroup - checkbox group field role
 
 =head1 VERSION
 
-version 0.40022
+version 0.40023
 
 =head1 SYNOPSIS
 

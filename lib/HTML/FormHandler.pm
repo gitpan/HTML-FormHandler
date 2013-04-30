@@ -25,7 +25,7 @@ use Data::Clone;
 use 5.008;
 
 # always use 5 digits after decimal because of toolchain issues
-our $VERSION = '0.40022';
+our $VERSION = '0.40023';
 
 
 # for consistency in api with field nodes
@@ -474,6 +474,7 @@ sub after_update_model {
                     name   => $field->name,
                     parent => $parent,
                 );
+                $field->init_state;
                 $new_result = $field->_result_from_object( $result, $rep_item );
                 # find index of existing result
                 my $index = $parent->result->find_result_index( sub { $_ == $result } );
@@ -806,7 +807,7 @@ HTML::FormHandler - HTML forms using Moose
 
 =head1 VERSION
 
-version 0.40022
+version 0.40023
 
 =head1 SYNOPSIS
 
@@ -1658,6 +1659,8 @@ ijw: Ian Wells
 amiri: Amiri Barksdale
 
 ozum: Ozum Eldogan
+
+lukast: Lukas Thiemeier
 
 Initially based on the source code of L<Form::Processor> by Bill Moseley
 
