@@ -32,7 +32,6 @@ lib/HTML/FormHandler/Field/File.pm
 lib/HTML/FormHandler/Field/Float.pm
 lib/HTML/FormHandler/Field/Hidden.pm
 lib/HTML/FormHandler/Field/Hour.pm
-lib/HTML/FormHandler/Field/HtmlArea.pm
 lib/HTML/FormHandler/Field/IntRange.pm
 lib/HTML/FormHandler/Field/Integer.pm
 lib/HTML/FormHandler/Field/Minute.pm

@@ -25,7 +25,7 @@ HTML::FormHandler::I18N::en_us - base message file
 
 =head1 VERSION
 
-version 0.40023
+version 0.40024
 
 =head1 AUTHOR
 

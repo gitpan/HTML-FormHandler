@@ -37,6 +37,7 @@ sub clear_data {
 sub build_options { [] }
 has 'options_from' => ( isa => 'Str', is => 'rw', default => 'none' );
 has 'do_not_reload' => ( isa => 'Bool', is => 'ro' );
+has 'no_option_validation' => ( isa => 'Bool', is => 'rw' );
 
 sub BUILD {
     my $self = shift;
@@ -171,7 +172,7 @@ sub _inner_validate_field {
     my ($self) = @_;
 
     my $value = $self->value;
-    return 1 unless defined $value;    # nothing to check
+    return unless defined $value;    # nothing to check
 
     if ( ref $value eq 'ARRAY' &&
         !( $self->can('multiple') && $self->multiple ) )
@@ -183,6 +184,8 @@ sub _inner_validate_field {
         $value = [$value];
         $self->_set_value($value);
     }
+
+    return if $self->no_option_validation;
 
     # create a lookup hash
     my %options;
@@ -346,7 +349,7 @@ HTML::FormHandler::Field::Select - select fields
 
 =head1 VERSION
 
-version 0.40023
+version 0.40024
 
 =head1 DESCRIPTION
 
@@ -585,6 +588,11 @@ otherwise will return C<checkbox_group>.
 
 Returns the option label for the option value that matches the field's current value.
 Can be helpful for displaying information about the field in a more friendly format.
+
+=head2 no_option_validation
+
+Set this flag to true if you don't want to validate the options that are submitted.
+This would generally only happen if the options are generated via javascript.
 
 =head2 error messages
 

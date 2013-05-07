@@ -82,7 +82,7 @@ HTML::FormHandler::Widget::Wrapper::Base - common methods for widget wrappers
 
 =head1 VERSION
 
-version 0.40023
+version 0.40024
 
 =head1 DESCRIPTION
 

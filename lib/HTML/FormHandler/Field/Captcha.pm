@@ -3,7 +3,6 @@ package HTML::FormHandler::Field::Captcha;
 
 use Moose;
 extends 'HTML::FormHandler::Field';
-use GD::SecurityImage;
 use HTTP::Date;
 
 
@@ -75,6 +74,7 @@ sub fif { }
 sub gen_captcha {
     my $self = shift;
 
+    require GD::SecurityImage;
     my ( $image, $type, $rnd ) = GD::SecurityImage->new(
         height   => $self->height,
         width    => $self->width,
@@ -105,7 +105,7 @@ HTML::FormHandler::Field::Captcha - captcha field with GD::SecurityImage
 
 =head1 VERSION
 
-version 0.40023
+version 0.40024
 
 =head1 SYNOPSIS
 

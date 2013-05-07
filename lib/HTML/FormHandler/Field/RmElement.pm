@@ -38,7 +38,7 @@ HTML::FormHandler::Field::RmElement - field to support repeatable javascript rem
 
 =head1 VERSION
 
-version 0.40023
+version 0.40024
 
 =head1 SYNOPSIS
 

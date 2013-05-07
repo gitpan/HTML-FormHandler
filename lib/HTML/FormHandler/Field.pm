@@ -996,7 +996,7 @@ HTML::FormHandler::Field - base class for fields
 
 =head1 VERSION
 
-version 0.40023
+version 0.40024
 
 =head1 SYNOPSIS
 
@@ -1282,7 +1282,7 @@ Widget types for some of the provided field classes:
     RadioGroup             : Select, Multiple, IntRange (etc)
     Select                 : Select, Multiple, IntRange (etc)
     CheckboxGroup          : Multiple select
-    TextArea               : TextArea, HtmlArea
+    TextArea               : TextArea
     Compound               : Compound, Repeatable, DateTime
     Password               : Password
     Hidden                 : Hidden

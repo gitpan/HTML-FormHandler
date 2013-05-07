@@ -51,7 +51,7 @@ HTML::FormHandler::Widget::Form::Role::HTMLAttributes - set HTML attributes on t
 
 =head1 VERSION
 
-version 0.40023
+version 0.40024
 
 =head1 AUTHOR
 

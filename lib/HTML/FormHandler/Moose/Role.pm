@@ -51,7 +51,7 @@ HTML::FormHandler::Moose::Role - to add sugar to roles
 
 =head1 VERSION
 
-version 0.40023
+version 0.40024
 
 =head1 SYNOPSIS
 

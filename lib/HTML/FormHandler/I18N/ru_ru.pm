@@ -109,7 +109,7 @@ HTML::FormHandler::I18N::ru_ru - Russian message file
 
 =head1 VERSION
 
-version 0.40023
+version 0.40024
 
 =head1 AUTHOR
 
