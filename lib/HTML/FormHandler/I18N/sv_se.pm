@@ -107,7 +107,7 @@ HTML::FormHandler::I18N::sv_se - Swedish message translations
 
 =head1 VERSION
 
-version 0.40024
+version 0.40025
 
 =head1 AUTHOR
 

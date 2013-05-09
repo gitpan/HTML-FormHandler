@@ -102,7 +102,7 @@ HTML::FormHandler::Widget::Wrapper::Bootstrap - Twitter Bootstrap 2.0 field wrap
 
 =head1 VERSION
 
-version 0.40024
+version 0.40025
 
 =head1 SYNOPSIS
 
