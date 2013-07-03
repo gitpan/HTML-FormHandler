@@ -298,7 +298,7 @@ HTML::FormHandler::Render::Simple - simple rendering role
 
 =head1 VERSION
 
-version 0.40025
+version 0.40026
 
 =head1 SYNOPSIS
 

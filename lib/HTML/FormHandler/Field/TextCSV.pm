@@ -50,7 +50,7 @@ HTML::FormHandler::Field::TextCSV - CSV Text field from multiple
 
 =head1 VERSION
 
-version 0.40025
+version 0.40026
 
 =head1 SYNOPSIS
 

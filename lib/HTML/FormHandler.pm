@@ -25,7 +25,7 @@ use Data::Clone;
 use 5.008;
 
 # always use 5 digits after decimal because of toolchain issues
-our $VERSION = '0.40025';
+our $VERSION = '0.40026';
 
 
 # for consistency in api with field nodes
@@ -526,6 +526,20 @@ sub errors {
     return @errors;
 }
 
+sub errors_by_id {
+    my $self = shift;
+    my %errors;
+    $errors{$_->id} = [$_->all_errors] for $self->error_fields;
+    return \%errors;
+}
+
+sub errors_by_name {
+    my $self = shift;
+    my %errors;
+    $errors{$_->html_name} = [$_->all_errors] for $self->error_fields;
+    return \%errors;
+}
+
 sub build_errors {
     my $self = shift;
     # this puts the errors in the result
@@ -807,7 +821,7 @@ HTML::FormHandler - HTML forms using Moose
 
 =head1 VERSION
 
-version 0.40025
+version 0.40026
 
 =head1 SYNOPSIS
 

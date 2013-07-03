@@ -149,7 +149,7 @@ HTML::FormHandler::Widget::Form::Simple - widget to render a form with divs
 
 =head1 VERSION
 
-version 0.40025
+version 0.40026
 
 =head1 SYNOPSIS
 
