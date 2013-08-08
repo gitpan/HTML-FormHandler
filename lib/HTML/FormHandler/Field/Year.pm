@@ -33,7 +33,7 @@ HTML::FormHandler::Field::Year - year selection list
 
 =head1 VERSION
 
-version 0.40026
+version 0.40027
 
 =head1 DESCRIPTION
 

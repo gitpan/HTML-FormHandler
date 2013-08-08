@@ -258,7 +258,6 @@ t/lib/Form/Address.pm
 t/lib/Form/AddressRole.pm
 t/lib/Form/Multiple.pm
 t/lib/Form/MultipleRole.pm
-t/lib/Form/MyForm.pm
 t/lib/Form/NoExtForm.pm
 t/lib/Form/Person.pm
 t/lib/Form/PersonRole.pm

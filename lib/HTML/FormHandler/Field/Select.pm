@@ -22,6 +22,7 @@ has 'options' => (
     lazy    => 1,
     builder => 'build_options'
 );
+sub options_ref { [shift->options] }
 # this is used for rendering
 has 'options_index' => ( traits => ['Counter'], isa => 'Num',
     is => 'rw', default => 0,
@@ -349,7 +350,7 @@ HTML::FormHandler::Field::Select - select fields
 
 =head1 VERSION
 
-version 0.40026
+version 0.40027
 
 =head1 DESCRIPTION
 

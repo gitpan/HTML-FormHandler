@@ -43,7 +43,7 @@ HTML::FormHandler::Widget::Field::Compound - compound field widget
 
 =head1 VERSION
 
-version 0.40026
+version 0.40027
 
 =head1 SYNOPSIS
 

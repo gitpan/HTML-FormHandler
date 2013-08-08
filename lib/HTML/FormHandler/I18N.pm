@@ -15,7 +15,8 @@ sub maketext {
         $out = $lh->SUPER::maketext(@message);
     }
     catch {
-        die "Unable to do maketext on: " . $message[0];
+        die "Unable to do maketext on: " . $message[0] .
+            "\nIf the message contains brackets you may need to escape them with a tilde.";
     };
     return $out;
 }
@@ -32,7 +33,7 @@ HTML::FormHandler::I18N - internationalization
 
 =head1 VERSION
 
-version 0.40026
+version 0.40027
 
 =head1 AUTHOR
 

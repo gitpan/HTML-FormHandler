@@ -293,7 +293,7 @@ HTML::FormHandler::Model::CDBI - Class::DBI model class (non-functioning)
 
 =head1 VERSION
 
-version 0.40026
+version 0.40027
 
 =head1 SYNOPSIS
 

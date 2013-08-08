@@ -38,7 +38,7 @@ HTML::FormHandler::Widget::Field::Span - button field rendering widget
 
 =head1 VERSION
 
-version 0.40026
+version 0.40027
 
 =head1 SYNOPSIS
 

@@ -27,7 +27,7 @@ HTML::FormHandler::Model::Object - stub for Object model
 
 =head1 VERSION
 
-version 0.40026
+version 0.40027
 
 =head1 AUTHOR
 

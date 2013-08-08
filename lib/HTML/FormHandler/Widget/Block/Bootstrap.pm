@@ -31,7 +31,7 @@ HTML::FormHandler::Widget::Block::Bootstrap - block to format bare form element 
 
 =head1 VERSION
 
-version 0.40026
+version 0.40027
 
 =head1 AUTHOR
 
