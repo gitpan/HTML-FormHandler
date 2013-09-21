@@ -21,7 +21,7 @@ sub selectcsv_inflate_default {
 sub selectcsv_deflate_value {
     my ( $self, $value ) = @_;
     if ( defined $value ) {
-        my $str = join( ',', @$value );
+        my $str = join( ',', sort @$value );
         return $str;
     }
     return;
@@ -45,7 +45,7 @@ HTML::FormHandler::Field::SelectCSV - Multiple select field from CSV value
 
 =head1 VERSION
 
-version 0.40027
+version 0.40028
 
 =head1 SYNOPSIS
 

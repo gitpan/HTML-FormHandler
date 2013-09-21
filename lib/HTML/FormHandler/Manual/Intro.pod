@@ -11,7 +11,7 @@ HTML::FormHandler::Manual::Intro - introduction to using FormHandler
 
 =head1 VERSION
 
-version 0.40027
+version 0.40028
 
 =head1 SYNOPSIS
 
@@ -154,7 +154,7 @@ template.
 The form object will give you a hashref of values suitable for
 filling in the form with C<< $form->fif >>.
 
-By default FormHandler structures fields (and renders thems) in a way
+By default FormHandler structures fields (and renders them) in a way
 that matches the database. If you want to organize the rendering output
 in different ways, you can use blocks to organize your fields.
 

@@ -110,7 +110,7 @@ HTML::FormHandler::Wizard - create a multi-page form
 
 =head1 VERSION
 
-version 0.40027
+version 0.40028
 
 =head1 SYNOPSIS
 

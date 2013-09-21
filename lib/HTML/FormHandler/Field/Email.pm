@@ -11,6 +11,11 @@ our $class_messages = {
 };
 has '+html5_type_attr' => ( default => 'email' );
 
+has 'email_valid_params' => (
+    is => 'rw',
+    isa => 'HashRef',
+);
+
 sub get_class_messages  {
     my $self = shift;
     return {
@@ -27,7 +32,10 @@ apply(
         {
             check => sub {
                 my ( $value, $field ) = @_;
-                my $checked = Email::Valid->address( $value );
+                my $checked = Email::Valid->address(
+                    -address => $value,
+                    %{ $field->email_valid_params || {} },
+                );
                 $field->value($checked)
                     if $checked;
             },
@@ -53,11 +61,11 @@ HTML::FormHandler::Field::Email - validates email using Email::Valid
 
 =head1 VERSION
 
-version 0.40027
+version 0.40028
 
 =head1 DESCRIPTION
 
-Validates that the input looks like an email address uisng L<Email::Valid>.
+Validates that the input looks like an email address using L<Email::Valid>.
 Widget type is 'text'.
 
 If form has 'is_html5' flag active it will render <input type="email" ... />

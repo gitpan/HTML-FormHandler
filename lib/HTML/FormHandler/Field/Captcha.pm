@@ -105,12 +105,12 @@ HTML::FormHandler::Field::Captcha - captcha field with GD::SecurityImage
 
 =head1 VERSION
 
-version 0.40027
+version 0.40028
 
 =head1 SYNOPSIS
 
 A Captcha class using GD::SecurityImage.
-Requires that that three methods be available from a form object:
+Requires that three methods be available from a form object:
 
   $self->form->get_captcha;
   $self->form->set_captcha;

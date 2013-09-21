@@ -25,7 +25,7 @@ use Data::Clone;
 use 5.008;
 
 # always use 5 digits after decimal because of toolchain issues
-our $VERSION = '0.40027';
+our $VERSION = '0.40028';
 
 
 # for consistency in api with field nodes
@@ -150,6 +150,7 @@ has 'defaults' => ( is => 'rw', isa => 'HashRef', default => sub {{}}, traits =>
 );
 has 'use_defaults_over_obj' => ( is => 'rw', isa => 'Bool', clearer => 'clear_use_defaults_over_obj' );
 has 'use_init_obj_over_item' => ( is => 'rw', isa => 'Bool', clearer => 'clear_use_init_obj_over_item' );
+has 'use_init_obj_when_no_accessor_in_item' => ( is => 'rw', isa => 'Bool' );
 has 'use_fields_for_input_without_param' => ( is => 'rw', isa => 'Bool' );
 # flags
 has [ 'verbose', 'processed', 'did_init_obj' ] => ( isa => 'Bool', is => 'rw' );
@@ -612,7 +613,7 @@ sub setup_form {
             $self->_result_from_object( $self->result, $init_object );
         }
         elsif ( !$self->posted ) {
-            # no initial object. empty form form must be initialized
+            # no initial object. empty form must be initialized
             $self->_result_from_fields( $self->result );
         }
     }
@@ -821,7 +822,7 @@ HTML::FormHandler - HTML forms using Moose
 
 =head1 VERSION
 
-version 0.40027
+version 0.40028
 
 =head1 SYNOPSIS
 
@@ -1452,8 +1453,14 @@ not map to an existing or database object in an automatic way, and you need
 to create a different type of object for initialization. (You might also
 want to do 'update_model' yourself.)
 
-Also see the 'use_init_obj_over_item' flag, if you want to provide both an
-item and an init_object, and use the values from the init_object.
+Also see the 'use_init_obj_over_item' and the 'use_init_obj_when_no_accessor_in_item'
+flags, if you want to provide both an item and an init_object, and use the
+values from the init_object.
+
+The 'use_init_obj_when_no_accessor_in_item' flag is particularly useful
+when some of the fields in your form come from the database and some
+are process or environment type flags that are not in the database. You
+can provide defaults from both a database row and an 'init_object.
 
 =head3 ctx
 

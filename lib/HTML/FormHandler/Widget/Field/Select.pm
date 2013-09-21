@@ -78,7 +78,9 @@ sub render_option {
     my %fif_lookup;
     @fif_lookup{@$fif} = () if $self->multiple;
 
-    my $value = $option->{value};
+    # not sure why the value of an option would be undef, but just in case,
+    # set to empty string because of 'eq' below
+    my $value = defined $option->{value} ? $option->{value} : '';
     my $id = $self->id . '.' . $self->options_index;
     my $output .= qq{\n<option value="} . $self->html_filter($value) . '"';
     $output .= qq{ id="$id"};
@@ -114,7 +116,7 @@ HTML::FormHandler::Widget::Field::Select - select field rendering widget
 
 =head1 VERSION
 
-version 0.40027
+version 0.40028
 
 =head1 DESCRIPTION
 

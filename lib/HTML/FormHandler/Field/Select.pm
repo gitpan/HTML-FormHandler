@@ -350,7 +350,7 @@ HTML::FormHandler::Field::Select - select fields
 
 =head1 VERSION
 
-version 0.40027
+version 0.40028
 
 =head1 DESCRIPTION
 
@@ -481,7 +481,7 @@ Setting the select element to disabled:
       return @selections;
    }
 
-You can also devide the options up into option groups. See the section on
+You can also divide the options up into option groups. See the section on
 rendering.
 
 =head2 Reloading options

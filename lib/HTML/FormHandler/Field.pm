@@ -999,7 +999,7 @@ HTML::FormHandler::Field - base class for fields
 
 =head1 VERSION
 
-version 0.40027
+version 0.40028
 
 =head1 SYNOPSIS
 
@@ -1344,8 +1344,9 @@ the other. Now 'default' does *not* override.
 If you pass in a model object with C<< item => $row >> or an initial object
 with C<< init_object => {....} >> the values in that object will be used instead
 of values provided in the field definition with 'default' or 'default_fieldname'.
-If you want defaults that override the item/init_object, you can use the form
-flags 'use_defaults_over_obj' and 'use_init_obj_over_item'.
+If you want defaults that override or supplement the item/init_object, you can use the form
+flags 'use_defaults_over_obj', 'use_init_obj_over_item', and
+'use_init_obj_when_no_accessor_in_item'.
 
 You could also put your defaults into your row or init_object instead.
 

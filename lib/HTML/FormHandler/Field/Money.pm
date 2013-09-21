@@ -60,11 +60,11 @@ HTML::FormHandler::Field::Money - US currency-like values
 
 =head1 VERSION
 
-version 0.40027
+version 0.40028
 
 =head1 DESCRIPTION
 
-Validates that a postive or negative real value is entered.
+Validates that a positive or negative real value is entered.
 Formatted with two decimal places.
 
 Uses a period for the decimal point. Widget type is 'text'.

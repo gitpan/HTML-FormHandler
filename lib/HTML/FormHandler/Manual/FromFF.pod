@@ -11,7 +11,7 @@ HTML::FormHandler::Manual::FromFF - converting from HTML::FormFu
 
 =head1 VERSION
 
-version 0.40027
+version 0.40028
 
 =head1 SYNOPSIS
 
@@ -145,7 +145,7 @@ things in the form's 'validate' sub.
 
 =item Email
 
-Use the 'Email' field type, or use the the FH Moose Type, 'email'.
+Use the 'Email' field type, or use the FH Moose Type, 'email'.
 
      has_field 'email' => ( type => 'Email' );
      -- or --

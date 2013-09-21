@@ -241,6 +241,7 @@ t/form_setup/compound_field_list.t
 t/form_setup/config.t
 t/form_setup/dynamic.t
 t/form_setup/include.t
+t/form_setup/init_obj.t
 t/form_setup/no_update.t
 t/form_setup/posted.t
 t/form_setup/render_roles.t
@@ -324,6 +325,7 @@ t/repeatable/reload.t
 t/repeatable/set_methods.t
 t/repeatable/subfield.t
 t/result/basic.t
+t/result/blocks.t
 t/result/compound.t
 t/result/errors.t
 t/result/repeatable.t

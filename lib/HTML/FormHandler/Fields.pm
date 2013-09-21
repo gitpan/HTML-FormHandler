@@ -219,7 +219,7 @@ HTML::FormHandler::Fields - internal role for form and compound fields
 
 =head1 VERSION
 
-version 0.40027
+version 0.40028
 
 =head1 SYNOPSIS
 
@@ -234,7 +234,7 @@ num_fields, has_fields, and set_field_at methods.
 
 =head2 field( $full_name )
 
-Return the field objct with the full_name passed. Will return undef
+Return the field object with the full_name passed. Will return undef
 if the field is not found, or will die if passed a second parameter.
 
 =head2 field_index

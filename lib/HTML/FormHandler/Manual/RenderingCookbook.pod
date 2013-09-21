@@ -11,7 +11,7 @@ HTML::FormHandler::Manual::RenderingCookbook - rendering recipes
 
 =head1 VERSION
 
-version 0.40027
+version 0.40028
 
 =head1 SYNOPSIS
 
@@ -71,7 +71,7 @@ Or use the 'html_attributes' callback:
     <in a form>
     sub html_attributes {
         my ( $self, $field, $type, $attr ) = @_;
-        push @{$attr->{class}} = 'required'
+        push @{$attr->{class}}, 'required'
             if ( $type eq 'label' && $field->required );
     }
 

@@ -13,6 +13,7 @@ sub render {
 
     my $result;
     my $form;
+    # NOTE: do not use $self in this method; use $result or $form
     if ( $self->DOES('HTML::FormHandler::Result') ) {
         $result = $self;
         $form   = $self->form;
@@ -27,7 +28,7 @@ sub render {
     if ( $form->has_render_list ) {
         foreach my $fb ( @{ $form->render_list } ) {
             # it's a Field
-            if ( $self->field_in_index($fb) ) {
+            if ( $form->field_in_index($fb) ) {
                 # find field result and use that
                 my $fld_result = $result->get_result($fb);
                 # if no result, then we shouldn't be rendering this field
@@ -37,7 +38,7 @@ sub render {
             # it's a Block
             else {
                 # always use form level result for blocks
-                my $block = $self->block($fb);
+                my $block = $form->block($fb);
                 die "found no form field or block named '$fb'\n" unless $block;
                 $output .= $block->render($result);
             }
@@ -149,7 +150,7 @@ HTML::FormHandler::Widget::Form::Simple - widget to render a form with divs
 
 =head1 VERSION
 
-version 0.40027
+version 0.40028
 
 =head1 SYNOPSIS
 

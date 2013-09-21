@@ -49,7 +49,7 @@ sub get_class_messages  {
 sub date_deflate {
     my ( $self, $value ) = @_;
 
-    # if not a DateTime, assume correctly formated string and return
+    # if not a DateTime, assume correctly formatted string and return
     return $value unless ref $value eq 'DateTime';
     my $format = $self->get_strf_format;
     my $string = $value->strftime($format);
@@ -114,7 +114,7 @@ HTML::FormHandler::Field::Date - a date field with formats
 
 =head1 VERSION
 
-version 0.40027
+version 0.40028
 
 =head1 SUMMARY
 
