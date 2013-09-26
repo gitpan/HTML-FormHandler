@@ -34,7 +34,7 @@ HTML::FormHandler::Widget::Wrapper::TableInline - wrapper class for table layout
 
 =head1 VERSION
 
-version 0.40028
+version 0.40050
 
 =head1 AUTHOR
 

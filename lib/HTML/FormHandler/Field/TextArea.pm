@@ -8,6 +8,7 @@ our $VERSION = '0.02';
 has '+widget' => ( default => 'Textarea' );
 has 'cols'    => ( isa     => 'Int', is => 'rw' );
 has 'rows'    => ( isa     => 'Int', is => 'rw' );
+sub html_element { 'textarea' }
 
 
 __PACKAGE__->meta->make_immutable;
@@ -23,7 +24,7 @@ HTML::FormHandler::Field::TextArea - textarea input
 
 =head1 VERSION
 
-version 0.40028
+version 0.40050
 
 =head1 Summary
 

@@ -47,9 +47,17 @@ sub wrap_checkbox {
     my $lattrs = process_attrs( { class => \@label_class } );
 
     # return wrapped checkbox, either on left or right
-    return qq{<label$lattrs$for>\n$label\n$rendered_widget</label>}
-        if( $self->get_tag('label_left') );
-    return qq{<label$lattrs$for>$rendered_widget\n$label\n</label>};
+    my $output = '';
+    if ( $self->get_tag('label_left') ) {
+        $output = qq{<label$lattrs$for>\n$label\n$rendered_widget</label>};
+    }
+    else {
+        $output = qq{<label$lattrs$for>$rendered_widget\n$label\n</label>};
+    }
+    if ( $self->get_tag('checkbox_element_wrapper') ) {
+        $output = qq{<div class="checkbox">$output</div>};
+    }
+    return $output;
 }
 
 # for compatibility with older code
@@ -82,7 +90,7 @@ HTML::FormHandler::Widget::Wrapper::Base - common methods for widget wrappers
 
 =head1 VERSION
 
-version 0.40028
+version 0.40050
 
 =head1 DESCRIPTION
 

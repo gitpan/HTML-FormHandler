@@ -37,7 +37,7 @@ HTML::FormHandler::Widget::Field::Submit - submit field rendering widget
 
 =head1 VERSION
 
-version 0.40028
+version 0.40050
 
 =head1 SYNOPSIS
 

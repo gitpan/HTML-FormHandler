@@ -5,6 +5,8 @@ use namespace::autoclean;
 use HTML::FormHandler::Render::Util ('process_attrs');
 
 
+sub type_attr { 'radio' }
+
 sub render {
     my ( $self, $result ) = @_;
     $result ||= $self->result;
@@ -89,9 +91,17 @@ sub wrap_radio {
 
     # return wrapped radio, either on left or right
     my $label = $self->_localize($option_label);
-    return qq{<label$lattrs$for>\n$label\n$rendered_widget</label>}
-        if( $self->get_tag('label_left') );
-    return qq{<label$lattrs$for>$rendered_widget\n$label\n</label>};
+    my $output = '';
+    if ( $self->get_tag('label_left') ) {
+        $output = qq{<label$lattrs$for>\n$label\n$rendered_widget</label>};
+    }
+    else {
+        $output = qq{<label$lattrs$for>$rendered_widget\n$label\n</label>};
+    }
+    if ( $self->get_tag('radio_element_wrapper') ) {
+        $output = qq{<div class="radio">$output</div>};
+    }
+    return $output;
 }
 
 1;
@@ -105,7 +115,7 @@ HTML::FormHandler::Widget::Field::RadioGroup - radio group rendering widget
 
 =head1 VERSION
 
-version 0.40028
+version 0.40050
 
 =head1 SYNOPSIS
 

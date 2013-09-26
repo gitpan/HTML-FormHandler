@@ -5,6 +5,8 @@ use Moose::Role;
 use namespace::autoclean;
 use HTML::FormHandler::Render::Util ('process_attrs');
 
+sub html_element { 'button' }
+
 sub render_element {
     my ( $self, $result ) = @_;
     $result ||= $self->result;
@@ -38,7 +40,7 @@ HTML::FormHandler::Widget::Field::ButtonTag - button field rendering widget, usi
 
 =head1 VERSION
 
-version 0.40028
+version 0.40050
 
 =head1 AUTHOR
 

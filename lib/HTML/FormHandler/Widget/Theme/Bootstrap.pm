@@ -24,7 +24,7 @@ HTML::FormHandler::Widget::Theme::Bootstrap - sample bootstrap theme
 
 =head1 VERSION
 
-version 0.40028
+version 0.40050
 
 =head1 SYNOPSIS
 

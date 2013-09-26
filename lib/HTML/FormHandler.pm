@@ -25,7 +25,7 @@ use Data::Clone;
 use 5.008;
 
 # always use 5 digits after decimal because of toolchain issues
-our $VERSION = '0.40028';
+our $VERSION = '0.40050';
 
 
 # for consistency in api with field nodes
@@ -264,16 +264,6 @@ sub has_flag {
     return $self->$flag_name;
 }
 
-# used to transfer tags to fields from form
-has 'widget_tags' => (
-    isa => 'HashRef',
-    traits => ['Hash'],
-    is => 'rw',
-    default => sub {{}},
-    handles => {
-        has_widget_tags => 'count'
-    }
-);
 has 'form_tags'         => (
     traits => ['Hash'],
     isa => 'HashRef',
@@ -822,7 +812,7 @@ HTML::FormHandler - HTML forms using Moose
 
 =head1 VERSION
 
-version 0.40028
+version 0.40050
 
 =head1 SYNOPSIS
 

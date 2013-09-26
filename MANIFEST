@@ -150,6 +150,7 @@ lib/HTML/FormHandler/Widget/Theme/Bootstrap.pm
 lib/HTML/FormHandler/Widget/Theme/BootstrapFormMessages.pm
 lib/HTML/FormHandler/Widget/Wrapper/Base.pm
 lib/HTML/FormHandler/Widget/Wrapper/Bootstrap.pm
+lib/HTML/FormHandler/Widget/Wrapper/Bootstrap3.pm
 lib/HTML/FormHandler/Widget/Wrapper/Fieldset.pm
 lib/HTML/FormHandler/Widget/Wrapper/None.pm
 lib/HTML/FormHandler/Widget/Wrapper/Simple.pm
@@ -203,6 +204,7 @@ t/bootstrap/ext_controls.t
 t/bootstrap/inline.t
 t/bootstrap/other.t
 t/bootstrap/search.t
+t/bootstrap3/basic.t
 t/compound/basic.t
 t/compound/default.t
 t/compound/empty.t
