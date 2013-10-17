@@ -40,6 +40,13 @@ has 'form_errors' => (
     }
 );
 
+sub form_and_field_errors {
+    my $self         = shift;
+    my @field_errors = map { $_->all_errors } $self->all_error_results;
+    my @form_errors = $self->all_form_errors;
+    return (@form_errors, @field_errors);
+}
+
 sub validated { !$_[0]->has_error_results && $_[0]->has_input && !$_[0]->has_form_errors }
 
 has 'ran_validation' => ( is => 'rw', isa => 'Bool', default => 0 );
@@ -72,7 +79,7 @@ HTML::FormHandler::Result - form result object
 
 =head1 VERSION
 
-version 0.40050
+version 0.40051
 
 =head1 SYNOPSIS
 

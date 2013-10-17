@@ -404,10 +404,14 @@ sub element_wrapper_attributes {
     # local copy of label_attr
     my $attr = {};
     my $class = [@{$self->element_wrapper_class}];
+    $self->add_standard_element_wrapper_classes( $result, $class );
     $attr->{class} = $class if @$class;
     # call form hook
     my $mod_attr = $self->form->html_attributes($self, 'element_wrapper', $attr, $result) if $self->form;
     return ref($mod_attr) eq 'HASH' ? $mod_attr : $attr;
+}
+sub add_standard_element_wrapper_classes {
+    my ( $self, $result, $class ) = @_;
 }
 
 sub attributes { shift->element_attributes(@_) }
@@ -450,10 +454,15 @@ sub label_attributes {
     # local copy of label_attr
     my $attr = {%{$self->label_attr}};
     my $class = [@{$self->label_class}];
+    $self->add_standard_label_classes($result, $class);
     $attr->{class} = $class if @$class;
     # call form hook
     my $mod_attr = $self->form->html_attributes($self, 'label', $attr, $result) if $self->form;
     return ref($mod_attr) eq 'HASH' ? $mod_attr : $attr;
+}
+
+sub add_standard_label_classes {
+    my ( $self, $result, $class ) = @_;
 }
 
 sub wrapper_attributes {
@@ -1037,7 +1046,7 @@ HTML::FormHandler::Field - base class for fields
 
 =head1 VERSION
 
-version 0.40050
+version 0.40051
 
 =head1 SYNOPSIS
 

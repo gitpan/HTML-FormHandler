@@ -11,7 +11,7 @@ HTML::FormHandler::Manual::Errors - FormHandler error methods
 
 =head1 VERSION
 
-version 0.40050
+version 0.40051
 
 =head1 SYNOPSIS
 
@@ -44,6 +44,9 @@ Returns an array of localized error strings (both field and
 form errors):
 
     my @errors = $form->errors;
+
+Note: this is a form method, not a result method. For the same thing
+from a result object, use C<< $result->form_and_field_errors >>.
 
 =item has_errors
 

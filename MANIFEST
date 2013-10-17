@@ -147,6 +147,7 @@ lib/HTML/FormHandler/Widget/Form/Role/HTMLAttributes.pm
 lib/HTML/FormHandler/Widget/Form/Simple.pm
 lib/HTML/FormHandler/Widget/Form/Table.pm
 lib/HTML/FormHandler/Widget/Theme/Bootstrap.pm
+lib/HTML/FormHandler/Widget/Theme/Bootstrap3.pm
 lib/HTML/FormHandler/Widget/Theme/BootstrapFormMessages.pm
 lib/HTML/FormHandler/Widget/Wrapper/Base.pm
 lib/HTML/FormHandler/Widget/Wrapper/Bootstrap.pm
@@ -205,6 +206,7 @@ t/bootstrap/inline.t
 t/bootstrap/other.t
 t/bootstrap/search.t
 t/bootstrap3/basic.t
+t/bootstrap3/horiz.t
 t/compound/basic.t
 t/compound/default.t
 t/compound/empty.t

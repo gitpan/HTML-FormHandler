@@ -47,6 +47,20 @@ has 'error_results' => (
     }
 );
 
+sub errors_by_id {
+    my $self = shift;
+    my %errors;
+    $errors{$_->field_def->id} = [$_->all_errors] for $self->all_error_results;
+    return \%errors;
+}
+
+sub errors_by_name {
+    my $self = shift;
+    my %errors;
+    $errors{$_->field_def->html_name} = [$_->all_errors] for $self->all_error_results;
+    return \%errors;
+}
+
 has 'errors' => (
     traits     => ['Array'],
     is         => 'rw',
@@ -119,7 +133,7 @@ HTML::FormHandler::Result::Role - role with common code for form & field results
 
 =head1 VERSION
 
-version 0.40050
+version 0.40051
 
 =head1 SYNOPSIS
 

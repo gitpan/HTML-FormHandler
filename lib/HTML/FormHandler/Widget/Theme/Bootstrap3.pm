@@ -1,4 +1,4 @@
-package HTML::FormHandler::Widget::Theme::Bootstrap;
+package HTML::FormHandler::Widget::Theme::Bootstrap3;
 # ABSTRACT: sample bootstrap theme
 
 
@@ -7,7 +7,7 @@ with 'HTML::FormHandler::Widget::Theme::BootstrapFormMessages';
 
 after 'before_build' => sub {
     my $self = shift;
-    $self->set_widget_wrapper('Bootstrap')
+    $self->set_widget_wrapper('Bootstrap3')
        if $self->widget_wrapper eq 'Simple';
 };
 
@@ -20,7 +20,7 @@ __END__
 
 =head1 NAME
 
-HTML::FormHandler::Widget::Theme::Bootstrap - sample bootstrap theme
+HTML::FormHandler::Widget::Theme::Bootstrap3 - sample bootstrap theme
 
 =head1 VERSION
 
@@ -31,7 +31,7 @@ version 0.40051
 Also see L<HTML::FormHandler::Manual::Rendering>.
 
 Sample Bootstrap theme role. Can be applied to your subclass of HTML::FormHandler.
-Sets the widget wrapper to 'Bootstrap' and renders form messages using Bootstrap
+Sets the widget wrapper to 'Bootstrap3' and renders form messages using Bootstrap
 formatting and classes.
 
 There is an example app using Bootstrap at http://github.com:gshank/formhandler-example.

@@ -42,7 +42,7 @@ sub wrap_field {
         $rendered_widget = $self->do_prepend_append($rendered_widget);
     }
     elsif( lc $self->widget eq 'checkbox' ) {
-        $rendered_widget = $self->wrap_checkbox($result, $rendered_widget, 'label')
+        $rendered_widget = $self->wrap_checkbox($result, $rendered_widget)
     }
 
     $output .= "\n$rendered_widget";
@@ -102,7 +102,7 @@ HTML::FormHandler::Widget::Wrapper::Bootstrap - Twitter Bootstrap 2.0 field wrap
 
 =head1 VERSION
 
-version 0.40050
+version 0.40051
 
 =head1 SYNOPSIS
 
