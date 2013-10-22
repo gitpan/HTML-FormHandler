@@ -54,7 +54,7 @@ HTML::FormHandler::TraitFor::I18N - localization
 
 =head1 VERSION
 
-version 0.40052
+version 0.40053
 
 =head3 language_handle, _build_language_handle
 

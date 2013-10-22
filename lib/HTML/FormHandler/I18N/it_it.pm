@@ -114,7 +114,7 @@ HTML::FormHandler::I18N::it_it - Italian message translations - traduzione itali
 
 =head1 VERSION
 
-version 0.40052
+version 0.40053
 
 =head1 NAME
 

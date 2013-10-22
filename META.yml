@@ -29,7 +29,7 @@ requires:
   File::Spec: 0
   HTML::TreeBuilder: 3.23
   JSON: 0
-  List::AllUtils: 0.7
+  List::AllUtils: 0.07
   Locale::Maketext: 1.09
   Moose: 2.0007
   MooseX::Getopt: 0.16
@@ -44,4 +44,4 @@ requires:
 resources:
   bugtracker: http://github.com/gshank/html-formhandler/issues
   repository: git://github.com/gshank/html-formhandler.git
-version: 0.40052
+version: 0.40053

@@ -45,7 +45,7 @@ HTML::FormHandler::Field::SelectCSV - Multiple select field from CSV value
 
 =head1 VERSION
 
-version 0.40052
+version 0.40053
 
 =head1 SYNOPSIS
 
