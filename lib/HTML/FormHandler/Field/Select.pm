@@ -145,9 +145,9 @@ sub select_widget {
 }
 
 sub as_label {
-    my $self = shift;
+    my ( $self, $value ) = @_;
 
-    my $value = $self->value;
+    $value = $self->value unless defined $value;
     return unless defined $value;
     if ( $self->multiple ) {
         my @labels;
@@ -352,7 +352,7 @@ HTML::FormHandler::Field::Select - select fields
 
 =head1 VERSION
 
-version 0.40051
+version 0.40052
 
 =head1 DESCRIPTION
 

@@ -65,7 +65,7 @@ HTML::FormHandler::Foo - Experiment in loading form from config file
 
 =head1 VERSION
 
-version 0.40051
+version 0.40052
 
 =head1 AUTHOR
 

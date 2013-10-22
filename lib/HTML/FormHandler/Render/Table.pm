@@ -81,7 +81,7 @@ HTML::FormHandler::Render::Table - render a form with a table layout
 
 =head1 VERSION
 
-version 0.40051
+version 0.40052
 
 =head1 SYNOPSIS
 

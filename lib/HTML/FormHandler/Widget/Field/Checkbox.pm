@@ -39,7 +39,7 @@ HTML::FormHandler::Widget::Field::Checkbox - HTML attributes field role
 
 =head1 VERSION
 
-version 0.40051
+version 0.40052
 
 =head1 SYNOPSIS
 
