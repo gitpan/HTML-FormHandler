@@ -13,13 +13,6 @@ has '+type_attr'           => ( default => 'checkbox' );
 has 'option_label'         => ( is => 'rw' );
 has 'option_wrapper'       => ( is => 'rw' );
 
-sub value {
-    my $field = shift;
-    return $field->next::method(@_) if @_;
-    my $v = $field->next::method();
-    return defined $v ? $v : 0;
-}
-
 sub validate {
     my $self = shift;
     $self->add_error($self->get_message('required'), $self->loc_label) if( $self->required && !$self->value );
@@ -31,6 +24,7 @@ use namespace::autoclean;
 1;
 
 __END__
+
 =pod
 
 =head1 NAME
@@ -39,7 +33,7 @@ HTML::FormHandler::Field::Checkbox - a checkbox field type
 
 =head1 VERSION
 
-version 0.40053
+version 0.40054
 
 =head1 DESCRIPTION
 
@@ -70,6 +64,10 @@ fields, will not be ignored if there is no input. If a particular
 checkbox should not be processed for a particular form, you must
 set 'inactive' to 1 instead.
 
+Note that a checkbox is only 'checked' when the 'checkbox_value' is
+provided. The 'value' for a non-checked checkbox is only really
+useful for creating form values such as are stored in a database.
+
 =head1 AUTHOR
 
 FormHandler Contributors - see HTML::FormHandler
@@ -82,4 +80,3 @@ This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.
 
 =cut
-

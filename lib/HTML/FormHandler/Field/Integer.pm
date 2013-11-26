@@ -46,6 +46,7 @@ use namespace::autoclean;
 1;
 
 __END__
+
 =pod
 
 =head1 NAME
@@ -54,7 +55,7 @@ HTML::FormHandler::Field::Integer - validate an integer value
 
 =head1 VERSION
 
-version 0.40053
+version 0.40054
 
 =head1 DESCRIPTION
 
@@ -79,4 +80,3 @@ This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.
 
 =cut
-

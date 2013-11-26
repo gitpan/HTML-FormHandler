@@ -68,6 +68,7 @@ sub page {
 1;
 
 __END__
+
 =pod
 
 =head1 NAME
@@ -76,7 +77,7 @@ HTML::FormHandler::Pages - used in Wizard
 
 =head1 VERSION
 
-version 0.40053
+version 0.40054
 
 =head1 AUTHOR
 
@@ -90,4 +91,3 @@ This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.
 
 =cut
-

@@ -206,6 +206,7 @@ t/bootstrap/inline.t
 t/bootstrap/other.t
 t/bootstrap/search.t
 t/bootstrap3/basic.t
+t/bootstrap3/controls.t
 t/bootstrap3/horiz.t
 t/bootstrap3/layout_classes.t
 t/compound/basic.t
@@ -218,6 +219,7 @@ t/errors/compound.t
 t/errors/form_messages.t
 t/errors/messages.t
 t/errors/req_message.t
+t/field_setup/checkbox.t
 t/field_setup/compound_update_fields.t
 t/field_setup/defaults.t
 t/field_setup/disabled.t
@@ -238,6 +240,7 @@ t/fields/novalue.t
 t/fields/password.t
 t/fields/repeatable.t
 t/fields/select.t
+t/fields/select2.t
 t/fields/selectcsv.t
 t/fields/textcsv.t
 t/form_setup/api.t

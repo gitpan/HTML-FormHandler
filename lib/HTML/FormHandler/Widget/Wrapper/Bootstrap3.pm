@@ -9,6 +9,8 @@ use List::AllUtils ('any');
 with 'HTML::FormHandler::Widget::Wrapper::Base';
 
 
+sub is_b3 {1}
+
 sub build_wrapper_tags {
     {
         radio_element_wrapper => 1,
@@ -172,6 +174,7 @@ qq{<div$attr>
 1;
 
 __END__
+
 =pod
 
 =head1 NAME
@@ -180,7 +183,7 @@ HTML::FormHandler::Widget::Wrapper::Bootstrap3 - Twitter Bootstrap 2.0 field wra
 
 =head1 VERSION
 
-version 0.40053
+version 0.40054
 
 =head1 SYNOPSIS
 
@@ -220,4 +223,3 @@ This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.
 
 =cut
-

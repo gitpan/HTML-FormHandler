@@ -50,7 +50,7 @@ sub date_deflate {
     my ( $self, $value ) = @_;
 
     # if not a DateTime, assume correctly formatted string and return
-    return $value unless ref $value eq 'DateTime';
+    return $value unless blessed $value && $value->isa('DateTime');
     my $format = $self->get_strf_format;
     my $string = $value->strftime($format);
     return $string;
@@ -106,6 +106,7 @@ use namespace::autoclean;
 1;
 
 __END__
+
 =pod
 
 =head1 NAME
@@ -114,7 +115,7 @@ HTML::FormHandler::Field::Date - a date field with formats
 
 =head1 VERSION
 
-version 0.40053
+version 0.40054
 
 =head1 SUMMARY
 
@@ -171,4 +172,3 @@ This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.
 
 =cut
-

@@ -47,7 +47,7 @@ sub render_repeatable_js {
     rep_index[data_rep_id] = index;
   });
 
-  \$(document).on('click', '.rm_element', function() {
+  \$(document).on('click', '.rm_element', function(event) {
     cont = confirm('Remove?');
     if (cont) {
       var id = \$(this).attr('data-rep-elem-id');
@@ -68,6 +68,7 @@ EOS
 1;
 
 __END__
+
 =pod
 
 =head1 NAME
@@ -76,7 +77,7 @@ HTML::FormHandler::Render::RepeatableJs - role providing method to construct rep
 
 =head1 VERSION
 
-version 0.40053
+version 0.40054
 
 =head1 SYNOPSIS
 
@@ -156,4 +157,3 @@ This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.
 
 =cut
-

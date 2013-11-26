@@ -86,7 +86,11 @@ sub wrap_radio {
 
     # use "simple" label attributes for inner label
     my @label_class = ('radio');
-    push @label_class, 'inline' if $self->get_tag('inline');
+    if ( $self->get_tag('inline') ) {
+        my $class = 'inline';
+        $class = 'radio-inline' if $self->has_flag('is_b3');
+        push @label_class, $class;
+    }
     my $lattrs = process_attrs( { class => \@label_class } );
 
     # return wrapped radio, either on left or right
@@ -107,6 +111,7 @@ sub wrap_radio {
 1;
 
 __END__
+
 =pod
 
 =head1 NAME
@@ -115,7 +120,7 @@ HTML::FormHandler::Widget::Field::RadioGroup - radio group rendering widget
 
 =head1 VERSION
 
-version 0.40053
+version 0.40054
 
 =head1 SYNOPSIS
 
@@ -135,4 +140,3 @@ This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.
 
 =cut
-

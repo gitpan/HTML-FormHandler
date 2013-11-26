@@ -54,7 +54,11 @@ sub render_option {
     # create option label attributes
     my $lattr = $option->{label_attributes} || {};
     push @{ $lattr->{class} }, 'checkbox';
-    push @{ $lattr->{class} }, 'inline' if $self->get_tag('inline');
+    if ( $self->get_tag('inline') ) {
+        my $class = 'inline';
+        $class = 'checkbox-inline' if $self->has_flag('is_b3');
+        push @{ $lattr->{class} }, $class;
+    }
     my $lattr_str = process_attrs( $lattr );
 
     my $id = $self->id . '.' . $self->options_index;
@@ -90,6 +94,7 @@ sub render_option {
 1;
 
 __END__
+
 =pod
 
 =head1 NAME
@@ -98,7 +103,7 @@ HTML::FormHandler::Widget::Field::CheckboxGroup - checkbox group field role
 
 =head1 VERSION
 
-version 0.40053
+version 0.40054
 
 =head1 SYNOPSIS
 
@@ -124,4 +129,3 @@ This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.
 
 =cut
-

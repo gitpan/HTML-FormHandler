@@ -4,7 +4,7 @@
       "FormHandler Contributors - see HTML::FormHandler"
    ],
    "dynamic_config" : 0,
-   "generated_by" : "Dist::Zilla version 4.300020, CPAN::Meta::Converter version 2.120921",
+   "generated_by" : "Dist::Zilla version 5.006, CPAN::Meta::Converter version 2.132830",
    "license" : [
       "perl_5"
    ],
@@ -67,6 +67,6 @@
          "web" : "http://github.com/gshank/html-formhandler"
       }
    },
-   "version" : "0.40053"
+   "version" : "0.40054"
 }
 

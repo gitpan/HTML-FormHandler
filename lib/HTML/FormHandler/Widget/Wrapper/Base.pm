@@ -29,7 +29,11 @@ sub wrap_checkbox {
     my ( $self, $result, $rendered_widget, $default_wrapper ) = @_;
 
     my $option_wrapper = $self->option_wrapper || $default_wrapper;
-    if ( $option_wrapper && $option_wrapper ne 'standard' ) {
+    if ( $option_wrapper && $option_wrapper ne 'standard' &&
+         $option_wrapper ne 'label' ) {
+        unless ( $self->can($option_wrapper) ) {
+            die "HFH: no option_wrapper method '$option_wrapper'";
+        }
         return $self->$option_wrapper($result, $rendered_widget);
     }
     else {
@@ -157,6 +161,7 @@ use namespace::autoclean;
 1;
 
 __END__
+
 =pod
 
 =head1 NAME
@@ -165,7 +170,7 @@ HTML::FormHandler::Widget::Wrapper::Base - common methods for widget wrappers
 
 =head1 VERSION
 
-version 0.40053
+version 0.40054
 
 =head1 DESCRIPTION
 
@@ -197,4 +202,3 @@ This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.
 
 =cut
-

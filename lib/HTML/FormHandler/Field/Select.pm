@@ -8,8 +8,9 @@ our $VERSION = '0.03';
 
 
 has 'options' => (
-    isa       => 'ArrayRef',
+    isa       => 'HFH::SelectOptions',
     is        => 'rw',
+    coerce    => 1,
     traits    => ['Array'],
     auto_deref => 1,
     handles  => {
@@ -344,6 +345,7 @@ use namespace::autoclean;
 1;
 
 __END__
+
 =pod
 
 =head1 NAME
@@ -352,7 +354,7 @@ HTML::FormHandler::Field::Select - select fields
 
 =head1 VERSION
 
-version 0.40053
+version 0.40054
 
 =head1 DESCRIPTION
 
@@ -660,4 +662,3 @@ This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.
 
 =cut
-

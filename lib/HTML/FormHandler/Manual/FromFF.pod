@@ -1,8 +1,8 @@
 package HTML::FormHandler::Manual::FromFF;
 # ABSTRACT: converting from HTML::FormFu
 
-
 __END__
+
 =pod
 
 =head1 NAME
@@ -11,7 +11,7 @@ HTML::FormHandler::Manual::FromFF - converting from HTML::FormFu
 
 =head1 VERSION
 
-version 0.40053
+version 0.40054
 
 =head1 SYNOPSIS
 
@@ -240,4 +240,3 @@ This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.
 
 =cut
-
