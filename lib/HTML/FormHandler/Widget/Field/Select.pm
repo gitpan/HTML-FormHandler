@@ -111,18 +111,23 @@ __END__
 
 =pod
 
+=encoding UTF-8
+
 =head1 NAME
 
 HTML::FormHandler::Widget::Field::Select - select field rendering widget
 
 =head1 VERSION
 
-version 0.40054
+version 0.40055
 
 =head1 DESCRIPTION
 
 Renders single and multiple selects. Options hashrefs must
 have 'value' and 'label' keys, and may have an 'attributes' key.
+
+See L<HTML::FormHandler::Field::Select> for documentation on
+select fields and options.
 
 =head1 NAME
 

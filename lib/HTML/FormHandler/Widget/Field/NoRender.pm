@@ -12,13 +12,15 @@ __END__
 
 =pod
 
+=encoding UTF-8
+
 =head1 NAME
 
 HTML::FormHandler::Widget::Field::NoRender - no rendering widget
 
 =head1 VERSION
 
-version 0.40054
+version 0.40055
 
 =head1 SYNOPSIS
 

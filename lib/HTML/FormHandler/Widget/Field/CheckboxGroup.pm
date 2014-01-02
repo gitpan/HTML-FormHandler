@@ -97,13 +97,15 @@ __END__
 
 =pod
 
+=encoding UTF-8
+
 =head1 NAME
 
 HTML::FormHandler::Widget::Field::CheckboxGroup - checkbox group field role
 
 =head1 VERSION
 
-version 0.40054
+version 0.40055
 
 =head1 SYNOPSIS
 
@@ -116,6 +118,9 @@ Options hashrefs must have the keys 'value', and 'label'.
 They may have an 'attributes' hashref key. The 'checked'
 attribute should not be set in the options hashref. It should
 be set by supplying a default value or from params input.
+
+See L<HTML::FormHandler::Field::Select> for documentation on
+select fields and options.
 
 =head1 AUTHOR
 

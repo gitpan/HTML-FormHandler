@@ -114,19 +114,24 @@ __END__
 
 =pod
 
+=encoding UTF-8
+
 =head1 NAME
 
 HTML::FormHandler::Widget::Field::RadioGroup - radio group rendering widget
 
 =head1 VERSION
 
-version 0.40054
+version 0.40055
 
 =head1 SYNOPSIS
 
 Renders a radio group (from a 'Select' field);
 
 Tags: radio_br_after
+
+See L<HTML::FormHandler::Field::Select> for documentation on
+select fields and options.
 
 =head1 AUTHOR
 

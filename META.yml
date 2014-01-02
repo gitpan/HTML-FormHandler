@@ -44,4 +44,4 @@ requires:
 resources:
   bugtracker: http://github.com/gshank/html-formhandler/issues
   repository: git://github.com/gshank/html-formhandler.git
-version: 0.40054
+version: 0.40055

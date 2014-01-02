@@ -49,13 +49,15 @@ __END__
 
 =pod
 
+=encoding UTF-8
+
 =head1 NAME
 
 HTML::FormHandler::TraitFor::I18N - localization
 
 =head1 VERSION
 
-version 0.40054
+version 0.40055
 
 =head3 language_handle, _build_language_handle
 

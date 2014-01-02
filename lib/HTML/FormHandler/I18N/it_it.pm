@@ -108,13 +108,15 @@ __END__
 
 =pod
 
+=encoding UTF-8
+
 =head1 NAME
 
 HTML::FormHandler::I18N::it_it - Italian message translations - traduzione italiana dei messaggi
 
 =head1 VERSION
 
-version 0.40054
+version 0.40055
 
 =head1 NAME
 

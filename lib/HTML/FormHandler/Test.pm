@@ -34,13 +34,15 @@ __END__
 
 =pod
 
+=encoding UTF-8
+
 =head1 NAME
 
 HTML::FormHandler::Test - provides is_html method used in tests
 
 =head1 VERSION
 
-version 0.40054
+version 0.40055
 
 =head1 SYNOPSIS
 
