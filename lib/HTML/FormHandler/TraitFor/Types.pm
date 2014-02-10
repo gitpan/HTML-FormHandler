@@ -46,7 +46,7 @@ HTML::FormHandler::TraitFor::Types - types used internally in FormHandler
 
 =head1 VERSION
 
-version 0.40055
+version 0.40056
 
 =head1 AUTHOR
 

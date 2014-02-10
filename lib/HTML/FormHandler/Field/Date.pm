@@ -117,7 +117,7 @@ HTML::FormHandler::Field::Date - a date field with formats
 
 =head1 VERSION
 
-version 0.40055
+version 0.40056
 
 =head1 SUMMARY
 

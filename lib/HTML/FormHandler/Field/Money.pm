@@ -63,7 +63,7 @@ HTML::FormHandler::Field::Money - US currency-like values
 
 =head1 VERSION
 
-version 0.40055
+version 0.40056
 
 =head1 DESCRIPTION
 

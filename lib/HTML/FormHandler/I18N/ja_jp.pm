@@ -109,7 +109,7 @@ HTML::FormHandler::I18N::ja_jp - Japanese message file
 
 =head1 VERSION
 
-version 0.40055
+version 0.40056
 
 =head1 AUTHOR
 

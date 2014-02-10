@@ -27,7 +27,7 @@ HTML::FormHandler::Field::TextArea - textarea input
 
 =head1 VERSION
 
-version 0.40055
+version 0.40056
 
 =head1 Summary
 

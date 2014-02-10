@@ -10,7 +10,8 @@ sub render_form_messages {
     $result ||= $self->result;
     my $output = '';
     if ( $result->has_form_errors || $result->has_errors ) {
-        $output = qq{\n<div class="alert alert-error">};
+        my $alert_error_class = $self->form_messages_alert_error_class;
+        $output = qq{\n<div class="alert $alert_error_class">};
         my $msg = $self->error_message;
         $msg ||= 'There were errors in your form';
         $msg = $self->_localize($msg);
@@ -37,6 +38,8 @@ sub render_form_messages {
     return $output;
 }
 
+sub form_messages_alert_error_class { 'alert-error' }
+
 1;
 
 __END__
@@ -51,7 +54,7 @@ HTML::FormHandler::Widget::Theme::BootstrapFormMessages - role to render form me
 
 =head1 VERSION
 
-version 0.40055
+version 0.40056
 
 =head1 DESCRIPTION
 

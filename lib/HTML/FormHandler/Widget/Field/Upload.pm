@@ -40,7 +40,7 @@ HTML::FormHandler::Widget::Field::Upload - update field rendering widget
 
 =head1 VERSION
 
-version 0.40055
+version 0.40056
 
 =head1 SYNOPSIS
 

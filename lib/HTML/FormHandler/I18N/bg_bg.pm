@@ -110,7 +110,7 @@ HTML::FormHandler::I18N::bg_bg - Bulgarian message file
 
 =head1 VERSION
 
-version 0.40055
+version 0.40056
 
 =head1 NAME
 

@@ -185,7 +185,7 @@ HTML::FormHandler::Widget::Wrapper::Bootstrap3 - Twitter Bootstrap 2.0 field wra
 
 =head1 VERSION
 
-version 0.40055
+version 0.40056
 
 =head1 SYNOPSIS
 

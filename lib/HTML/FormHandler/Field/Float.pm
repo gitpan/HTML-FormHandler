@@ -96,7 +96,7 @@ HTML::FormHandler::Field::Float - validate a float value
 
 =head1 VERSION
 
-version 0.40055
+version 0.40056
 
 =head1 DESCRIPTION
 

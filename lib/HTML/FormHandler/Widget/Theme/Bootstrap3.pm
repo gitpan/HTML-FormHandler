@@ -13,6 +13,8 @@ after 'before_build' => sub {
 
 sub build_form_element_class { ['form-horizontal'] }
 
+sub form_messages_alert_error_class { 'alert-danger' }
+
 1;
 
 __END__
@@ -27,7 +29,7 @@ HTML::FormHandler::Widget::Theme::Bootstrap3 - sample bootstrap theme
 
 =head1 VERSION
 
-version 0.40055
+version 0.40056
 
 =head1 SYNOPSIS
 

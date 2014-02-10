@@ -211,7 +211,7 @@ sub dump {
 sub dump_validated {
     my $self = shift;
     warn "HFH: fields validated:\n";
-    foreach my $field ( $self->all_fields ) {
+    foreach my $field ( $self->sorted_fields ) {
         $field->dump_validated if $field->can('dump_validated');
         my $message = $field->has_errors ? join( ' | ', $field->all_errors) : 'validated';
         warn "HFH: ", $field->name, ": $message\n";
@@ -233,7 +233,7 @@ HTML::FormHandler::Fields - internal role for form and compound fields
 
 =head1 VERSION
 
-version 0.40055
+version 0.40056
 
 =head1 SYNOPSIS
 
