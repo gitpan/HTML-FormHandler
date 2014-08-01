@@ -13,7 +13,7 @@ HTML::FormHandler::Manual::Rendering - how to render with FormHandler
 
 =head1 VERSION
 
-version 0.40056
+version 0.40057
 
 =head1 SYNOPSIS
 
@@ -79,7 +79,7 @@ the 'fill-in-form' values provided with the form's 'fif' function.
     <input type="submit" name="submit" value="Save">
     </form>
 
-If you are looking for an easy way to get your fields to line up in an evenly spaced manner, 
+If you are looking for an easy way to get your fields to line up in an evenly spaced manner,
 all uniformly aligned, and to do so without using templates or tables, you can externally style the
 default FormHandler output with the following CSS rule (not supported in internet explorer 6).
 
@@ -357,10 +357,10 @@ Types: element, wrapper, label, form_element, form_wrapper, checkbox_label
    sub html_attributes {
        my ( $self, $obj, $type, $attrs, $result ) = @_;
        # obj is either form or field
-       $attr->{class} = 'label' if $type eq 'label';
-       $attr->{placeholder} = $self->_localize($attr->{placeholder})
-           if exists $attr->{placeholder};
-       return $attr;
+       $attrs->{class} = 'label' if $type eq 'label';
+       $attrs->{placeholder} = $self->_localize($attrs->{placeholder})
+           if exists $attrs->{placeholder};
+       return $attrs;
    }
 
 This callback is called in the methods that wrap the various '_attr' attributes,
@@ -769,7 +769,7 @@ FormHandler Contributors - see HTML::FormHandler
 
 =head1 COPYRIGHT AND LICENSE
 
-This software is copyright (c) 2013 by Gerda Shank.
+This software is copyright (c) 2014 by Gerda Shank.
 
 This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.

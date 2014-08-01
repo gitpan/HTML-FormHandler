@@ -25,7 +25,7 @@ use Data::Clone;
 use 5.008;
 
 # always use 5 digits after decimal because of toolchain issues
-our $VERSION = '0.40056';
+our $VERSION = '0.40057';
 
 
 # for consistency in api with field nodes
@@ -164,7 +164,6 @@ has 'error_message' => ( is => 'rw', predicate => 'has_error_message', clearer =
 has 'success_message' => ( is => 'rw', predicate => 'has_success_message', clearer => 'clear_success_message' );
 has 'info_message'  => ( is => 'rw', predicate => 'has_info_message', clearer => 'clear_info_message' );
 # deprecated
-has 'css_class' =>     ( isa => 'Str',  is => 'ro' );
 has 'style'     =>     ( isa => 'Str',  is => 'rw' );
 
 has 'is_html5'  => ( isa => 'Bool', is => 'ro', default => 0 );
@@ -231,7 +230,6 @@ sub form_element_attributes {
     $attr->{action} = $self->action if $self->action;
     $attr->{method} = $self->http_method if $self->http_method;
     $attr->{enctype} = $self->enctype if $self->enctype;
-    $attr->{class} = $self->css_class if $self->css_class;
     $attr->{style} = $self->style if $self->style;
     $attr = {%$attr, %{$self->form_element_attr}};
     my $class = [@{$self->form_element_class}];
@@ -486,6 +484,8 @@ sub clear {
     $self->clear_data;
     $self->clear_params;
     $self->clear_posted;
+    $self->clear_item;
+    $self->clear_init_object;
     $self->clear_ctx;
     $self->processed(0);
     $self->did_init_obj(0);
@@ -738,6 +738,13 @@ sub _munge_params {
     $self->{params} = $new_params;
 }
 
+sub params_to_values {
+    my ( $self, $params ) = @_;
+    my $_fix_params = $self->params_class->new( @{ $self->params_args || [] } );
+    my $new_params = $_fix_params->expand_hash($params);
+    return $new_params;
+}
+
 sub add_form_error {
     my ( $self, @message ) = @_;
 
@@ -812,7 +819,7 @@ HTML::FormHandler - HTML forms using Moose
 
 =head1 VERSION
 
-version 0.40056
+version 0.40057
 
 =head1 SYNOPSIS
 
@@ -1547,7 +1554,6 @@ to be used for defaults instead of the item.
 
 Discouraged (use form_element_attr instead):
 
-   css_class - adds a 'class' attribute to the form tag
    style - adds a 'style' attribute to the form tag
    enctype - Request enctype
 
@@ -1681,7 +1687,7 @@ FormHandler Contributors - see HTML::FormHandler
 
 =head1 COPYRIGHT AND LICENSE
 
-This software is copyright (c) 2013 by Gerda Shank.
+This software is copyright (c) 2014 by Gerda Shank.
 
 This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.

@@ -13,7 +13,7 @@ HTML::FormHandler::Manual::Defaults - form defaults documentation
 
 =head1 VERSION
 
-version 0.40056
+version 0.40057
 
 =head1 SYNOPSIS
 
@@ -67,6 +67,17 @@ be done by filling the values into the row object or by turning on the form
 flag 'use_defaults_over_obj'.
 
    $form->process( item => $empty_row, use_defaults_over_obj => 1 );
+
+If you always want new DBIC results to be ignored, you could set the flag in
+a base form method:
+
+    sub set_active {
+        my $self = shift;
+        $self->next::method;
+        if ( $self->item and ! $self->item->in_storage ) {
+            $self->use_defaults_over_obj(1);
+        }
+    }
 
 You could also pass in another object or hashref in the 'init_object' attribute,
 and set the 'use_init_obj_over_item' flag:
@@ -147,7 +158,7 @@ FormHandler Contributors - see HTML::FormHandler
 
 =head1 COPYRIGHT AND LICENSE
 
-This software is copyright (c) 2013 by Gerda Shank.
+This software is copyright (c) 2014 by Gerda Shank.
 
 This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.

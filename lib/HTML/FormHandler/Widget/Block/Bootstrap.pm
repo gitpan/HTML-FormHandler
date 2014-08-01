@@ -34,7 +34,7 @@ HTML::FormHandler::Widget::Block::Bootstrap - block to format bare form element 
 
 =head1 VERSION
 
-version 0.40056
+version 0.40057
 
 =head1 AUTHOR
 
@@ -42,7 +42,7 @@ FormHandler Contributors - see HTML::FormHandler
 
 =head1 COPYRIGHT AND LICENSE
 
-This software is copyright (c) 2013 by Gerda Shank.
+This software is copyright (c) 2014 by Gerda Shank.
 
 This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.

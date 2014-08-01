@@ -60,7 +60,10 @@ sub validate {
     my $self = shift;
 
     my $format = $self->get_strf_format;
-    my $strp = DateTime::Format::Strptime->new( pattern => $format );
+    my @options;
+    push @options, ( time_zone => $self->time_zone ) if $self->time_zone;
+    push @options, ( locale => $self->locale ) if $self->locale;
+    my $strp = DateTime::Format::Strptime->new( pattern => $format, @options );
 
     my $dt = eval { $strp->parse_datetime( $self->value ) };
     unless ($dt) {
@@ -68,7 +71,7 @@ sub validate {
         return;
     }
     $self->_set_value($dt);
-    my $val_strp = DateTime::Format::Strptime->new( pattern => "%Y-%m-%d" );
+    my $val_strp = DateTime::Format::Strptime->new( pattern => "%Y-%m-%d", @options );
     if ( $self->date_start ) {
         my $date_start = $val_strp->parse_datetime( $self->date_start );
         die "date_start: " . $val_strp->errmsg unless $date_start;
@@ -117,7 +120,7 @@ HTML::FormHandler::Field::Date - a date field with formats
 
 =head1 VERSION
 
-version 0.40056
+version 0.40057
 
 =head1 SUMMARY
 
@@ -168,7 +171,7 @@ FormHandler Contributors - see HTML::FormHandler
 
 =head1 COPYRIGHT AND LICENSE
 
-This software is copyright (c) 2013 by Gerda Shank.
+This software is copyright (c) 2014 by Gerda Shank.
 
 This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.

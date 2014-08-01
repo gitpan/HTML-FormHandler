@@ -75,4 +75,38 @@ my $expected =
 </form>';
 is_html( $rendered, $expected, 'rendered correctly' );
 
+{
+    package Test::ElementClassField;
+    use HTML::FormHandler::Moose;
+    extends 'HTML::FormHandler::Field::Text';
+
+    sub build_element_class { ['foo'] }
+}
+{
+    package Test::ElementClassForm;
+    use HTML::FormHandler::Moose;
+    extends 'HTML::FormHandler';
+
+    has_field 'foo' => (
+        type          => '+Test::ElementClassField',
+        element_class => 'bar',
+    );
+
+    # Note: all => { element_class => 'baz' } does not
+    # override the specific setting on the field. This is
+    # deliberate. The idea is that the more specific setting
+    # should override the general setting. Like all of these things,
+    # sometimes people are going to want it one way and sometimes the
+    # other. If you want to set the element_class for all elements
+    # at once, don't put a specific element_class on the field.
+    sub build_update_subfields {
+    {
+        foo => { element_class => 'baz' },
+    }
+};
+}
+$form = Test::ElementClassForm->new;
+$form->process;
+is_deeply( $form->field('foo')->element_class, [qw( baz )], 'foo has correct classes' );
+
 done_testing;

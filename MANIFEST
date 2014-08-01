@@ -65,6 +65,7 @@ lib/HTML/FormHandler/Field/Year.pm
 lib/HTML/FormHandler/Fields.pm
 lib/HTML/FormHandler/Foo.pm
 lib/HTML/FormHandler/I18N.pm
+lib/HTML/FormHandler/I18N/ar_kw.pm
 lib/HTML/FormHandler/I18N/bg_bg.pm
 lib/HTML/FormHandler/I18N/de_de.pm
 lib/HTML/FormHandler/I18N/en_us.pm
@@ -208,6 +209,7 @@ t/bootstrap/search.t
 t/bootstrap3/basic.t
 t/bootstrap3/controls.t
 t/bootstrap3/horiz.t
+t/bootstrap3/inlinecheckboxes.t
 t/bootstrap3/layout_classes.t
 t/compound/basic.t
 t/compound/default.t
@@ -322,6 +324,7 @@ t/render/widget_tags.t
 t/render/widgets.t
 t/render/withtt.t
 t/repeatable/defaults.t
+t/repeatable/empty.t
 t/repeatable/has_many.t
 t/repeatable/hash.t
 t/repeatable/js.t

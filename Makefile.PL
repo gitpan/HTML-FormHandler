@@ -53,7 +53,7 @@ my %WriteMakefileArgs = (
     "Test::Memory::Cycle" => "1.04",
     "Test::More" => "0.94"
   },
-  "VERSION" => "0.40056",
+  "VERSION" => "0.40057",
   "test" => {
     "TESTS" => "t/*.t t/blocks/*.t t/bootstrap/*.t t/bootstrap3/*.t t/compound/*.t t/errors/*.t t/field_setup/*.t t/fields/*.t t/form_setup/*.t t/infl_defl/*.t t/moose/*.t t/render/*.t t/repeatable/*.t t/result/*.t t/validation/*.t t/wizard/*.t"
   }

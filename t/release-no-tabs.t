@@ -71,6 +71,7 @@ my @files = (
     'lib/HTML/FormHandler/Fields.pm',
     'lib/HTML/FormHandler/Foo.pm',
     'lib/HTML/FormHandler/I18N.pm',
+    'lib/HTML/FormHandler/I18N/ar_kw.pm',
     'lib/HTML/FormHandler/I18N/bg_bg.pm',
     'lib/HTML/FormHandler/I18N/de_de.pm',
     'lib/HTML/FormHandler/I18N/en_us.pm',
